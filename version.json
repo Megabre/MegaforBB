@@ -19,6 +19,6 @@
   "meta": {
     "database_migration_required": true,
     "breaking_changes": false,
-    "manifest_file_count": 9245
+    "manifest_file_count": 476
   }
 }
