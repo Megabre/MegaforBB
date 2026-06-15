@@ -1,0 +1,28 @@
+{# Görünüm sağında sabit (fixed) mesaj gezgini — main sütununa JS ile hizalanır #}
+{% set _pp = postsPerPage ?? 20 %}
+{% set _cp = currentPage ?? 1 %}
+{% set _offset = (_cp - 1) * _pp %}
+{% set _total = totalPosts ?? 0 %}
+<nav id="topic-post-scrubber" class="mfbb-topic-post-scrubber" aria-label="{{ core__('post.scrubber_aria') }}" data-topic-scrubber="1">
+  <button type="button" class="mfbb-topic-post-scrubber__navbtn" id="topic-scrubber-up" aria-label="{{ core__('post.scrubber_prev') }}" title="{{ core__('post.scrubber_prev') }}">
+    <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
+  </button>
+  <div class="topic-post-scrubber__track mfbb-topic-post-scrubber__dots">
+    {% for p in posts %}
+    {% set _gid = _offset + loop.index %}
+    <a href="#post-{{ p.id }}"
+       class="topic-post-scrubber__dot flex-shrink-0 w-2.5 h-2.5 rounded-full bg-gray-300 hover:bg-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#206bc4] transition-colors"
+       data-post-id="{{ p.id }}"
+       data-global-index="{{ _gid }}"
+       title="#{{ _gid }}{% if p.username is defined and p.username %} — {{ p.username }}{% endif %}"
+       aria-label="{{ core__('post.scrubber_post', { num: _gid }) }}">
+    </a>
+    {% endfor %}
+  </div>
+  <button type="button" class="mfbb-topic-post-scrubber__navbtn" id="topic-scrubber-down" aria-label="{{ core__('post.scrubber_next') }}" title="{{ core__('post.scrubber_next') }}">
+    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+  </button>
+  {% if _total > 0 %}
+  <div id="topic-scrubber-readout" class="topic-post-scrubber__readout mfbb-topic-post-scrubber__readout text-[10px] leading-tight text-center text-gray-500 tabular-nums px-1 pt-1 pb-0.5" data-total="{{ _total }}" data-offset="{{ _offset }}" aria-live="polite"></div>
+  {% endif %}
+</nav>

@@ -1,0 +1,126 @@
+﻿{% if poll and topic %}
+{% set currentUser = user ?? null %}
+{% set userVotes = userVotes ?? [] %}
+{% set totalVotes = totalVotes ?? 0 %}
+{% set hasVoted = userVotes is not empty %}
+{% set isClosed = poll.closes_at is not null and poll.closes_at <= 'now'|date('Y-m-d H:i:s') %}
+{% set allowChangeVote = (poll.allow_change_vote ?? 0) == 1 %}
+{% set maxVotes = poll.max_votes ?? 1 %}
+{% set showVoteForm = currentUser and not hasVoted and not isClosed %}
+{% set showResults = hasVoted or isClosed or not currentUser %}
+{% set showChangeBtn = currentUser and hasVoted and allowChangeVote and not isClosed %}
+{% set pollError = flash('poll_error') %}
+{% set pollOk = flash('poll_ok') %}
+<div class="mt-4 mb-6" x-data="{ changeMode: false }">
+  <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-lg overflow-hidden">
+    <div class="bg-slate-50 px-4 py-3 border-b border-gray-200">
+      <h3 class="font-semibold text-[#105289] flex items-center gap-2">
+        <i class="fa-solid fa-chart-pie text-blue-600"></i>
+        {{ core_e(poll.question) }}
+      </h3>
+      <div class="flex items-center gap-3 mt-1">
+        {% if poll.closes_at %}
+        <span class="text-xs text-gray-500">
+          <i class="fa-regular fa-clock mr-1"></i>{{ isClosed ? 'Kapandı' : 'Kapanış' }}: {{ poll.closes_at|date('d.m.Y H:i') }}
+        </span>
+        {% endif %}
+        <span class="text-xs text-gray-500">
+          <i class="fa-solid fa-users mr-1"></i>{{ totalVotes }} oy
+        </span>
+      </div>
+    </div>
+    <div class="p-4">
+      {% if pollError %}<div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{{ core_e(pollError) }}</div>{% endif %}
+      {% if pollOk %}<div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">{{ core_e(pollOk) }}</div>{% endif %}
+
+      {% if showVoteForm %}
+      <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/poll/vote') }}" method="post">
+        {{ core_csrf_field('poll_vote')|raw }}
+        <div class="space-y-2.5">
+          {% for opt in pollOptions %}
+          <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors group">
+            {% if maxVotes == 1 %}
+            <input type="radio" name="option_id" value="{{ opt.id }}" class="text-[#105289] focus:ring-[#105289]">
+            {% else %}
+            <input type="checkbox" name="option_ids[]" value="{{ opt.id }}" class="rounded text-[#105289] focus:ring-[#105289]">
+            {% endif %}
+            <span class="text-gray-700 group-hover:text-[#105289] text-sm">{{ core_e(opt.option_text) }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+          <button type="submit" class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-[#105289] rounded-lg hover:bg-[#1a5aad] transition-colors">
+            <i class="fa-solid fa-check"></i>Oy Ver
+          </button>
+          {% if maxVotes > 1 %}<span class="text-xs text-gray-500">En fazla {{ maxVotes }} seçenek seçebilirsiniz.</span>{% endif %}
+        </div>
+      </form>
+
+      {% elseif showResults %}
+      <div x-show="!changeMode">
+        <div class="space-y-3">
+          {% for opt in pollOptions %}
+          {% set count = opt.vote_count ?? 0 %}
+          {% set pct = totalVotes > 0 ? (100 * count / totalVotes)|round(1) : 0 %}
+          {% set voted = opt.id in userVotes %}
+          {% set barColor = voted ? 'bg-[#105289]' : 'bg-gray-400' %}
+          <div>
+            <div class="flex items-center justify-between text-sm mb-1">
+              <span class="{{ voted ? 'font-semibold text-[#105289]' : 'text-gray-700' }}">
+                {% if voted %}<i class="fa-solid fa-circle-check text-[#105289] mr-1.5"></i>{% endif %}
+                {{ core_e(opt.option_text) }}
+              </span>
+              <span class="text-gray-500 font-medium tabular-nums">{{ count }} oy ({{ pct }}%)</span>
+            </div>
+            <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full {{ barColor }} rounded-full transition-all duration-500 ease-out" style="width: {{ pct }}%"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <span class="text-sm text-gray-500"><i class="fa-solid fa-chart-bar mr-1"></i>Toplam {{ totalVotes }} oy</span>
+          {% if showChangeBtn %}
+          <button type="button" @click="changeMode = true" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#105289] bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+            <i class="fa-solid fa-rotate"></i>Oyunu Değiştir
+          </button>
+          {% endif %}
+          {% if not currentUser %}
+          <a href="{{ core_url('login') }}" class="inline-flex items-center gap-1.5 text-xs text-amber-600 hover:underline">
+            <i class="fa-solid fa-lock"></i>Oy vermek için giriş yapın
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if showChangeBtn %}
+      <div x-show="changeMode" x-transition style="display:none">
+        <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/poll/vote') }}" method="post">
+          {{ core_csrf_field('poll_vote')|raw }}
+          <div class="space-y-2.5">
+            {% for opt in pollOptions %}
+            {% set isSelected = opt.id in userVotes %}
+            <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors group">
+              {% if maxVotes == 1 %}
+              <input type="radio" name="option_id" value="{{ opt.id }}" {{ isSelected ? 'checked' : '' }} class="text-[#105289] focus:ring-[#105289]">
+              {% else %}
+              <input type="checkbox" name="option_ids[]" value="{{ opt.id }}" {{ isSelected ? 'checked' : '' }} class="rounded text-[#105289] focus:ring-[#105289]">
+              {% endif %}
+              <span class="text-gray-700 group-hover:text-[#105289] text-sm">{{ core_e(opt.option_text) }}</span>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="mt-4 flex items-center gap-3">
+            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-[#105289] rounded-lg hover:bg-[#1a5aad] transition-colors">
+              <i class="fa-solid fa-rotate"></i>Oyunu Güncelle
+            </button>
+            <button type="button" @click="changeMode = false" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">{{ core__('common.cancel') }}</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}

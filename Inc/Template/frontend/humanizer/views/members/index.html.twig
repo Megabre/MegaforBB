@@ -1,0 +1,235 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set members = members ?? [] %}
+{% set page = page ?? 1 %}
+{% set totalPages = totalPages ?? 1 %}
+{% set total = total ?? 0 %}
+{% set sort = sort ?? 'posts' %}
+{% set order = order ?? 'desc' %}
+{% set search = search ?? '' %}
+{% set reputationEnabled = reputationEnabled ?? false %}
+{% set topPosters = topPosters ?? [] %}
+{% set newestMembers = newestMembers ?? [] %}
+{% set baseUrl = core_url('members') %}
+{% set sortLabels = {
+  'posts': { 'label': core__('members.sort_posts'), 'icon': 'fa-comment' },
+  'topics': { 'label': core__('members.sort_topics'), 'icon': 'fa-folder-open' },
+  'joined': { 'label': core__('members.sort_joined'), 'icon': 'fa-calendar' }
+} %}
+{% if reputationEnabled %}
+  {% set sortLabels = sortLabels|merge({ 'reputation': { 'label': 'Reputation', 'icon': 'fa-star' } }) %}
+{% endif %}
+
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">{{ core__('common.members') }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+  <div class="bg-white ring-1 ring-gray-200 rounded-lg p-4 flex items-center gap-3">
+    <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+      <i class="fa-solid fa-users text-lg"></i>
+    </div>
+    <div>
+      <div class="text-2xl font-bold text-[#1a252f]">{{ total|number_format(0) }}</div>
+      <div class="text-xs text-gray-500">{{ core__('members.total_members') }}</div>
+    </div>
+  </div>
+  {% if newestMembers[0] is defined and newestMembers[0] %}
+  <div class="bg-white ring-1 ring-gray-200 rounded-lg p-4 flex items-center gap-3">
+    <div class="h-10 w-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
+      <i class="fa-solid fa-user-plus text-lg"></i>
+    </div>
+    <div class="min-w-0">
+      <a href="{{ core_url('member/' ~ (newestMembers[0].username|e('url'))) }}" class="text-sm font-bold text-[#1a252f] hover:text-blue-500 truncate block">{{ core_e(newestMembers[0].username) }}</a>
+      <div class="text-xs text-gray-500">{{ core__('members.newest_member') }}</div>
+    </div>
+  </div>
+  {% endif %}
+  {% if topPosters[0] is defined and topPosters[0] %}
+  <div class="bg-white ring-1 ring-gray-200 rounded-lg p-4 flex items-center gap-3">
+    <div class="h-10 w-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+      <i class="fa-solid fa-trophy text-lg"></i>
+    </div>
+    <div class="min-w-0">
+      <a href="{{ core_url('member/' ~ (topPosters[0].username|e('url'))) }}" class="text-sm font-bold text-[#1a252f] hover:text-blue-500 truncate block">{{ core_e(topPosters[0].username) }}</a>
+      <div class="text-xs text-gray-500">{{ core__('members.posts_count', { count: (topPosters[0].post_count ?? 0)|number_format(0) }) }}</div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="bg-white ring-1 ring-gray-200 rounded-lg p-4 flex items-center gap-3">
+    <div class="h-10 w-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+      <i class="fa-solid fa-chart-line text-lg"></i>
+    </div>
+    <div>
+      <div class="text-2xl font-bold text-[#1a252f]">{{ totalPages }}</div>
+      <div class="text-xs text-gray-500">{{ core__('common.page') }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-4 bg-white ring-1 ring-gray-200 shadow-sm rounded-lg overflow-hidden">
+  <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+    <form method="get" action="{{ baseUrl }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div class="flex-1 relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+        <input type="text" name="q" value="{{ core_e(search) }}" placeholder="Kullanıcı adı ara..." class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs text-gray-500">Sırala:</span>
+        {% for k, info in sortLabels %}
+        <a href="{{ baseUrl }}?sort={{ k|e('url') }}&order={{ (sort == k and order == 'desc') ? 'asc' : 'desc' }}{{ search != '' ? ('&q=' ~ search|url_encode) : '' }}"
+           class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors {{ sort == k ? 'bg-[#1a252f] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+          <i class="fa-solid {{ info.icon }}"></i>
+          {{ core_e(info.label) }}
+          {% if sort == k %}
+          <i class="fa-solid {{ order == 'asc' ? 'fa-arrow-up' : 'fa-arrow-down' }} text-[10px] ml-0.5"></i>
+          {% endif %}
+        </a>
+        {% endfor %}
+        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+          <i class="fa-solid fa-search mr-1"></i>Ara
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {% if search != '' %}
+  <div class="px-4 py-2 bg-blue-50 border-b border-blue-100 text-sm text-blue-700 flex items-center justify-between">
+    <span><i class="fa-solid fa-filter mr-1"></i>"<strong>{{ core_e(search) }}</strong>" için {{ total|number_format(0) }} sonuç bulundu</span>
+    <a href="{{ baseUrl }}" class="text-blue-600 hover:underline text-xs">Filtreyi temizle</a>
+  </div>
+  {% endif %}
+
+  {% if members is empty %}
+  <div class="p-12 text-center">
+    <i class="fa-solid fa-users-slash text-4xl text-gray-300 mb-3"></i>
+    <p class="text-gray-500">Aramanızla eşleşen üye bulunamadı.</p>
+  </div>
+  {% else %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0">
+    {% for u in members %}
+    {% set memberUrl = core_url('member/' ~ member_url_path(u)) %}
+    {% set avatarUrl = (u.avatar_path|default('')) != '' ? asset_url(u.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(u.username|default(''))|url_encode) ~ '&size=80&bold=true&background=1a252f&color=ffffff') %}
+    {% set roleBg = (u.role_color|default('')) != '' ? u.role_color : '#6b7280' %}
+    <div class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors {{ loop.index0 is even ? 'sm:border-r sm:border-gray-100' : '' }}">
+      <a href="{{ memberUrl }}" class="flex-shrink-0">
+        <img src="{{ core_e(avatarUrl) }}" alt="" class="w-14 h-14 rounded-full object-cover ring-2 ring-gray-200 hover:ring-blue-400 transition-all">
+      </a>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-0.5">
+          <a href="{{ memberUrl }}" class="font-semibold text-[#1a252f] hover:text-blue-500 truncate">{{ core_e(u.username|default('')) }}</a>
+          {% if u.role_name|default('') %}
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold text-white flex-shrink-0" style="background:{{ roleBg|e('css') }}">{{ core_e(u.role_name) }}</span>
+          {% endif %}
+        </div>
+        {% if u.location|default('') %}
+        <div class="text-xs text-gray-400 mb-1 truncate"><i class="fa-solid fa-location-dot mr-0.5"></i>{{ core_e(u.location) }}</div>
+        {% endif %}
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500">
+          <span title="{{ core__('member.tab_posts')|e('html_attr') }}"><i class="fa-solid fa-comment text-blue-400 mr-0.5"></i>{{ (u.post_count ?? 0)|number_format(0) }}</span>
+          <span title="{{ core__('topic.topics')|e('html_attr') }}"><i class="fa-solid fa-folder-open text-green-400 mr-0.5"></i>{{ (u.topic_count ?? 0)|number_format(0) }}</span>
+          <span title="{{ core__('members.likes_tooltip')|e('html_attr') }}"><i class="fa-solid fa-heart text-red-400 mr-0.5"></i>{{ (u.like_count ?? 0)|number_format(0) }}</span>
+          {% if reputationEnabled and (u.reputation_net ?? 0) != 0 %}
+          <span title="Reputation" class="{{ (u.reputation_net ?? 0) > 0 ? 'text-green-600' : 'text-red-600' }}">
+            <i class="fa-solid fa-star mr-0.5"></i>{{ (u.reputation_net ?? 0) > 0 ? '+' : '' }}{{ (u.reputation_net ?? 0) }}
+          </span>
+          {% endif %}
+          <span title="{{ core__('members.joined_tooltip')|e('html_attr') }}" class="text-gray-400"><i class="fa-regular fa-calendar mr-0.5"></i>{{ u.created_at|default('') != '' ? (u.created_at|date('d.m.Y')) : '' }}</span>
+        </div>
+      </div>
+      <a href="{{ memberUrl }}" class="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 hover:bg-blue-100 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-colors">
+        <i class="fa-solid fa-chevron-right text-xs"></i>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if totalPages > 1 %}
+  {% set rangeStart = max(1, page - 3) %}
+  {% set rangeEnd = min(totalPages, page + 3) %}
+  {% set querySuffix = (search != '' ? ('&q=' ~ search|url_encode) : '') %}
+  <div class="px-4 py-3 border-t border-gray-100 flex flex-wrap items-center justify-center gap-1.5">
+    {% if page > 1 %}
+    <a href="{{ baseUrl }}?page={{ page - 1 }}&sort={{ sort|e('url') }}&order={{ order|e('url') }}{{ querySuffix }}"
+       class="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-[#1a252f]">
+      <i class="fa-solid fa-chevron-left text-xs"></i> {{ core__('common.previous') }}
+    </a>
+    {% endif %}
+
+    {% if rangeStart > 1 %}
+    <a href="{{ baseUrl }}?page=1&sort={{ sort|e('url') }}&order={{ order|e('url') }}{{ querySuffix }}" class="px-3 py-1.5 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-[#1a252f]">1</a>
+    {% if rangeStart > 2 %}<span class="px-1 text-gray-400">...</span>{% endif %}
+    {% endif %}
+
+    {% for p in range(rangeStart, rangeEnd) %}
+    <a href="{{ baseUrl }}?page={{ p }}&sort={{ sort|e('url') }}&order={{ order|e('url') }}{{ querySuffix }}"
+       class="px-3 py-1.5 text-sm rounded-lg {{ p == page ? 'bg-[#1a252f] text-white font-semibold' : 'bg-gray-100 hover:bg-gray-200 text-[#1a252f]' }}">{{ p }}</a>
+    {% endfor %}
+
+    {% if rangeEnd < totalPages %}
+    {% if rangeEnd < totalPages - 1 %}<span class="px-1 text-gray-400">...</span>{% endif %}
+    <a href="{{ baseUrl }}?page={{ totalPages }}&sort={{ sort|e('url') }}&order={{ order|e('url') }}{{ querySuffix }}" class="px-3 py-1.5 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-[#1a252f]">{{ totalPages }}</a>
+    {% endif %}
+
+    {% if page < totalPages %}
+    <a href="{{ baseUrl }}?page={{ page + 1 }}&sort={{ sort|e('url') }}&order={{ order|e('url') }}{{ querySuffix }}"
+       class="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-[#1a252f]">
+      {{ core__('common.next') }} <i class="fa-solid fa-chevron-right text-xs"></i>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+
+{% if topPosters is not empty or newestMembers is not empty %}
+<div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+  {% if topPosters is not empty %}
+  <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-lg overflow-hidden">
+    <div class="bg-[#1a252f] text-white px-4 py-3 font-semibold text-sm tracking-wide flex items-center gap-2">
+      <i class="fa-solid fa-ranking-star text-amber-400"></i> {{ core__('members.top_posters') }}
+    </div>
+    <div class="divide-y divide-gray-100">
+      {% for tp in topPosters %}
+      {% set tpUrl = core_url('member/' ~ (tp.username|e('url'))) %}
+      {% set tpAvatar = (tp.avatar_path|default('')) != '' ? asset_url(tp.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(tp.username)|url_encode) ~ '&size=40&bold=true&background=1a252f&color=ffffff') %}
+      {% set medal = loop.index0 == 0 ? 'text-amber-500' : (loop.index0 == 1 ? 'text-gray-400' : (loop.index0 == 2 ? 'text-amber-700' : 'text-gray-300')) %}
+      <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+        <span class="w-6 text-center font-bold text-sm {{ medal }}">{% if loop.index0 < 3 %}<i class="fa-solid fa-medal"></i>{% else %}{{ loop.index }}{% endif %}</span>
+        <a href="{{ tpUrl }}"><img src="{{ core_e(tpAvatar) }}" class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-200" alt=""></a>
+        <a href="{{ tpUrl }}" class="flex-1 text-sm font-semibold text-[#1a252f] hover:text-blue-500 truncate">{{ core_e(tp.username) }}</a>
+        <span class="text-xs text-gray-500 font-medium">{{ core__('members.posts_count', { count: (tp.post_count ?? 0)|number_format(0) }) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if newestMembers is not empty %}
+  <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-lg overflow-hidden">
+    <div class="bg-[#1a252f] text-white px-4 py-3 font-semibold text-sm tracking-wide flex items-center gap-2">
+      <i class="fa-solid fa-user-plus text-green-400"></i> {{ core__('members.newest_members') }}
+    </div>
+    <div class="divide-y divide-gray-100">
+      {% for nm in newestMembers %}
+      {% set nmUrl = core_url('member/' ~ (nm.username|e('url'))) %}
+      {% set nmAvatar = (nm.avatar_path|default('')) != '' ? asset_url(nm.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(nm.username)|url_encode) ~ '&size=40&bold=true&background=1a252f&color=ffffff') %}
+      <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+        <a href="{{ nmUrl }}"><img src="{{ core_e(nmAvatar) }}" class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-200" alt=""></a>
+        <a href="{{ nmUrl }}" class="flex-1 text-sm font-semibold text-[#1a252f] hover:text-blue-500 truncate">{{ core_e(nm.username) }}</a>
+        <span class="text-xs text-gray-400">{{ (nm.created_at|default('')) != '' ? (nm.created_at|date('d.m.Y')) : '' }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

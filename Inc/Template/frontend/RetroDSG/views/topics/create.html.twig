@@ -1,0 +1,270 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set forum = forum ?? null %}
+{% set prefixes = prefixes ?? [] %}
+{% set error = error ?? '' %}
+{% set preselectedType = preselectedType ?? null %}
+{% if not forum %}
+  <p class="p-4 text-gray-500">{{ core__('topic_create.forum_not_found') }}</p>
+{% else %}
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li>›</li>
+      <li><a href="{{ forum_url|default(core_url('forum/' ~ (forum.slug|e('url')))) }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(forum.name) }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">{{ core__('forum.new_topic') }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+  <div class="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-4">
+    <h1 class="text-lg sm:text-xl font-semibold text-[#1a252f]">{{ core__('forum.new_topic') }}</h1>
+  </div>
+  <div class="p-4 sm:p-6">
+    {% if error %}
+    <div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{{ core_e(error) }}</div>
+    {% endif %}
+    {% if isCommerceEnabled is defined and isCommerceEnabled and (commerceAlertMessage is defined and commerceAlertMessage) %}
+    <div class="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md text-sm">{{ commerceAlertMessage|e }}</div>
+    {% endif %}
+
+    <form action="{{ forum_new_topic_url|default(core_url('forum/' ~ (forum.slug|e('url')) ~ '/new-topic')) }}" method="post" class="space-y-6" id="new-topic-form" data-draft-forum-slug="{{ (forum.slug ?? '')|e('html_attr') }}">
+      {{ core_csrf_field('new_topic')|raw }}
+      {{ core_csrf_field('api_tag_create', 'api_tag_csrf')|raw }}
+      <input type="hidden" id="upload-attachment-csrf" name="upload_attachment_token" value="{{ core_csrf_token('upload_attachment')|e('html_attr') }}">
+      {% if not (allowedTypes is defined and 'auction' in allowedTypes) %}
+      <input type="hidden" name="topic_type" id="topic_type_input" value="{{ (preselectedType ?? 'topic')|e('html_attr') }}">
+      {% endif %}
+
+      {% if allowedTypes is defined and allowedTypes is not empty and 'auction' in allowedTypes %}
+      <div class="mb-4">
+        <label for="topic_type_select" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.type')|default('Konu tipi') }}</label>
+        <select name="topic_type" id="topic_type_select" class="w-full sm:w-auto border border-gray-300 rounded-md shadow-sm px-3 py-2">
+          <option value="topic" {{ (preselectedType ?? '') == 'topic' ? 'selected' : '' }}>{{ core__('topic_create.type_topic')|default('Konu') }}</option>
+          {% if 'article' in allowedTypes %}<option value="article" {{ (preselectedType ?? '') == 'article' ? 'selected' : '' }}>{{ core__('topic_create.type_article')|default('Makale') }}</option>{% endif %}
+          {% if 'poll' in allowedTypes %}<option value="poll" {{ (preselectedType ?? '') == 'poll' ? 'selected' : '' }}>{{ core__('topic_create.type_poll')|default('Anket') }}</option>{% endif %}
+          {% if 'question' in allowedTypes %}<option value="question" {{ (preselectedType ?? '') == 'question' ? 'selected' : '' }}>{{ core__('topic_create.type_question')|default('Soru') }}</option>{% endif %}
+          <option value="auction" {{ (preselectedType ?? '') == 'auction' ? 'selected' : '' }}>{{ core__('topic_create.type_auction')|default('Açık artırma') }}</option>
+        </select>
+      </div>
+      <div id="commerce-auction-fields" class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md hidden space-y-3">
+        <h3 class="text-sm font-medium text-gray-700">{{ core__('topic_create.type_auction')|default('Açık artırma') }} – {{ core__('commerce.auction_fields')|default('Alanlar') }}</h3>
+        <div>
+          <label for="auction_start_price" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('commerce.auction_start_price')|default('Başlangıç fiyatı') }} <span class="text-red-500">*</span></label>
+          <input type="number" name="auction_start_price" id="auction_start_price" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div>
+          <label for="auction_min_bid" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('commerce.auction_min_bid')|default('Minimum artış') }} <span class="text-red-500">*</span></label>
+          <input type="number" name="auction_min_bid" id="auction_min_bid" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" step="0.01" min="0" placeholder="1.00">
+        </div>
+        <div>
+          <label for="auction_end_time" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('commerce.auction_end_time')|default('Bitiş tarihi') }} <span class="text-red-500">*</span></label>
+          <input type="datetime-local" name="auction_end_time" id="auction_end_time" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2">
+        </div>
+      </div>
+      <script>
+      (function(){
+        var sel = document.getElementById('topic_type_select');
+        var block = document.getElementById('commerce-auction-fields');
+        var inputs = block ? block.querySelectorAll('input[name^="auction_"]') : [];
+        function toggle(){
+          if (!block) return;
+          if (sel && sel.value === 'auction') {
+            block.classList.remove('hidden');
+            inputs.forEach(function(i){ i.setAttribute('required','required'); });
+          } else {
+            block.classList.add('hidden');
+            inputs.forEach(function(i){ i.removeAttribute('required'); });
+          }
+        }
+        if (sel) { sel.addEventListener('change', toggle); toggle(); }
+      })();
+      </script>
+      {% endif %}
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        {% if prefixes is not empty %}
+        <div class="w-full sm:w-1/3 md:w-1/4">
+          <label for="prefix_id" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.prefix') }}</label>
+          <select name="prefix_id" id="prefix_id" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2">
+            <option value="0">{{ core__('topic_create.prefix_none') }}</option>
+            {% for p in prefixes %}<option value="{{ p.id ?? 0 }}">{{ core_e(p.name ?? '') }}</option>{% endfor %}
+          </select>
+        </div>
+        {% endif %}
+        <div class="flex-1">
+          <label for="title" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.title') }}</label>
+          <input type="text" name="title" id="title" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" required placeholder="{{ core__('topic_create.title_placeholder')|e('html_attr') }}">
+        </div>
+      </div>
+
+      <div class="mfbb-topic-create-editor-section rounded-lg border border-gray-200 overflow-hidden bg-white">
+        <div class="mb-0">
+          <label for="body" class="block text-sm font-medium text-gray-700 mb-1 px-4 pt-4">{{ core__('topic_create.body_label') }}</label>
+          <textarea name="body" id="body" rows="10" data-editor class="w-full border-0 rounded-none px-4 shadow-none" required placeholder="{{ core__('topic_create.body_placeholder')|e('html_attr') }}"></textarea>
+        </div>
+        <div class="mfbb-topic-create-tabs border-t border-gray-200 bg-gray-50" id="topic-create-tabs" role="tablist" aria-label="{{ core__('topic_create.tab_poll') }}">
+          <div class="flex border-b border-gray-200 overflow-x-auto">
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="poll" aria-selected="false" id="tab-poll">
+              <i class="fa-solid fa-chart-pie mr-2 text-gray-400"></i>{{ core__('topic_create.tab_poll') }}
+            </button>
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="files" aria-selected="false" id="tab-files">
+              <i class="fa-solid fa-paperclip mr-2 text-gray-400"></i>{{ core__('topic_create.tab_files') }}
+            </button>
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="tags" aria-selected="false" id="tab-tags">
+              <i class="fa-solid fa-tags mr-2 text-gray-400"></i>{{ core__('topic_create.tab_tags') }}
+            </button>
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="settings" aria-selected="false" id="tab-settings">
+              <i class="fa-solid fa-sliders mr-2 text-gray-400"></i>{{ core__('topic_create.tab_settings') }}
+            </button>
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="schedule" aria-selected="false" id="tab-schedule">
+              <i class="fa-regular fa-clock mr-2 text-gray-400"></i>{{ core__('topic_create.tab_schedule') }}
+            </button>
+          </div>
+          <div class="mfbb-topic-create-panels p-4 bg-white min-h-[100px] relative">
+            <p class="mfbb-topic-create-tabs-placeholder text-sm text-gray-500 italic py-2" id="topic-create-tabs-placeholder">{{ core__('topic_create.tabs_placeholder')|default('Yukarıdaki sekmelerden birini seçin.') }}</p>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-poll" aria-labelledby="tab-poll" data-panel="poll">
+              <div class="flex items-center gap-2 mb-2">
+                <label class="block text-sm font-medium text-gray-700">{{ core__('topic_create.poll_label') }}</label>
+              </div>
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.poll_hint') }}</p>
+              <div class="space-y-2 mb-2">
+                <input type="text" name="poll_question" id="poll_question" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm" placeholder="{{ core__('topic_create.poll_question_placeholder')|e('html_attr') }}">
+                <div id="poll-options-container" class="space-y-2" data-option-placeholder="{{ core__('topic_create.poll_option')|e('html_attr') }}">
+                  <input type="text" name="poll_options[]" class="w-full border border-gray-300 rounded-md shadow-sm focus:border-[#1a252f] focus:ring-[#1a252f] sm:text-sm p-2 border" placeholder="{{ core__('topic_create.poll_option') }} 1">
+                  <input type="text" name="poll_options[]" class="w-full border border-gray-300 rounded-md shadow-sm focus:border-[#1a252f] focus:ring-[#1a252f] sm:text-sm p-2 border" placeholder="{{ core__('topic_create.poll_option') }} 2">
+                </div>
+                <button type="button" id="poll-add-option" class="text-sm text-[#1a252f] hover:text-blue-600 font-medium"><i class="fa-solid fa-plus mr-1"></i>{{ core__('topic_create.poll_add_option') }}</button>
+              </div>
+              <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <label class="inline-flex items-center gap-1.5">
+                  <input type="number" name="poll_max_votes" value="1" min="1" class="w-14 border border-gray-300 rounded px-2 py-1 text-sm"> {{ core__('topic_create.poll_max_votes') }}
+                </label>
+                <label class="inline-flex items-center gap-1.5">
+                  <input type="checkbox" name="poll_allow_change_vote" value="1" class="rounded border-gray-300 text-[#1a252f] focus:ring-[#1a252f]"> {{ core__('topic_create.poll_allow_change') }}
+                </label>
+                <label class="inline-flex items-center gap-1.5">
+                  <span class="text-gray-500">{{ core__('topic_create.poll_closes_at') }}:</span>
+                  <input type="datetime-local" name="poll_closes_at" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                </label>
+              </div>
+            </div>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-files" aria-labelledby="tab-files" data-panel="files">
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('topic_create.attachments_label') }}</label>
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.attachments_hint') }}</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <input type="file" id="topic-create-attachment-input" class="hidden" multiple>
+                <button type="button" id="topic-create-attachment-btn" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                  <i class="fa-solid fa-upload"></i> {{ core__('topic_create.attachments_select') }}
+                </button>
+                <div id="topic-create-attachment-list" class="flex flex-wrap gap-2"></div>
+              </div>
+              <div id="topic-create-attachment-ids"></div>
+            </div>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-tags" aria-labelledby="tab-tags" data-panel="tags">
+              <label for="topic-create-tag-input" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.tags_label') }}</label>
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.tags_hint') }}</p>
+              <div id="topic-create-tag-chips" class="flex flex-wrap gap-2 mb-2"></div>
+              <div class="relative flex gap-2 flex-wrap">
+                <div class="flex-1 min-w-[200px] relative">
+                  <input type="text" id="topic-create-tag-input" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" placeholder="{{ core__('topic_create.tags_placeholder')|e('html_attr') }}" autocomplete="off">
+                  <div id="topic-create-tag-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto z-20"></div>
+                </div>
+                <button type="button" id="topic-create-tag-add-btn" class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">{{ core__('topic_create.tag_add') }}</button>
+              </div>
+              <div id="topic-create-tag-ids"></div>
+            </div>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings" data-panel="settings">
+              <label class="block text-sm font-medium text-gray-700 mb-3">{{ core__('topic_create.tab_settings') }}</label>
+              <table class="w-full border-collapse" style="table-layout: fixed;">
+                <tbody>
+                  {% if allowedTypes is defined and 'question' in allowedTypes %}
+                  <tr>
+                    <td colspan="2" class="py-2">
+                      <label class="inline-flex items-center gap-2 cursor-pointer" for="topic-create-is-question">
+                        <input type="checkbox" name="is_question" value="1" id="topic-create-is-question" class="rounded border-gray-300 text-[#1a252f] focus:ring-[#1a252f]" {{ (preselectedType ?? '') == 'question' ? 'checked' : '' }}>
+                        <span class="text-sm text-gray-700">{{ core__('topic_create.settings_question_answer')|default('Soru – Cevap (Q&A)') }}</span>
+                      </label>
+                      <p class="text-xs text-gray-500 mt-1 ml-6">{{ core__('topic_create.settings_question_answer_hint')|default('Konu soru/çözüm formatında olur; bir cevabı çözüm olarak işaretleyebilirsiniz.') }}</p>
+                    </td>
+                  </tr>
+                  {% endif %}
+                  <tr>
+                    <td class="align-top pr-4 py-2" style="width: 42%;">
+                      <label class="inline-flex items-center gap-2 cursor-pointer" for="topic-create-is-private">
+                        <input type="checkbox" name="is_private" value="1" id="topic-create-is-private" class="rounded border-gray-300 text-[#1a252f] focus:ring-[#1a252f]">
+                        <span class="text-sm text-gray-700">{{ core__('topic_create.private_topic') }}</span>
+                      </label>
+                    </td>
+                    <td class="align-top pl-0 py-2" style="width: 58%;">
+                      <div id="topic-create-private-viewers-wrap">
+                        <label for="topic-create-private-viewer-input" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.private_viewers_label') }}</label>
+                        <input type="text" id="topic-create-private-viewer-input" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm" placeholder="{{ core__('topic_create.private_viewers_placeholder')|e('html_attr') }}" autocomplete="off">
+                        <div id="topic-create-private-viewer-suggestions" class="hidden mt-2 border border-gray-200 rounded-lg bg-white shadow-md overflow-hidden" style="max-height: 200px; overflow-y: auto;"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr id="topic-create-private-viewers-chips-row">
+                    <td colspan="2" class="pt-3 border-t border-gray-100">
+                      <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.private_viewers_hint') }}</p>
+                      <div id="topic-create-private-viewer-chips" class="flex flex-wrap gap-2"></div>
+                      <div id="topic-create-private-viewer-ids"></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-schedule" aria-labelledby="tab-schedule" data-panel="schedule">
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('topic_create.schedule_label') }}</label>
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.schedule_hint') }}</p>
+              <div class="max-w-xs">
+                <input type="datetime-local" name="scheduled_publish_at" id="scheduled_publish_at" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm" min="">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if commerceTemplates is defined and commerceTemplates is not empty %}
+      <div class="border-t border-gray-200 pt-4 mt-4 space-y-4">
+        {% for t in commerceTemplates %}
+        {% if t.fields is not empty %}
+        <div class="bg-gray-50 rounded-md p-4">
+          <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t.name|e }}</h3>
+          <div class="space-y-3">
+            {% for f in t.fields %}
+            <div>
+              <label for="commerce_field_{{ f.field_key|e('html_attr') }}" class="block text-sm font-medium text-gray-700 mb-1">{{ f.label|e }}{% if f.is_required %} <span class="text-red-500">*</span>{% endif %}</label>
+              {% if f.field_type == 'textarea' %}
+              <textarea name="commerce_field[{{ f.field_key|e('html_attr') }}]" id="commerce_field_{{ f.field_key|e('html_attr') }}" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" rows="3"{% if f.is_required %} required{% endif %}></textarea>
+              {% elseif f.field_type == 'number' %}
+              <input type="number" name="commerce_field[{{ f.field_key|e('html_attr') }}]" id="commerce_field_{{ f.field_key|e('html_attr') }}" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2"{% if f.is_required %} required{% endif %}>
+              {% elseif f.field_type == 'url' %}
+              <input type="url" name="commerce_field[{{ f.field_key|e('html_attr') }}]" id="commerce_field_{{ f.field_key|e('html_attr') }}" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2"{% if f.is_required %} required{% endif %}>
+              {% elseif f.field_type == 'date' %}
+              <input type="date" name="commerce_field[{{ f.field_key|e('html_attr') }}]" id="commerce_field_{{ f.field_key|e('html_attr') }}" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2"{% if f.is_required %} required{% endif %}>
+              {% else %}
+              <input type="text" name="commerce_field[{{ f.field_key|e('html_attr') }}]" id="commerce_field_{{ f.field_key|e('html_attr') }}" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2"{% if f.is_required %} required{% endif %}>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
+        <a href="{{ forum_url|default(core_url('forum/' ~ (forum.slug|e('url')))) }}" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">{{ core__('topic_create.cancel') }}</a>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#1a252f] rounded-md hover:bg-[#172029]"><i class="fa-solid fa-paper-plane mr-2"></i>{{ core__('topic_create.submit_btn') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

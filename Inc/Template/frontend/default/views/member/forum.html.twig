@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% set profileUser = profileUser ?? null %}
+{% if not profileUser %}<div class="ips-profile-page"><div class="ips-profile-empty"><p>{{ core_e(lang('error.not_found')) }}</p></div></div>
+{% else %}
+{% set baseUrl = core_url('member/' ~ member_url_path(profileUser)) %}
+{% set topics = topics ?? [] %}
+{% set posts = posts ?? [] %}
+{% set userStats = userStats ?? {} %}
+{% set isOwnProfile = user and profileUser and user.id is defined and profileUser.id is defined and user.id == profileUser.id %}
+{% set avatarUrl = profileUser.avatar_path is not empty ? asset_url(profileUser.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(profileUser.username ?? null)|url_encode %}
+<div class="ips-profile-page">
+{% include 'partials/profile_breadcrumb.html.twig' with { crumbs: [{ label: profileUser.username, href: baseUrl }, { label: core__('member.forum_contributions') }] } %}
+<div class="ips-profile-wrap">
+  {% include 'partials/profile_shell.html.twig' with { profileUser: profileUser, isOwnProfile: isOwnProfile, coverUrl: null, avatarUrl: avatarUrl, rewardLevel: null, userStats: userStats, activeTab: 'activity', compact: true, reputationEnabled: reputationEnabled ?? true, idelistEnabled: idelistEnabled ?? false } %}
+  <div class="ips-profile-layout">
+    <div class="ips-profile-layout__main">
+      {% include 'partials/profile_activity_subnav.html.twig' with { profileUser: profileUser, activityFilter: 'forum', idelistEnabled: idelistEnabled ?? false } %}
+      <div class="ips-profile-panel__body">
+        <h3 class="ips-section-subtitle">{{ core__('profile.topics') }} ({{ topics|length }})</h3>
+        {% if topics is empty %}<p class="ips-profile-empty-text">{{ core__('member.contributions_forum_empty') }}</p>{% else %}
+        <ul class="ips-profile-feed mb-6">{% for t in topics %}<li class="ips-profile-feed__item"><div class="ips-profile-feed__meta"><a href="{{ core_url('forum/' ~ (t.forum_slug ?? '')|e('url')) }}">{{ core_e(t.forum_name ?? '') }}</a><span>{{ core_e(t.created_at ?? '') }}</span></div><a href="{{ core_url('topic/' ~ topic_url_path(t)) }}" class="ips-profile-feed__title">{{ core_e(t.title ?? '') }}</a></li>{% endfor %}</ul>{% endif %}
+        <h3 class="ips-section-subtitle">{{ core__('profile.posts') }} ({{ posts|length }})</h3>
+        {% if posts is empty %}<p class="ips-profile-empty-text">{{ core__('member.posts_empty') }}</p>{% else %}
+        <ul class="ips-profile-feed">{% for p in posts %}<li class="ips-profile-feed__item"><div class="ips-profile-feed__meta"><a href="{{ core_url('topic/' ~ topic_url_path_by_id(p.topic_id ?? 0)) ~ '#post-' ~ (p.id ?? '') }}">{{ core_e(p.topic_title ?? '') }}</a><span>{{ core_e(p.forum_name ?? '') }}</span><span>{{ core_e(p.created_at ?? '') }}</span></div><div class="ips-profile-feed__excerpt">{{ (p.body_html ?? p.body ?? '')|striptags|slice(0, 220) }}…</div></li>{% endfor %}</ul>{% endif %}
+      </div>
+    </div>
+    <aside class="ips-profile-layout__side ips-profile-layout__side--sticky">
+      <div class="ips-profile-side-inner">
+        {% include 'partials/profile_sidebar_card.html.twig' with { profileUser: profileUser, userStats: userStats, rewardLevel: rewardLevel ?? null, isOwnProfile: isOwnProfile ?? false, reputationEnabled: reputationEnabled ?? true } %}
+      </div>
+    </aside>
+  </div>
+</div></div>
+{% endif %}
+{% endblock %}

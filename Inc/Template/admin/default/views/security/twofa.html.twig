@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.twofa.settings_title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.twofa.settings_description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flash('success') %}
+        <div class="alert alert-success">{{ core_e(flash('success')) }}</div>
+        {% endif %}
+        {% if flash('error') %}
+        <div class="alert alert-danger">{{ core_e(flash('error')) }}</div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.twofa.settings_title') }}</h3>
+            </div>
+            <div class="card-body">
+                {% if hasAnswer %}
+                <div class="alert alert-info mb-4">
+                    {{ lang('admin.twofa.currently_enabled') }}
+                </div>
+                {% endif %}
+                <form action="{{ core_url(adminPath ~ '/security/twofa') }}" method="post">
+                    {{ core_csrf_field('admin_security')|raw }}
+                    <div class="mb-3">
+                        <label for="admin_twofa_question" class="form-label">{{ lang('admin.twofa.question_label') }}</label>
+                        <input type="text" name="admin_twofa_question" id="admin_twofa_question" class="form-control" value="{{ core_e(question) }}" placeholder="{{ lang('admin.twofa.question_placeholder') }}" maxlength="255">
+                        <div class="form-hint">{{ lang('admin.twofa.question_hint') }}</div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="admin_twofa_answer" class="form-label">{{ lang('admin.twofa.answer_label') }}</label>
+                        <input type="text" name="admin_twofa_answer" id="admin_twofa_answer" class="form-control" autocomplete="off" placeholder="{{ lang('admin.twofa.answer_placeholder') }}">
+                        <div class="form-hint">{{ hasAnswer ? lang('admin.twofa.answer_change_hint') : lang('admin.twofa.answer_hint') }}</div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">{{ lang('admin.twofa.save_btn') }}</button>
+                        {% if hasAnswer %}
+                        <button type="submit" name="admin_twofa_disable" value="1" class="btn btn-outline-danger" onclick="return confirm({{ lang('admin.twofa.disable_confirm')|json_encode|raw }});">{{ lang('admin.twofa.disable_btn') }}</button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

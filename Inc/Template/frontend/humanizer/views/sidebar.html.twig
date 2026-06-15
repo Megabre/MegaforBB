@@ -1,0 +1,136 @@
+{% set onlineStats = onlineStats ?? { members: [], members_count: 0, guests_count: 0, bots_count: 0, total_online: 0 } %}
+{% set online = online ?? (onlineStats.members ?? []) %}
+{% set recentTopics = recentTopics ?? [] %}
+{% set popularTopics = popularTopics ?? [] %}
+{% set stats = stats ?? { total_topics: 0, total_posts: 0, total_members: 0 } %}
+{% set onlineCount = onlineStats.members_count ?? (online|length) %}
+{% set membersCount = onlineStats.members_count ?? (online|length) %}
+{% set guestsCount = onlineStats.guests_count ?? 0 %}
+{% set totalOnlineForStats = onlineStats.total_online ?? (onlineCount + guestsCount) %}
+{% set sidebarWidgets = sidebarWidgets ?? [] %}
+{% set ads = ads ?? [] %}
+{% set sidebar_blocks = sidebar_blocks ?? '' %}
+      </main>
+      <aside class="w-full lg:w-80 lg:shrink-0 space-y-4">
+        {% if user %}
+        <div class="mb-4">
+          <button type="button" onclick="document.dispatchEvent(new CustomEvent('open-new-content-modal'))" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-[#105289] hover:bg-[#234a73] rounded-xl shadow-sm transition-colors">
+            <i class="fa-solid fa-plus"></i>
+            {{ core__('common.new_create') }}
+          </button>
+        </div>
+        {% include 'partials/new_content_modal.html.twig' with _context %}
+        {% endif %}
+        {% if sidebar_blocks is not empty %}
+        <div class="megafor-sidebar-hooks">{{ sidebar_blocks|raw }}</div>
+        {% endif %}
+        {% if ads.sidebar_top is defined and ads.sidebar_top is not empty %}
+        <div class="ads-slot ads-sidebar-top">
+          {% for html in ads.sidebar_top %}<div class="ad-item mb-3 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+        </div>
+        {% endif %}
+        {% if sidebarWidgets is not empty %}
+        {% for w in sidebarWidgets %}
+        {% if w.type == 'html' %}
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          {% if w.title is not empty %}<div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide">{{ core_e(w.title) }}</div>{% endif %}
+          <div class="p-4 sidebar-widget-html">{{ w.content is not empty ? core_sanitize_html(w.content)|raw : '' }}</div>
+        </div>
+        {% elseif w.type == 'online_users' %}
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-solid fa-users mr-2"></i>{{ core_e(core__('sidebar.online_users')) }}</div>
+          <ul class="p-4 text-sm text-gray-700 space-y-1">
+            {% if onlineCount > 0 %}<li>{% for u in online %}{{ u.username ?? '' }}{% if not loop.last %}, {% endif %}{% endfor %}</li>{% endif %}
+            <li class="text-xs text-gray-500">{{ core__('sidebar.online_total', { count: onlineCount + guestsCount, members: membersCount, guests: guestsCount }) }}</li>
+          </ul>
+        </div>
+        {% elseif w.type == 'forum_stats' %}
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-solid fa-chart-line mr-2"></i>{{ core_e(core__('sidebar.forum_stats')) }}</div>
+          <div class="p-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
+            <div><span class="text-gray-500">{{ core_e(core__('stats.topics')) }}:</span> <span class="font-semibold">{{ (stats.total_topics ?? 0)|number_format(0) }}</span></div>
+            <div><span class="text-gray-500">{{ core_e(core__('stats.posts')) }}:</span> <span class="font-semibold">{{ (stats.total_posts ?? 0)|number_format(0) }}</span></div>
+            <div><span class="text-gray-500">{{ core_e(core__('stats.members')) }}:</span> <span class="font-semibold">{{ (stats.total_members ?? 0)|number_format(0) }}</span></div>
+            <div><span class="text-gray-500">{{ core_e(core__('footer.online')) }}:</span> <span class="font-semibold">{{ totalOnlineForStats }}</span></div>
+          </div>
+        </div>
+        {% elseif w.type == 'recent_topics' %}
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-regular fa-clock mr-2"></i>{{ core_e(core__('sidebar.recent_topics')) }}</div>
+          <ul class="divide-y divide-gray-200">
+            {% for t in recentTopics|slice(0, 5) %}
+            <li class="p-4"><a href="{{ core_url('topic/' ~ topic_url_path(t)) }}" class="text-sm font-semibold text-[#105289] hover:text-blue-500 hover:underline">{{ core_e(t.title ?? '') }}</a></li>
+            {% endfor %}
+            {% if recentTopics is empty %}<li class="p-4 text-sm text-gray-500">—</li>{% endif %}
+          </ul>
+        </div>
+        {% elseif w.type == 'popular_topics' %}
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-solid fa-fire mr-2"></i>{{ core_e(core__('sidebar.popular_topics')) }}</div>
+          <ul class="divide-y divide-gray-200">
+            {% for t in popularTopics|slice(0, 5) %}
+            <li class="p-4"><a href="{{ core_url('topic/' ~ topic_url_path(t)) }}" class="text-sm font-semibold text-[#105289] hover:text-blue-500 hover:underline">{{ core_e(t.title ?? '') }}</a></li>
+            {% endfor %}
+            {% if popularTopics is empty %}<li class="p-4 text-sm text-gray-500">—</li>{% endif %}
+          </ul>
+        </div>
+        {% elseif w.type == 'tag_cloud' %}
+        {% set topTags = topTags ?? [] %}
+        {% set tagLimit = (w.content|default(10))|round %}
+        {% set tagLimit = tagLimit >= 1 and tagLimit <= 50 ? tagLimit : 10 %}
+        {% set tagsToShow = topTags|slice(0, tagLimit) %}
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-solid fa-tags mr-2"></i>{{ core_e(core__('sidebar.tag_cloud')) }}</div>
+          <div class="p-4 flex flex-wrap gap-2 items-baseline">
+            {% for t in tagsToShow %}
+            <a href="{{ core_url('search?tag=' ~ (t.slug|e('url'))) }}" class="text-[#105289] hover:text-[#105289] hover:underline font-medium" style="font-size: {{ t.size ?? 100 }}%;">{{ core_e(t.name) }}</a>{% if not loop.last %} <span class="text-gray-300">·</span> {% endif %}
+            {% endfor %}
+            {% if tagsToShow is empty %}<span class="text-sm text-gray-500">—</span>{% endif %}
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-solid fa-users mr-2"></i>{{ core_e(core__('sidebar.online_users')) }}</div>
+          <ul class="p-4 text-sm text-gray-700 space-y-1">
+            {% if onlineCount > 0 %}<li>{% for u in online %}{{ u.username ?? '' }}{% if not loop.last %}, {% endif %}{% endfor %}</li>{% endif %}
+            <li class="text-xs text-gray-500">{{ core__('sidebar.online_total', { count: onlineCount + guestsCount, members: membersCount, guests: guestsCount }) }}</li>
+          </ul>
+        </div>
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-solid fa-chart-line mr-2"></i>{{ core_e(core__('sidebar.forum_stats')) }}</div>
+          <div class="p-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
+            <div><span class="text-gray-500">{{ core_e(core__('stats.topics')) }}:</span> <span class="font-semibold">{{ (stats.total_topics ?? 0)|number_format(0) }}</span></div>
+            <div><span class="text-gray-500">{{ core_e(core__('stats.posts')) }}:</span> <span class="font-semibold">{{ (stats.total_posts ?? 0)|number_format(0) }}</span></div>
+            <div><span class="text-gray-500">{{ core_e(core__('stats.members')) }}:</span> <span class="font-semibold">{{ (stats.total_members ?? 0)|number_format(0) }}</span></div>
+            <div><span class="text-gray-500">{{ core_e(core__('footer.online')) }}:</span> <span class="font-semibold">{{ totalOnlineForStats }}</span></div>
+          </div>
+        </div>
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-regular fa-clock mr-2"></i>{{ core_e(core__('sidebar.recent_topics')) }}</div>
+          <ul class="divide-y divide-gray-200">
+            {% for t in recentTopics|slice(0, 5) %}
+            <li class="p-4"><a href="{{ core_url('topic/' ~ topic_url_path(t)) }}" class="text-sm font-semibold text-[#105289] hover:text-blue-500 hover:underline">{{ core_e(t.title ?? '') }}</a></li>
+            {% endfor %}
+            {% if recentTopics is empty %}<li class="p-4 text-sm text-gray-500">—</li>{% endif %}
+          </ul>
+        </div>
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+          <div class="hz-widget-head px-4 py-3 rounded-t-xl font-semibold text-sm tracking-wide"><i class="fa-solid fa-fire mr-2"></i>{{ core_e(core__('sidebar.popular_topics')) }}</div>
+          <ul class="divide-y divide-gray-200">
+            {% for t in popularTopics|slice(0, 5) %}
+            <li class="p-4"><a href="{{ core_url('topic/' ~ topic_url_path(t)) }}" class="text-sm font-semibold text-[#105289] hover:text-blue-500 hover:underline">{{ core_e(t.title ?? '') }}</a></li>
+            {% endfor %}
+            {% if popularTopics is empty %}<li class="p-4 text-sm text-gray-500">—</li>{% endif %}
+          </ul>
+        </div>
+        {% endif %}
+        {% if social_show_sidebar and (social_facebook or social_twitter or social_instagram or social_youtube or social_linkedin) %}
+        <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden p-4">
+          <div class="font-semibold text-sm text-gray-700 mb-2">{{ core_e(core__('footer.social')) }}</div>
+          {% include 'partials/social_links.html.twig' with _context|merge({ social_zone: 'sidebar' }) %}
+        </div>
+        {% endif %}
+      </aside>
+    </div>

@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% include 'partials/search_page.html.twig' %}
+
+<script>
+window.MFBB_SEARCH = {
+  apiUrl: {{ core_url('api/search')|json_encode|raw }},
+  page: {{ page ?? 1 }},
+  debounceMs: 320,
+  minChars: 2,
+  categories: {{ searchCategories|default([])|json_encode|raw }},
+  i18n: {
+    searching: {{ core__('search.searching')|json_encode|raw }},
+    resultsCount: {{ core__('search.results_count', { count: ':count' })|json_encode|raw }},
+    noResults: {{ core__('search.no_results')|json_encode|raw }},
+    noResultsHint: {{ core__('search.no_results_hint')|json_encode|raw }},
+    minChars: {{ core__('search.min_chars')|json_encode|raw }},
+    placeholder: {{ core__('search.placeholder')|json_encode|raw }},
+    viewAll: {{ core__('search.view_all')|json_encode|raw }},
+    replies: {{ core__('search.replies')|json_encode|raw }},
+    views: {{ core__('search.views')|json_encode|raw }},
+    posts: {{ core__('search.posts_label')|json_encode|raw }},
+    votes: {{ core__('search.votes')|json_encode|raw }},
+    topics: {{ core__('topic.topics')|lower|json_encode|raw }},
+    sectionForums: {{ core__('search.section_forums')|json_encode|raw }},
+    sectionTopics: {{ core__('search.section_topics')|json_encode|raw }},
+    sectionArticles: {{ core__('search.section_articles')|json_encode|raw }},
+    sectionPosts: {{ core__('search.section_posts')|json_encode|raw }},
+    sectionUsers: {{ core__('search.section_users')|json_encode|raw }},
+    sectionDocs: {{ core__('search.section_docs')|json_encode|raw }},
+    sectionIdeas: {{ core__('search.section_ideas')|json_encode|raw }},
+    prev: {{ core__('common.prev')|json_encode|raw }},
+    next: {{ core__('common.next')|json_encode|raw }}
+  }
+};
+</script>
+<script src="{{ core_url('js/search.js') }}?v={{ core_config('app.version', '1.0.0') }}"></script>
+{% endblock %}

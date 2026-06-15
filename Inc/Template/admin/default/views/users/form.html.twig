@@ -1,0 +1,160 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set editUser = editUser ?? null %}
+{% set roles = roles ?? [] %}
+{% set isEdit = editUser and editUser.id %}
+{% set actionUrl = isEdit ? core_url(adminPath ~ '/users/update/' ~ editUser.id) : core_url(adminPath ~ '/users/store') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">
+                    <a href="{{ core_url(adminPath ~ '/users') }}">{{ core_e(admin__('menu.users')) }}</a>
+                </div>
+                <h2 class="page-title">{{ core_e(pageTitle ?? '') }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row row-cards">
+            <div class="col-12">
+                <form action="{{ actionUrl }}" method="post" class="card">
+                    {{ core_csrf_field()|raw }}
+                    <div class="card-body">
+                        {% if user_error|default('') is not empty %}
+                        <div class="alert alert-danger mb-3">{{ core_e(user_error) }}</div>
+                        {% endif %}
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label required">{{ core_e(admin__('users.username')) }}</label>
+                                <input type="text" name="username" class="form-control" placeholder="{{ core_e(admin__('users.username')) }}" value="{{ core_e(editUser.username ?? '') }}" required>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label required">{{ core_e(admin__('users.email')) }}</label>
+                                <input type="email" name="email" class="form-control" placeholder="{{ core_e(admin__('users.email')) }}" value="{{ core_e(editUser.email ?? '') }}" required>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label{{ isEdit ? '' : ' required' }}">{{ core_e(admin__('users.password')) }}{% if isEdit %} <small class="text-muted">{{ core_e(admin__('users.password_hint')) }}</small>{% endif %}</label>
+                                <input type="password" name="password" class="form-control" placeholder="{{ core_e(admin__('users.password')) }}" {{ isEdit ? '' : 'required' }}>
+                            </div>
+                            {% if hasProfileFields|default(false) %}
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(lang('profile.edit_first_name')) }}</label>
+                                <input type="text" name="first_name" class="form-control" maxlength="64" value="{{ core_e(editUser.first_name ?? '') }}">
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(lang('profile.edit_last_name')) }}</label>
+                                <input type="text" name="last_name" class="form-control" maxlength="64" value="{{ core_e(editUser.last_name ?? '') }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-check form-switch">
+                                    <input type="hidden" name="show_name" value="0">
+                                    <input type="checkbox" name="show_name" value="1" class="form-check-input" {{ (editUser.show_name ?? 0) ? 'checked' : '' }}>
+                                    <span class="form-check-label">{{ core_e(lang('profile.edit_show_name_label')) }}</span>
+                                </label>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(lang('profile.birthday')) }}</label>
+                                <input type="date" name="birthday" class="form-control" value="{{ editUser.birthday ?? '' }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">{{ core_e(lang('profile.edit_avatar_label')) }}</label>
+                                <input type="text" name="avatar_path" class="form-control" placeholder="/storage/avatars/..." value="{{ core_e(editUser.avatar_path ?? '') }}">
+                                <small class="text-muted">{{ core_e(lang('profile.edit_avatar_hint')) }}</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">{{ core_e(lang('profile.edit_cover_upload')) }}</label>
+                                <input type="text" name="cover_photo_path" class="form-control" placeholder="/storage/covers/..." value="{{ core_e(editUser.cover_photo_path ?? '') }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">{{ core_e(lang('profile.edit_signature_label')) }}</label>
+                                <textarea name="signature" class="form-control" rows="3" maxlength="260" placeholder="{{ core_e(lang('profile.edit_signature_placeholder')) }}">{{ core_e(editUser.signature ?? '') }}</textarea>
+                                <small class="text-muted">{{ core_e(lang('profile.edit_signature_hint')) }}</small>
+                            </div>
+                            {% endif %}
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('users.location')) }}</label>
+                                <input type="text" name="location" class="form-control" placeholder="{{ core_e(admin__('users.location_ph')) }}" value="{{ core_e(editUser.location ?? '') }}">
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('users.website')) }}</label>
+                                <input type="url" name="website" class="form-control" placeholder="https://..." value="{{ core_e(editUser.website ?? '') }}">
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label required">{{ core_e(admin__('users.locale')) }}</label>
+                                <select name="locale" class="form-select" required>
+                                    <option value="tr" {{ (editUser.locale ?? 'tr') == 'tr' ? 'selected' : '' }}>{{ core_e(admin__('users.turkish')) }}</option>
+                                    <option value="en" {{ (editUser.locale ?? '') == 'en' ? 'selected' : '' }}>English</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">{{ core_e(admin__('users.bio')) }}</label>
+                                <textarea name="bio" class="form-control" rows="3">{{ core_e(editUser.bio ?? '') }}</textarea>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('users.custom_title')) }}</label>
+                                <input type="text" name="custom_title" class="form-control" placeholder="{{ core_e(admin__('users.custom_title_ph')) }}" value="{{ core_e(editUser.custom_title ?? '') }}">
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('users.reward_points')) }}</label>
+                                <input type="number" name="reward_points" class="form-control" value="{{ editUser.reward_points ?? 0 }}" min="0">
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('users.warning_points')) }}</label>
+                                <input type="number" name="warning_points" class="form-control border-warning" value="{{ editUser.warning_points ?? 0 }}" min="0">
+                                <small class="text-muted">{{ core_e(admin__('users.warning_points_hint')) }}</small>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label required">{{ core_e(admin__('users.role')) }}</label>
+                                <select name="role_id" class="form-select" required>
+                                    <option value="">{{ core_e(admin__('common.select')) }}</option>
+                                    {% for role in roles %}
+                                    <option value="{{ role.id }}" {{ (editUser.role_id ?? null) == role.id ? 'selected' : '' }}>{{ core_e(role.name) }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('users.status')) }}</label>
+                                <div>
+                                    <label class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="is_verified" value="1" {{ (editUser.is_verified ?? false) ? 'checked' : '' }}>
+                                        <span class="form-check-label">{{ core_e(admin__('users.verified')) }}</span>
+                                    </label>
+                                    <label class="form-check form-check-inline">
+                                        <input class="form-check-input text-danger bg-danger" type="checkbox" name="is_banned" value="1" {{ (editUser.is_banned ?? false) ? 'checked' : '' }}>
+                                        <span class="form-check-label text-danger">{{ core_e(admin__('users.banned')) }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            {% if hasInviteColumns|default(false) %}
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(lang('invitation.user_inviter')) }}</label>
+                                <div class="form-control-plaintext">
+                                    {% if editUser.usedInvitation and editUser.usedInvitation.inviter %}
+                                    <a href="{{ core_url(adminPath ~ '/users/edit/' ~ editUser.usedInvitation.inviter.id) }}">{{ core_e(editUser.usedInvitation.inviter.username) }}</a>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(lang('invitation.user_available')) }}</label>
+                                <input type="number" name="available_invites" class="form-control" value="{{ editUser.available_invites ?? 0 }}" min="0">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="{{ core_url(adminPath ~ '/users') }}" class="btn btn-link link-secondary">{{ core_e(admin__('common.cancel')) }}</a>
+                        <button type="submit" class="btn btn-primary">{{ core_e(admin__('common.save')) }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

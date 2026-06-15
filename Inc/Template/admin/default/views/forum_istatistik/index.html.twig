@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+{% set pozisyonlar = pozisyonlar ?? {} %}
+{% set forumIstatistikPozisyonlar = forumIstatistikPozisyonlar ?? {} %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.forum_istatistik.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.forum_istatistik.description') }}</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/forum-istatistik/ekle') }}" class="btn btn-primary">{{ lang('admin.forum_istatistik.add_new') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for pozKey, pozLabel in pozisyonlar %}
+            {% set items = forumIstatistikPozisyonlar[pozKey] ?? [] %}
+            {% if items is not empty %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ pozLabel|e }}</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-sm card-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ lang('admin.forum_istatistik.table_order') }}</th>
+                                <th>{{ lang('admin.forum_istatistik.table_title_type') }}</th>
+                                <th>{{ lang('admin.forum_istatistik.table_status') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ item.display_order }}</td>
+                                <td>
+                                    <strong>{{ item.title|e }}</strong>
+                                    <span class="text-muted small ms-1">({{ item.icerik_id|e }})</span>
+                                </td>
+                                <td>{% if item.active %}<span class="badge bg-success">{{ lang('admin.forum_istatistik.status_on') }}</span>{% else %}<span class="badge bg-secondary">{{ lang('admin.forum_istatistik.status_off') }}</span>{% endif %}</td>
+                                <td>
+                                    <a href="{{ core_url(adminPath ~ '/forum-istatistik/duzenle/' ~ item.veri_id) }}" class="btn btn-sm btn-ghost-secondary">{{ lang('admin.forum_istatistik.edit') }}</a>
+                                    <a href="{{ core_url(adminPath ~ '/forum-istatistik/sil/' ~ item.veri_id) }}" class="btn btn-sm btn-ghost-secondary text-danger">{{ lang('admin.forum_istatistik.delete') }}</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+            {% endif %}
+        {% endfor %}
+        {% if forumIstatistikPozisyonlar is empty %}
+        <div class="card">
+            <div class="card-body text-center text-muted py-5">
+                {{ lang('admin.forum_istatistik.no_blocks') }} <a href="{{ core_url(adminPath ~ '/forum-istatistik/ekle') }}">{{ lang('admin.forum_istatistik.add_first') }}</a>.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

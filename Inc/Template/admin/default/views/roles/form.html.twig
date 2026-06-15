@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set role = role ?? null %}
+{% set isEdit = role and role.id %}
+{% set actionUrl = isEdit ? core_url(adminPath ~ '/roles/update/' ~ role.id) : core_url(adminPath ~ '/roles/store') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle"><a href="{{ core_url(adminPath ~ '/roles') }}">{{ core_e(admin__('menu.groups')) }}</a></div>
+                <h2 class="page-title">{{ core_e(pageTitle ?? '') }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row row-cards">
+            <div class="col-12">
+                <form action="{{ actionUrl }}" method="post" class="card">
+                    {{ core_csrf_field()|raw }}
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label required">{{ core_e(admin__('groups.name')) }}</label>
+                                <input type="text" name="name" class="form-control" placeholder="{{ core_e(admin__('groups.name_ph')) }}" value="{{ core_e(role.name ?? '') }}" required>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label required">{{ core_e(admin__('groups.color')) }}</label>
+                                <input type="color" name="color" class="form-control form-control-color" value="{{ core_e(role.color ?? '#6c757d') }}" required title="{{ core_e(admin__('groups.color_title')) }}">
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label required">{{ core_e(admin__('groups.sort_order')) }}</label>
+                                <input type="number" name="sort_order" class="form-control" value="{{ role.sort_order ?? 0 }}" required>
+                            </div>
+                            <div class="col-sm-12">
+                                <label class="form-label">{{ core_e(admin__('groups.is_staff')) }}</label>
+                                <div>
+                                    <label class="form-check">
+                                        <input class="form-check-input text-success bg-success" type="checkbox" name="is_staff" value="1" {{ (role.is_staff ?? false) ? 'checked' : '' }}>
+                                        <span class="form-check-label">{{ core_e(admin__('groups.staff_hint')) }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('groups.pm_daily_limit')) }}</label>
+                                <input type="number" name="pm_daily_limit" class="form-control" value="{{ role.pm_daily_limit ?? 0 }}" min="0" title="{{ core_e(admin__('groups.pm_daily_limit_hint')) }}">
+                                <small class="form-hint">{{ core_e(admin__('groups.pm_daily_limit_hint')) }}</small>
+                            </div>
+                            <div class="col-sm-12 col-md-8">
+                                <label class="form-label">{{ core_e(admin__('groups.pm_lifetime_total_quota')) }}</label>
+                                <input type="number" name="pm_lifetime_total_quota" class="form-control" value="{{ role.pm_lifetime_total_quota ?? 0 }}" min="0" title="{{ core_e(admin__('groups.pm_lifetime_total_quota_hint')) }}">
+                                <small class="form-hint">{{ core_e(admin__('groups.pm_lifetime_total_quota_hint')) }}</small>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('groups.daily_topic_limit')) }}</label>
+                                <input type="number" name="daily_topic_limit" class="form-control" value="{{ role.daily_topic_limit ?? 0 }}" min="0" title="{{ core_e(admin__('groups.daily_topic_limit_hint')) }}">
+                                <small class="form-hint">{{ core_e(admin__('groups.daily_topic_limit_hint')) }}</small>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('groups.bump_per_day')) }}</label>
+                                <input type="number" name="bump_per_day" class="form-control" value="{{ role.bump_per_day ?? 0 }}" min="0" title="{{ core_e(admin__('groups.bump_per_day_hint')) }}">
+                                <small class="form-hint">{{ core_e(admin__('groups.bump_per_day_hint')) }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="{{ core_url(adminPath ~ '/roles') }}" class="btn btn-link link-secondary">{{ core_e(admin__('common.cancel')) }}</a>
+                        <button type="submit" class="btn btn-primary">{{ core_e(admin__('common.save')) }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

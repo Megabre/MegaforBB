@@ -1,0 +1,51 @@
+﻿{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set topic = topic ?? null %}
+{% set forums = forums ?? [] %}
+{% set error = error ?? '' %}
+{% if not topic %}
+  <p class="p-4 text-gray-500">Konu bulunamadı.</p>
+{% else %}
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li>›</li>
+      <li><a href="{{ topic_url(topic) }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(topic.title) }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">{{ core__('topic.move') }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden max-w-2xl mx-auto">
+  <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 flex items-center gap-2">
+    <i class="fa-solid fa-arrows-alt text-[#1a252f]"></i>
+    <h1 class="text-xl font-semibold text-[#1a252f]">{{ core__('topic.move_title') }}</h1>
+  </div>
+  <div class="p-6">
+    {% if error %}
+    <div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{{ core_e(error) }}</div>
+    {% endif %}
+
+    <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/move') }}" method="post" class="space-y-6">
+      {{ core_csrf_field('move_topic')|raw }}
+      <div>
+        <label for="forum_id" class="block text-sm font-medium text-gray-700 mb-1">Hedef Forum</label>
+        <select name="forum_id" id="forum_id" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" required>
+          {% for f in forums %}
+          <option value="{{ f.id ?? 0 }}" {{ (topic.forum_id ?? 0) == (f.id ?? 0) ? 'disabled' : '' }}>{{ core_e(f.name ?? '') }}</option>
+          {% endfor %}
+        </select>
+        <p class="mt-2 text-sm text-gray-500">Bu konuyu ve tüm cevaplarını yeni foruma taşımak istediğinizden emin misiniz?</p>
+      </div>
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+        <a href="{{ topic_url(topic) }}" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">{{ core__('common.cancel') }}</a>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#1a252f] rounded-md hover:bg-[#172029]">{{ core__('topic.move_title') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? 'admin' %}
+{% set version = version ?? '?' %}
+{% set manifestExists = manifestExists ?? false %}
+{% set result = result ?? null %}
+{% set remoteFileStatus = remoteFileStatus ?? null %}
+{% set remoteVersion = remoteVersion ?? null %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-lg">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.file_verification.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.file_verification.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-lg">
+        {% if flashFileVerificationOk %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            {{ flashFileVerificationOk|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        {% if flashFileVerificationError %}
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            {{ flashFileVerificationError|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ lang('admin.file_verification.current_version') }}</h3></div>
+            <div class="card-body">
+                <p class="mb-2">{{ lang('admin.file_verification.version_info') }}</p>
+                <p class="mb-2"><strong>{{ lang('admin.file_verification.installed_version') }}:</strong> <code>{{ version|e }}</code></p>
+
+                {% if remoteVersion is not null %}
+                <hr class="my-2">
+                <p class="mb-1"><strong>{{ lang('admin.file_verification.remote_version') }}:</strong> <code>{{ remoteVersion.version|default('?')|e }}</code></p>
+                {% if remoteVersion.build is defined %}
+                <p class="mb-1"><strong>{{ lang('admin.file_verification.remote_build') }}:</strong> <code>{{ remoteVersion.build }}</code></p>
+                {% endif %}
+                {% if remoteVersion.released_at is defined %}
+                <p class="mb-1 text-muted small">{{ lang('admin.file_verification.remote_released_at') }}: {{ remoteVersion.released_at }}</p>
+                {% endif %}
+                {% if remoteVersion.meta is defined and remoteVersion.meta.manifest_file_count is defined %}
+                <p class="mb-0 text-muted small">{{ lang('admin.file_verification.remote_manifest_file_count') }}: {{ remoteVersion.meta.manifest_file_count }}</p>
+                {% endif %}
+                {% else %}
+                <p class="text-muted small mb-0">{{ lang('admin.file_verification.remote_version_none') }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Uzak durum kartı kaldırıldı: GitHub artık sadece version.json kaynağı, manifest tamamen lokaldir. #}
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">{{ lang('admin.file_verification.manifest_title') }}</h3>
+                <div>
+                    {% if manifestExists %}
+                    <a href="{{ core_url(adminPath ~ '/file-verification?run=1') }}" class="btn btn-primary btn-sm">{{ lang('admin.file_verification.run_check') }}</a>
+                    {% endif %}
+                    <form action="{{ core_url(adminPath ~ '/file-verification/generate') }}" method="post" class="d-inline ms-1">
+                        {{ core_csrf_field('admin_file_verification')|raw }}
+                        <button type="submit" class="btn btn-outline-primary btn-sm">{{ lang('admin.file_verification.generate_manifest') }}</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if not manifestExists %}
+                <div class="alert alert-warning mb-0">
+                    {{ lang('admin.file_verification.no_manifest') }}
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">{{ lang('admin.file_verification.manifest_exists') }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if result is not null %}
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ lang('admin.file_verification.result_title') }}</h3></div>
+            <div class="card-body">
+                {% if not result.success %}
+                <div class="alert alert-danger">{{ result.message|e }}</div>
+                {% else %}
+                <p class="mb-3">
+                    {{ lang('admin.file_verification.checked_count', {'total': result.total}) }}
+                    {% if result.modified_count > 0 or result.missing_count > 0 or result.unexpected_count|default(0) > 0 %}
+                    <span class="text-danger">{{ lang('admin.file_verification.problems_found') }}</span>
+                    {% else %}
+                    <span class="text-success">{{ lang('admin.file_verification.all_ok') }}</span>
+                    {% endif %}
+                </p>
+                <ul class="list-unstyled mb-0">
+                    <li><strong>{{ lang('admin.file_verification.ok_count') }}:</strong> {{ result.ok_count }}</li>
+                    <li class="text-warning"><strong>{{ lang('admin.file_verification.modified_count') }}:</strong> {{ result.modified_count }}</li>
+                    <li class="text-danger"><strong>{{ lang('admin.file_verification.missing_count') }}:</strong> {{ result.missing_count }}</li>
+                    <li class="text-danger"><strong>{{ lang('admin.file_verification.unexpected_count') }}:</strong> {{ result.unexpected_count|default(0) }}</li>
+                </ul>
+                {% if result.modified is defined and result.modified is not empty %}
+                <hr>
+                <p class="fw-semibold text-warning">{{ lang('admin.file_verification.modified_files') }}</p>
+                <ul class="small font-monospace mb-0" style="max-height: 200px; overflow-y: auto;">
+                    {% for path in result.modified %}
+                    <li>{{ path|e }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if result.missing is defined and result.missing is not empty %}
+                <hr>
+                <p class="fw-semibold text-danger">{{ lang('admin.file_verification.missing_files') }}</p>
+                <ul class="small font-monospace mb-0" style="max-height: 200px; overflow-y: auto;">
+                    {% for path in result.missing %}
+                    <li>{{ path|e }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if result.unexpected is defined and result.unexpected is not empty %}
+                <hr>
+                <p class="fw-semibold text-danger">{{ lang('admin.file_verification.unexpected_files') }}</p>
+                <ul class="small font-monospace mb-0" style="max-height: 200px; overflow-y: auto;">
+                    {% for path in result.unexpected %}
+                    <li>{{ path|e }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mb-4">
+            <a href="{{ core_url(adminPath) }}" class="btn btn-outline-secondary">{{ lang('admin.common.cancel') }}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

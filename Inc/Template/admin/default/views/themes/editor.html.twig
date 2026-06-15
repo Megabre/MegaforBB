@@ -1,0 +1,259 @@
+{% extends 'base.html.twig' %}
+{% set slug = slug ?? '' %}
+{% set files = files ?? [] %}
+{% set currentFile = currentFile ?? '' %}
+{% set fileContent = fileContent ?? '' %}
+{% set flashOk = flashOk ?? null %}
+{% set flashError = flashError ?? null %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">{{ lang('admin.themes.editor_pretitle') }}</div>
+                <h2 class="page-title">{{ lang('admin.themes.edit_code') }}: {{ slug|e }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/themes') }}" class="btn btn-outline-secondary"><i class="ti ti-arrow-left me-2"></i> {{ lang('admin.themes.back_to_themes') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flashOk %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            {{ flashOk|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        {% if flashError %}
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            {{ flashError|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card" style="height: calc(100vh - 180px); display: flex; flex-direction: column;">
+                    <div class="card-header py-2 bg-light">
+                        <h3 class="card-title text-sm"><i class="ti ti-folder me-2 text-primary"></i>{{ lang('admin.themes.template_files') }}</h3>
+                    </div>
+                    <div class="card-body p-0" style="overflow-y: auto;">
+                        <div class="p-2 border-bottom bg-white">
+                            <div class="mb-2">
+                                <label class="form-label form-label-sm mb-1">{{ lang('admin.themes.search_files_label') }}</label>
+                                <input type="text" class="form-control form-control-sm" id="theme-search-files-input" placeholder="{{ lang('admin.themes.search_files_placeholder') }}">
+                            </div>
+                            <div id="theme-file-search-results" class="mt-2 small"></div>
+                        </div>
+                        <div class="list-group list-group-flush rounded-0">
+                            {% for f in files %}
+                            <a href="{{ core_url(adminPath ~ '/themes/editor/' ~ slug|e('url') ~ '?file=' ~ f|e('url')) }}" 
+                               class="list-group-item list-group-item-action py-2 text-sm {{ currentFile == f ? 'active fw-bold border-start border-3 border-primary' : 'text-muted' }}"
+                               style="word-break: break-all;">
+                                <i class="ti ti-file-code me-2 {{ currentFile == f ? 'text-white' : '' }}"></i>
+                                {{ f|e }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card" style="height: calc(100vh - 180px); display: flex; flex-direction: column;">
+                    {% if currentFile %}
+                    <form action="{{ core_url(adminPath ~ '/themes/editor/' ~ slug|e('url')) }}" method="post" id="editor-form" class="d-flex flex-column h-100 m-0">
+                        {{ core_csrf_field('admin_theme_editor')|raw }}
+                        <input type="hidden" name="file" value="{{ currentFile|e('html_attr') }}">
+                        <div class="card-header py-2 bg-light d-flex justify-content-between align-items-center gap-2">
+                            <h3 class="card-title text-sm font-monospace text-primary mb-0">{{ currentFile|e }}</h3>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="text" class="form-control form-control-sm" id="theme-search-content-input" placeholder="{{ lang('admin.themes.search_content_placeholder') }}" style="width: 280px;">
+                                <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-device-floppy me-2"></i>{{ lang('admin.common.save') }}</button>
+                            </div>
+                        </div>
+                        <div id="theme-content-search-results" class="px-3 pt-2 small"></div>
+                        <div class="card-body p-0 flex-grow-1 position-relative">
+                            <textarea id="code-editor" name="content">{{ fileContent|e }}</textarea>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-muted">
+                        <i class="ti ti-code text-secondary mb-3 opacity-50" style="font-size: 4rem;"></i>
+                        <p>{{ lang('admin.themes.editor_hint') }}</p>
+                        <p class="small opacity-75 text-center px-4">{{ lang('admin.themes.editor_hint2') }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var filesInput = document.getElementById("theme-search-files-input");
+    var contentInput = document.getElementById("theme-search-content-input");
+    var currentEditorFile = "{{ currentFile|e('js') }}";
+    var fileResultsEl = document.getElementById("theme-file-search-results");
+    var contentResultsEl = document.getElementById("theme-content-search-results");
+    var fileRequestId = 0;
+    var contentRequestId = 0;
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function renderFiles(items) {
+        if (!fileResultsEl) return;
+        if (!items || items.length === 0) {
+            fileResultsEl.innerHTML = '<div class="text-muted">{{ lang('admin.themes.search_no_results')|e('js') }}</div>';
+            return;
+        }
+        var html = '<div class="text-muted mb-1">{{ lang('admin.themes.search_file_results')|e('js') }}</div><div class="list-group list-group-flush border rounded">';
+        items.forEach(function(item) {
+            html += '<a class="list-group-item list-group-item-action py-1 px-2" href="' + escapeHtml(item.url) + '">' + escapeHtml(item.file) + '</a>';
+        });
+        html += '</div>';
+        fileResultsEl.innerHTML = html;
+    }
+
+    function renderContent(items) {
+        if (!contentResultsEl) return;
+        if (!items || items.length === 0) {
+            contentResultsEl.innerHTML = '<div class="text-muted">{{ lang('admin.themes.search_no_results')|e('js') }}</div>';
+            return;
+        }
+        var html = '<div class="text-muted mb-1">{{ lang('admin.themes.search_content_results')|e('js') }}</div>';
+        items.forEach(function(fileResult) {
+            html += '<div class="border rounded p-2 mb-2">';
+            html += '<a class="fw-semibold text-decoration-none d-block mb-1" href="' + escapeHtml(fileResult.url) + '">' + escapeHtml(fileResult.file) + '</a>';
+            if (Array.isArray(fileResult.matches)) {
+                fileResult.matches.slice(0, 3).forEach(function(match) {
+                    html += '<div class="text-muted" style="word-break: break-word;">#' + escapeHtml(match.line) + ': ' + escapeHtml(match.text) + '</div>';
+                });
+            }
+            html += '</div>';
+        });
+        contentResultsEl.innerHTML = html;
+    }
+
+    function fetchFileSearch(url, callback) {
+        if (!fileResultsEl) return;
+        fileRequestId += 1;
+        var currentRequest = fileRequestId;
+        fileResultsEl.innerHTML = '<div class="text-muted">{{ lang('admin.themes.search_loading')|e('js') }}</div>';
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                if (currentRequest !== fileRequestId) return;
+                callback(data);
+            })
+            .catch(function() {
+                if (currentRequest !== fileRequestId) return;
+                fileResultsEl.innerHTML = '<div class="text-danger">{{ lang('admin.themes.search_error')|e('js') }}</div>';
+            });
+    }
+
+    function fetchContentSearch(url, callback) {
+        if (!contentResultsEl) return;
+        contentRequestId += 1;
+        var currentRequest = contentRequestId;
+        contentResultsEl.innerHTML = '<div class="text-muted">{{ lang('admin.themes.search_loading')|e('js') }}</div>';
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                if (currentRequest !== contentRequestId) return;
+                callback(data);
+            })
+            .catch(function() {
+                if (currentRequest !== contentRequestId) return;
+                contentResultsEl.innerHTML = '<div class="text-danger">{{ lang('admin.themes.search_error')|e('js') }}</div>';
+            });
+    }
+
+    var fileTimer = null;
+    if (filesInput) {
+        filesInput.addEventListener('input', function() {
+            clearTimeout(fileTimer);
+            var q = filesInput.value.trim();
+            if (q.length < 2) {
+                if (fileResultsEl) fileResultsEl.innerHTML = '';
+                return;
+            }
+            fileTimer = setTimeout(function() {
+                fetchFileSearch('{{ core_url(adminPath ~ '/themes/editor/' ~ slug|e('url') ~ '/search-files')|e('js') }}?q=' + encodeURIComponent(q), function(data) {
+                    renderFiles(data.files || []);
+                });
+            }, 250);
+        });
+    }
+
+    var contentTimer = null;
+    if (contentInput) {
+        contentInput.addEventListener('input', function() {
+            clearTimeout(contentTimer);
+            var q = contentInput.value.trim();
+            if (q.length < 2) {
+                if (contentResultsEl) contentResultsEl.innerHTML = '';
+                return;
+            }
+            if (!currentEditorFile) {
+                if (contentResultsEl) contentResultsEl.innerHTML = '';
+                return;
+            }
+            contentTimer = setTimeout(function() {
+                fetchContentSearch('{{ core_url(adminPath ~ '/themes/editor/' ~ slug|e('url') ~ '/search-content')|e('js') }}?file=' + encodeURIComponent(currentEditorFile) + '&q=' + encodeURIComponent(q), function(data) {
+                    renderContent(data.results || []);
+                });
+            }, 350);
+        });
+    }
+});
+</script>
+{% if currentFile %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+<style>.CodeMirror { position: absolute; top: 0; bottom: 0; left: 0; right: 0; height: 100%; font-size: 14px; line-height: 1.5; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/php/php.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var editorEl = document.getElementById("code-editor");
+    if (!editorEl) return;
+    var ext = "{{ currentFile|split('.')|last|lower|e('js') }}";
+    var md = "htmlmixed";
+    if (ext === "css") md = "css";
+    else if (ext === "js") md = "javascript";
+    else if (ext === "json") md = "application/json";
+    else if (ext === "php") md = "php";
+    var editor = CodeMirror.fromTextArea(editorEl, {
+        lineNumbers: true,
+        mode: md,
+        theme: "dracula",
+        indentUnit: 4,
+        indentWithTabs: false,
+        lineWrapping: true
+    });
+    editor.setOption('extraKeys', {
+        'Ctrl-S': function(cm) { document.getElementById('editor-form').submit(); }
+    });
+    document.getElementById('editor-form').addEventListener('submit', function() { editor.save(); });
+});
+</script>
+{% endif %}
+{% endblock %}

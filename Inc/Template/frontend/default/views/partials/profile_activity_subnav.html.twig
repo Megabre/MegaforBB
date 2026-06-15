@@ -1,0 +1,21 @@
+{# Etkinlik araç çubuğu + filtreler #}
+{% set u = profileUser ?? null %}
+{% set activityFilter = activityFilter ?? 'all' %}
+{% set idelistEnabled = idelistEnabled ?? (idelist_enabled ?? false) %}
+{% set portalEnabled = portal_enabled ?? false %}
+{% if u %}
+{% set baseUrl = core_url('member/' ~ member_url_path(u)) %}
+<div class="ips-profile-toolbar">
+  <h2 class="ips-profile-toolbar__title"><i class="fa-solid fa-chart-line"></i> {{ core__('member.tab_activity') }}</h2>
+  <nav class="ips-activity-filters" aria-label="{{ core__('member.activity_filters') }}">
+    <a href="{{ baseUrl }}" class="ips-activity-filters__chip{% if activityFilter == 'all' %} is-active{% endif %}">{{ core__('member.filter_all') }}</a>
+    <a href="{{ baseUrl }}?filter=forum" class="ips-activity-filters__chip{% if activityFilter == 'forum' %} is-active{% endif %}">{{ core__('member.filter_forum') }}</a>
+    {% if portalEnabled %}
+    <a href="{{ baseUrl }}?filter=articles" class="ips-activity-filters__chip{% if activityFilter == 'articles' %} is-active{% endif %}">{{ core__('member.filter_articles') }}</a>
+    {% endif %}
+    {% if idelistEnabled %}
+    <a href="{{ baseUrl }}?filter=ideas" class="ips-activity-filters__chip{% if activityFilter == 'ideas' %} is-active{% endif %}">{{ core__('member.filter_ideas') }}</a>
+    {% endif %}
+  </nav>
+</div>
+{% endif %}

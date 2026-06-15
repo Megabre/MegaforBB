@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set users = users ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle ?? admin__('menu.users')) }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <a href="{{ core_url(adminPath ~ '/users/create') }}" class="btn btn-primary d-none d-sm-inline-block">
+                        <i class="ti ti-plus"></i>
+                        {{ core_e(admin__('common.add')) }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <form action="{{ core_url(adminPath ~ '/users/bulk') }}" method="post">
+            {{ core_csrf_field()|raw }}
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <select name="action" class="form-select form-select-sm w-auto me-2" required>
+                            <option value="">{{ core_e(admin__('users.bulk_action_select')) }}</option>
+                            <option value="ban">{{ core_e(admin__('users.bulk_ban')) }}</option>
+                            <option value="unban">{{ core_e(admin__('users.bulk_unban')) }}</option>
+                            <option value="export">{{ core_e(admin__('users.bulk_export')) }}</option>
+                            <option value="delete">{{ core_e(admin__('users.bulk_delete')) }}</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" onclick="return confirm('{{ core_e(admin__('users.bulk_action_confirm')) }}')">{{ core_e(admin__('common.apply')) }}</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="w-1"><input class="form-check-input m-0 align-middle" type="checkbox" aria-label="{{ core_e(admin__('common.select_all')) }}" id="selectAll"></th>
+                                <th>ID</th>
+                                <th>{{ core_e(admin__('users.username')) }}</th>
+                                <th>{{ core_e(admin__('users.email')) }}</th>
+                                <th>{{ core_e(admin__('users.role')) }}</th>
+                                <th>{{ core_e(admin__('users.status')) }}</th>
+                                <th>{{ core_e(admin__('users.registered_at')) }}</th>
+                                <th class="w-1">{{ core_e(admin__('common.actions')) }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if users is empty %}
+                            <tr><td colspan="8" class="text-center text-muted">{{ core_e(admin__('users.no_users')) }}</td></tr>
+                            {% else %}
+                            {% for u in users %}
+                            <tr>
+                                <td><input class="form-check-input m-0 align-middle user-chk" type="checkbox" name="user_ids[]" value="{{ u.id }}" aria-label="{{ core_e(admin__('common.select_row')) }}"></td>
+                                <td class="text-muted">{{ u.id }}</td>
+                                <td class="font-weight-bold">
+                                    <div class="d-flex py-1 align-items-center">
+                                        <span class="avatar me-2" style="background-image: url(https://ui-avatars.com/api/?name={{ avatar_display_name(u.username)|url_encode }}&background=random)"></span>
+                                        <div class="flex-fill"><div class="font-weight-medium">{{ core_e(u.username) }}</div></div>
+                                    </div>
+                                </td>
+                                <td class="text-muted">{{ core_e(u.email) }}</td>
+                                <td>
+                                    {% if u.role %}
+                                    <span class="badge" style="background-color: {{ core_e(u.role.color ?? '#6c757d') }};">{{ core_e(u.role.name) }}</span>
+                                    {% else %}<span class="badge bg-secondary">Bilinmiyor</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if u.is_banned %}<span class="badge bg-danger">{{ core_e(admin__('users.banned')) }}</span>
+                                    {% else %}<span class="badge bg-success">Aktif</span>{% endif %}
+                                </td>
+                                <td class="text-muted">{{ u.created_at ? u.created_at|date('d/m/Y') : '—' }}</td>
+                                <td>
+                                    <div class="btn-list flex-nowrap">
+                                        <a href="{{ core_url(adminPath ~ '/users/edit/' ~ u.id) }}" class="btn btn-sm btn-white">{{ core_e(admin__('common.edit')) }}</a>
+                                        {% if user.id != u.id %}
+                                        <form action="{{ core_url(adminPath ~ '/users/delete/' ~ u.id) }}" method="post" onsubmit="return confirm('{{ core_e(admin__('common.are_you_sure')) }}');" style="display:inline;">
+                                            {{ core_csrf_field()|raw }}
+                                            <button type="submit" class="btn btn-sm btn-danger">{{ core_e(admin__('common.delete')) }}</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.getElementById('selectAll') && document.getElementById('selectAll').addEventListener('change', function() {
+    document.querySelectorAll('.user-chk').forEach(function(chk) { chk.checked = this.checked; }.bind(this));
+});
+</script>
+{% endblock %}

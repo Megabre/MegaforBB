@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-lg">
+        <div class="row g-2 align-items-center">
+            <div class="col-auto">
+                <span class="page-pretitle-icon"><i class="ti ti-alert-octagon fs-2 text-danger"></i></span>
+            </div>
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.reset.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.reset.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-lg">
+        {% if flash('success') %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            {{ core_e(flash('success')) }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        {% if flash('error') %}
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            {{ core_e(flash('error')) }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="card border-danger mb-4">
+            <div class="card-body">
+                <div class="alert alert-danger mb-0">
+                    <div class="d-flex">
+                        <div class="me-3"><i class="ti ti-alert-triangle" style="font-size: 2.5rem;"></i></div>
+                        <div>
+                            <h3 class="alert-title">{{ lang('admin.reset.warning_title') }}</h3>
+                            <div class="text-muted">
+                                <p class="mb-2">{{ lang('admin.reset.warning_intro') }}</p>
+                                <ul class="mb-2">
+                                    <li>{{ lang('admin.reset.item_users') }}</li>
+                                    <li>{{ lang('admin.reset.item_topics') }}</li>
+                                    <li>{{ lang('admin.reset.item_messages') }}</li>
+                                    <li>{{ lang('admin.reset.item_forums') }}</li>
+                                    <li>{{ lang('admin.reset.item_interactions') }}</li>
+                                    <li>{{ lang('admin.reset.item_reports') }}</li>
+                                </ul>
+                                <p class="mb-2"><strong>{{ lang('admin.reset.preserved') }}</strong></p>
+                                <p class="mb-0 fw-bold text-danger">{{ lang('admin.reset.irreversible') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-alert-octagon me-2 text-danger"></i>{{ lang('admin.reset.confirm_title') }}</h3>
+            </div>
+            <form action="{{ core_url(adminPath ~ '/reset/execute') }}" method="post" onsubmit="return confirm('{{ lang('admin.reset.confirm_prompt') }}')">
+                {{ core_csrf_field('admin_reset_system')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.reset.confirm_label') }}</label>
+                        <input type="text" name="confirm_text" class="form-control" placeholder="SIFIRLA" required autocomplete="off">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.reset.admin_password') }}</label>
+                        <input type="password" name="admin_password" class="form-control" required autocomplete="current-password">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-danger"><i class="ti ti-alert-octagon me-2"></i>{{ lang('admin.reset.execute') }}</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="mb-4">
+            <a href="{{ core_url(adminPath) }}" class="btn">{{ lang('admin.import.back_panel') }}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

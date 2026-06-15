@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set error = error ?? '' %}
+{% set customDefinitions = customDefinitions ?? [] %}
+{% set captcha_show = captcha_show ?? false %}
+
+<div class="min-h-[60vh] flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden grid grid-cols-1 md:grid-cols-2 border border-gray-100">
+    <div class="bg-[#1a252f] text-white p-8 md:p-10 flex flex-col justify-between rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none">
+      <div>
+        <div class="text-lg font-semibold">{{ core__('common.site_name') }}</div>
+        <div class="text-sm text-gray-200/90 mt-2 leading-relaxed">{{ core__('auth.register_subtitle') }}</div>
+        <ul class="mt-6 space-y-3 text-sm text-gray-200/90">
+          <li class="flex items-center gap-3"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/10"><i class="fa-solid fa-circle-check text-blue-300 text-xs"></i></span>{{ core__('auth.register_benefit_topics') }}</li>
+          <li class="flex items-center gap-3"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/10"><i class="fa-solid fa-circle-check text-blue-300 text-xs"></i></span>{{ core__('auth.register_benefit_follow') }}</li>
+          <li class="flex items-center gap-3"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/10"><i class="fa-solid fa-circle-check text-blue-300 text-xs"></i></span>{{ core__('auth.register_benefit_messages') }}</li>
+        </ul>
+      </div>
+      <div class="text-xs text-gray-300/80 mt-6">© {{ "now"|date("Y") }} {{ core__('common.site_name') }}</div>
+    </div>
+    <div class="p-8 md:p-10 space-y-5">
+      <div class="text-xl font-semibold text-[#1a252f] tracking-tight">{{ core__('auth.register_title') }}</div>
+      {% if error %}
+      <div class="p-4 rounded-xl bg-red-50/80 border border-red-100 text-red-700 text-sm">{{ core_e(error) }}</div>
+      {% endif %}
+      <form method="post" action="{{ core_url('register') }}" class="space-y-5">
+        {{ core_csrf_field('register')|raw }}
+        {% if requireInvite|default(false) %}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('auth.invite_code_label') }} *</label>
+          <input name="invite_code" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" placeholder="{{ core__('auth.invite_code_placeholder') }}" required>
+        </div>
+        {% endif %}
+        {% if (registration_show_first_name|default('1')) != '0' %}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('profile.edit_first_name') }}{% if (registration_show_first_name|default('1')) == '2' %} *{% endif %}</label>
+          <input name="first_name" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" placeholder="{{ core__('profile.edit_first_name') }}" maxlength="64" {% if (registration_show_first_name|default('1')) == '2' %}required{% endif %}>
+        </div>
+        {% endif %}
+        {% if (registration_show_last_name|default('1')) != '0' %}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('profile.edit_last_name') }}{% if (registration_show_last_name|default('1')) == '2' %} *{% endif %}</label>
+          <input name="last_name" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" placeholder="{{ core__('profile.edit_last_name') }}" maxlength="64" {% if (registration_show_last_name|default('1')) == '2' %}required{% endif %}>
+        </div>
+        {% endif %}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('auth.username') }}</label>
+          <input name="username" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" placeholder="{{ core__('auth.placeholder_username') }}" pattern="[a-zA-Z0-9_]+" maxlength="50" title="{{ core__('auth.username_format_invalid') }}">
+          <p class="mt-1 text-xs text-gray-500">{{ core__('auth.username_hint') }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('auth.email') }}</label>
+          <input name="email" type="email" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" placeholder="{{ core__('auth.placeholder_email') }}">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('auth.password') }}</label>
+          <input name="password" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" placeholder="••••••••">
+        </div>
+        {% if captcha_show %}{% include 'partials/captcha.html.twig' %}{% endif %}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('auth.password_again') }}</label>
+          <input name="password_confirm" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" placeholder="••••••••">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('auth.preferred_language') }}</label>
+          <select name="locale" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow bg-white">
+            <option value="tr">{{ core__('common.lang_tr') }}</option>
+            <option value="en">{{ core__('common.lang_en') }}</option>
+          </select>
+        </div>
+        {% for def in customDefinitions %}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ core_e(def.name) }}{% if def.is_required %} *{% endif %}</label>
+          {% if (def.field_type ?? 'text') == 'textarea' %}
+          <textarea name="custom_{{ core_e(def.field_key) }}" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" rows="2" {% if def.is_required %}required{% endif %}></textarea>
+          {% elseif (def.field_type ?? '') == 'select' %}
+          {% set opts = (def.field_options ?? '[]')|json_decode_array %}
+          <select name="custom_{{ core_e(def.field_key) }}" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow bg-white" {% if def.is_required %}required{% endif %}>
+            <option value="">{{ core__('common.select_option') }}</option>
+            {% for opt in opts %}<option value="{{ core_e(opt) }}">{{ core_e(opt) }}</option>{% endfor %}
+          </select>
+          {% else %}
+          <input name="custom_{{ core_e(def.field_key) }}" type="{{ (def.field_type ?? '') == 'number' ? 'number' : ((def.field_type ?? '') == 'date' ? 'date' : 'text') }}" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]/40 transition-shadow" {% if def.is_required %}required{% endif %}>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="w-full text-white bg-[#1a252f] hover:bg-[#172029] rounded-xl px-4 py-3.5 font-medium transition-colors shadow-sm">{{ core__('auth.register_title') }}</button>
+      </form>
+      <p class="text-sm text-gray-500 text-center pt-1">{{ core__('auth.has_account') }} <a href="{{ core_url('login') }}" class="text-[#1a252f] font-medium hover:underline">{{ core__('common.login') }}</a></p>
+      <p class="text-center"><a href="{{ core_url('') }}" class="text-sm text-gray-500 hover:text-[#1a252f] hover:underline">{{ core__('common.home') }}</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

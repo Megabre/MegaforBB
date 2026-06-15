@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% block content %}
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title mb-0"><i class="ti ti-key me-2"></i>{{ lang('admin.twofa.page_title') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">{{ lang('admin.twofa.enter_answer') }}</p>
+                        {% if flash('twofa_error') %}
+                        <div class="alert alert-danger">{{ core_e(flash('twofa_error')) }}</div>
+                        {% endif %}
+                        <form action="{{ core_url(adminPath ~ '/twofa') }}" method="post">
+                            {{ core_csrf_field('admin_twofa')|raw }}
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.twofa.question_label') }}</label>
+                                <p class="form-control-plaintext fw-semibold">{{ core_e(question) }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <label for="answer" class="form-label">{{ lang('admin.twofa.answer_label') }}</label>
+                                <input type="text" name="answer" id="answer" class="form-control form-control-lg" autocomplete="off" required autofocus placeholder="{{ lang('admin.twofa.answer_placeholder') }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">{{ lang('admin.twofa.verify_btn') }}</button>
+                        </form>
+                        <p class="text-muted small mt-3 mb-0">
+                            <a href="{{ core_url('') }}" class="text-muted">{{ lang('admin.twofa.back_to_site') }}</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set profileUser = profileUser ?? null %}
+{% if not profileUser %}
+  <div class="ips-profile-page"><div class="ips-profile-content-card"><div class="ips-profile-empty"><p>{{ core_e(lang('error.not_found')) }}</p></div></div></div>
+{% else %}
+{% set baseUrl = core_url('member/' ~ member_url_path(profileUser)) %}
+{% set items = items ?? [] %}
+{% set userStats = userStats ?? {} %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set isOwnProfile = user and profileUser and (user.id is defined) and (profileUser.id is defined) and user.id == profileUser.id %}
+{% set avatarUrl = profileUser.avatar_path is not empty ? asset_url(profileUser.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(profileUser.username ?? null)|url_encode %}
+
+<div class="ips-profile-page">
+{% include 'partials/profile_breadcrumb.html.twig' with { crumbs: [
+  { label: profileUser.username, href: baseUrl },
+  { label: core__('profile.topics') }
+] } %}
+
+<div class="ips-profile-wrap">
+  {% include 'partials/profile_shell.html.twig' with {
+    profileUser: profileUser, isOwnProfile: isOwnProfile, coverUrl: null, avatarUrl: avatarUrl,
+    rewardLevel: null, userStats: userStats, activeTab: 'activity', compact: true, reputationEnabled: reputationEnabled, idelistEnabled: idelistEnabled ?? false
+  } %}
+
+  <div class="ips-profile-content">
+    {% include 'partials/profile_activity_subnav.html.twig' with { profileUser: profileUser, userStats: userStats, activityFilter: 'forum', idelistEnabled: idelistEnabled ?? false } %}
+    <div class="ips-profile-content__section-body">
+    <h3 class="ips-section-subtitle"><i class="fa-solid fa-folder-open"></i> {{ core__('profile.topics') }}</h3>
+    {% if items is empty %}
+    <div class="ips-profile-empty"><i class="fa-solid fa-folder-open"></i><p>Henüz konu açılmamış.</p></div>
+    {% else %}
+    <ul class="ips-profile-feed">
+      {% for t in items %}
+      <li class="ips-profile-feed__item">
+        <div class="ips-profile-feed__meta">
+          <a href="{{ core_url('forum/' ~ (t.forum_slug ?? '')|e('url')) }}">{{ core_e(t.forum_name ?? '') }}</a>
+          <span>{{ core_e(t.created_at ?? '') }}</span>
+          <span>{{ t.reply_count ?? 0 }} cevap</span>
+        </div>
+        <a href="{{ core_url('topic/' ~ topic_url_path(t)) }}" class="ips-profile-feed__title">{{ core_e(t.title ?? '') }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    </div>
+  </div>
+</div>
+</div>
+{% endif %}
+{% endblock %}

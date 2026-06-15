@@ -1,0 +1,125 @@
+{% set isBirthday = p.is_birthday_today ?? false %}
+{% set displayName = (p.show_name and ((p.first_name ?? '')|trim != '' or (p.last_name ?? '')|trim != '')) ? ((p.first_name ?? '') ~ ' ' ~ (p.last_name ?? ''))|trim : '' %}
+{% set isAccepted = is_question and accepted_post_id and (p.id ?? 0) == accepted_post_id %}
+{% set canAcceptSolution = is_question and user and topic.user_id == user.id and p.user_id != user.id and not (p.is_first_post ?? false) and not isAccepted %}
+{% set canRemoveSolution = is_question and user and topic.user_id == user.id and isAccepted %}
+{% set netVotes = p.net_votes ?? 0 %}
+{% set voteByMe = p.vote_by_me ?? 0 %}
+{% set postBody = core_sanitize_html(core_display_post_html(p.body ?? '', p.body_html ?? '')) %}
+{% set cu = user ?? null %}
+{% set canEditPost = cu and (p.user_id == cu.id or (cu.role_id ?? 0) == 1 or (cu.role_id ?? 0) == 2) %}
+{% set avatarUrl = p.avatar_path is not empty ? asset_url(p.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(p.username)|url_encode ~ '&size=128' %}
+<article id="post-{{ p.id }}" class="flex flex-col md:flex-row border-b border-gray-200 last:border-0 {{ isBirthday ? 'postbit-birthday' : '' }} {{ isAccepted ? 'border border-green-500 bg-green-50/30' : '' }}" {{ isBirthday ? 'data-birthday="1"' : '' }}>
+  <aside class="relative w-full md:w-[240px] flex-shrink-0 flex flex-col {{ isBirthday ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-b md:border-b-0 md:border-r border-amber-200/60' : 'bg-slate-50 border-b md:border-b-0 md:border-r border-gray-200' }}" x-data="{ postDetailsOpen: false }">
+    {% if isBirthday %}<div class="absolute top-2 right-2 text-amber-600 text-xs font-semibold"><i class="fa-solid fa-birthday-cake"></i> {{ core__('profile.birthday') }}!</div>{% endif %}
+    <div class="md:hidden flex items-center justify-between gap-2 py-2.5 px-3">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <img src="{{ core_e(avatarUrl) }}" class="w-10 h-10 flex-shrink-0 object-cover rounded-full border-2 {{ isBirthday ? 'border-amber-300' : 'border-white' }} ring-1 ring-gray-200" alt="">
+        <a href="{{ core_url('member/' ~ (p.username ?? '')|e('url')) }}" class="text-sm font-bold text-slate-800 truncate hover:underline">{{ core_e(p.username ?? '') }}</a>
+        {% if p.is_verified %}<i class="fa-solid fa-certificate text-blue-500 text-xs"></i>{% endif %}
+      </div>
+      <button type="button" @click="postDetailsOpen = !postDetailsOpen" class="p-2 rounded-md hover:bg-black/10 text-slate-600"><i class="fa-solid text-sm" :class="postDetailsOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i></button>
+    </div>
+    <div class="md:hidden border-t border-gray-200/80 overflow-hidden" x-show="postDetailsOpen" x-cloak>
+      <div class="px-3 py-3 space-y-2 text-xs text-slate-600">
+        {% if displayName != '' %}<p class="font-medium text-slate-700">{{ core_e(displayName) }}</p>{% endif %}
+        {% if p.reward_level is defined and p.reward_level %}
+        {% set rl = p.reward_level %}
+        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium {{ core_e(rl.badge_css ?? 'text-gray-600') }}">{% if rl.badge_icon %}<i class="fa {{ core_e(rl.badge_icon) }} mr-1"></i>{% endif %}{{ core_e(rl.badge_label ?? rl.name ?? '') }}</div>
+        {% endif %}
+        {% if p.role_name %}<div class="inline-flex items-center px-2 py-0.5 rounded-md text-white text-[10px] font-bold uppercase" style="{{ p.role_color ? 'background-color:' ~ core_e(p.role_color) : '' }}">{{ core_e(p.role_name) }}</div>{% endif %}
+        {% if commerceTrustScores is defined and (p.user_id ?? null) is not null and commerceTrustScores[p.user_id] is defined %}
+        <div class="trust-badge inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800"><i class="fa-solid fa-shield-halved text-emerald-600"></i> {{ core__('commerce.trust_score')|default('Güven Skoru') }}: {{ commerceTrustScores[p.user_id]|number_format(1, ',', '') }}</div>
+        {% endif %}
+        <div class="flex items-center gap-3"><span><strong class="text-slate-800">{{ (p.user_post_count ?? 0)|number_format(0) }}</strong> {{ core__('postbit.posts') }}</span><span><strong class="text-slate-800">{{ (p.user_like_count ?? 0)|number_format(0) }}</strong> {{ core__('postbit.likes') }}</span></div>
+        <div class="space-y-1 pt-1 border-t border-gray-200">
+          <div class="flex justify-between"><span class="text-slate-400">{{ core__('postbit.joined') }}</span><span class="font-medium text-slate-700">{{ p.user_joined is defined and p.user_joined ? p.user_joined|date('d M Y') : '—' }}</span></div>
+          {% if p.location %}<div class="flex justify-between"><span class="text-slate-400">{{ core__('profile.location') }}</span><span class="font-medium text-slate-700">{{ core_e(p.location) }}</span></div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="hidden md:flex flex-col items-center pt-6 pb-6 px-4">
+      <div class="relative mb-4">
+        <img src="{{ core_e(avatarUrl) }}" class="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg shadow-md border-2 {{ isBirthday ? 'border-amber-300' : 'border-white' }} ring-1 {{ isBirthday ? 'ring-amber-200' : 'ring-gray-200' }}" alt="">
+      </div>
+      <div class="text-center px-2 w-full">
+        <h3 class="text-base md:text-lg font-bold text-slate-800 mb-1 flex items-center justify-center gap-1.5 flex-wrap">
+          <a href="{{ core_url('member/' ~ (p.username ?? '')|e('url')) }}" class="text-[#105289] hover:underline">{{ core_e(p.username ?? '') }}</a>
+          {% if p.is_verified %}<i class="fa-solid fa-certificate text-blue-500 text-sm" title="Onaylı Üye"></i>{% endif %}
+        </h3>
+        {% if displayName != '' %}<p class="text-xs text-slate-500 mb-1">{{ core_e(displayName) }}</p>{% endif %}
+        {% if p.reward_level is defined and p.reward_level %}
+        {% set rl = p.reward_level %}
+        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium {{ core_e(rl.badge_css ?? 'text-gray-600') }} mb-2">{% if rl.badge_icon %}<i class="fa {{ core_e(rl.badge_icon) }} mr-1"></i>{% endif %}{{ core_e(rl.badge_label ?? rl.name ?? '') }}</div>
+        {% endif %}
+        {% if p.role_name %}<div class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-white text-[10px] font-bold uppercase tracking-wider mb-3" style="{{ p.role_color ? 'background-color:' ~ core_e(p.role_color) : '' }}">{{ core_e(p.role_name) }}</div>{% endif %}
+        {% if commerceTrustScores is defined and (p.user_id ?? null) is not null and commerceTrustScores[p.user_id] is defined %}
+        <div class="trust-badge inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-emerald-100 text-emerald-800 mb-3">
+          <i class="fa-solid fa-shield-halved text-emerald-600"></i> {{ core__('commerce.trust_score')|default('Güven Skoru') }}: {{ commerceTrustScores[p.user_id]|number_format(1, ',', '') }}
+        </div>
+        {% endif %}
+        <div class="flex items-center justify-center gap-3 mb-4 text-slate-600 text-xs">
+          <div class="flex flex-col items-center"><span class="font-bold text-slate-800">{{ (p.user_post_count ?? 0)|number_format(0) }}</span><span class="text-[10px] uppercase text-slate-400 font-semibold">{{ core__('postbit.posts') }}</span></div>
+          <div class="w-px h-5 bg-gray-300"></div>
+          <div class="flex flex-col items-center"><span class="font-bold text-slate-800">{{ (p.user_like_count ?? 0)|number_format(0) }}</span><span class="text-[10px] uppercase text-slate-400 font-semibold">{{ core__('postbit.likes') }}</span></div>
+        </div>
+        <div class="w-full space-y-2 text-xs text-slate-500 text-left mb-4">
+          <div class="flex justify-between border-b border-gray-200 pb-1 border-dashed"><span><i class="fa-regular fa-calendar text-slate-400 mr-1"></i>{{ core__('postbit.joined') }}</span><span class="font-medium text-slate-700">{{ p.user_joined is defined and p.user_joined ? p.user_joined|date('d M Y') : '—' }}</span></div>
+          {% if p.location %}<div class="flex justify-between border-b border-gray-200 pb-1 border-dashed"><span><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>{{ core__('profile.location') }}</span><span class="font-medium text-slate-700">{{ core_e(p.location) }}</span></div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="flex-1 flex flex-col min-w-0 w-full bg-white" style="min-width: 0;">
+    <div class="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-1.5 bg-slate-50/50 text-sm">
+      {% if isAccepted %}<div class="w-full sm:w-auto flex items-center gap-2 text-green-700 font-semibold flex-wrap">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-check-circle"></i><span>{{ core__('post.solution_label') }}</span><span class="text-xs font-normal text-green-600">{{ core__('post.solution_accepted_by_author') }}</span></span>
+        {% if canRemoveSolution %}<form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/remove-solution') }}" method="post" class="inline" onsubmit="return confirm('{{ core__('post.remove_solution_confirm')|e('js') }}');">{{ core_csrf_field('remove_solution')|raw }}<button type="submit" class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200"><i class="fa-solid fa-xmark"></i>{{ core__('post.remove_solution_btn') }}</button></form>{% endif %}
+      </div>{% endif %}
+      <span class="text-xs font-medium text-slate-500"><i class="fa-regular fa-clock mr-1"></i>{{ core_e(p.created_at ?? '') }}</span>
+      <div class="flex items-center gap-1.5 sm:gap-3 text-xs text-slate-400 font-medium flex-wrap">
+        <span>#{{ postLoopIndex ?? loop.index }}</span>
+        {% if cu and not topic.is_locked %}<button type="button" class="post-quote-btn hover:text-slate-700" title="{{ core__('post.reply_quote_title') }}" data-post-id="{{ p.id }}" data-username="{{ core_e(p.username ?? '') }}"><i class="fa-solid fa-reply mr-1"></i><span class="hidden sm:inline">{{ core__('forum.reply_btn') }}</span></button>{% endif %}
+        {% if cu and (p.user_id ?? 0) != cu.id %}<button type="button" class="post-report-btn hover:text-slate-700" title="{{ core__('forum.report') }}" data-post-id="{{ p.id }}"><i class="fa-solid fa-flag mr-1"></i><span class="hidden sm:inline">{{ core__('forum.report') }}</span></button>{% endif %}
+        {% if canEditPost %}
+        {% if p.is_first_post|default(false) %}<a href="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/edit') }}" class="hover:text-slate-700" title="{{ core__('topic.edit_title_label') }}"><i class="fa-solid fa-pen mr-1"></i><span class="hidden sm:inline">{{ core__('post.edit') }}</span></a>{% else %}<a href="{{ core_url('post/' ~ post_url_path(p) ~ '/edit') }}" class="hover:text-slate-700" title="{{ core__('post.edit') }}"><i class="fa-solid fa-pen mr-1"></i><span class="hidden sm:inline">{{ core__('post.edit') }}</span></a>{% endif %}
+        <a href="{{ core_url('post/' ~ post_url_path(p) ~ '/edit-history') }}" class="hover:text-slate-700" title="{{ core__('post.edit_history') }}"><i class="fa-solid fa-clock-rotate-left"></i><span class="hidden sm:inline ml-1">{{ core__('post.history') }}</span></a>{% endif %}
+      </div>
+    </div>
+    <div class="post-body p-4 md:p-6 text-slate-800 leading-relaxed text-[15px] prose prose-slate max-w-none break-words">{{ postBody|smileys|raw }}</div>
+    {% if p.user_signature and (cu or show_signatures_to_guests|default(true)) %}
+    <div class="mx-4 md:mx-6 mb-2 mt-2 pt-3 border-t border-dashed border-gray-200">
+      <div class="pl-3 border-l-2 border-gray-300 text-sm text-gray-600 italic leading-relaxed post-signature">{{ core_sanitize_html(p.user_signature)|smileys|raw }}</div>
+    </div>
+    {% endif %}
+    {% if p.attachments is defined and p.attachments is not empty %}
+    {% include 'partials/attachments.html.twig' with _context|merge({ attachments: p.attachments }) %}
+    {% endif %}
+    <template id="post-quote-body-{{ p.id }}">{{ (p.body_html ?? p.body ?? '')|striptags|e }}</template>
+    <div class="mt-auto px-4 md:px-6 py-3 border-t border-gray-100 bg-slate-50/30 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        {% if isStaff %}<label class="inline-flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer post-select-wrap"><input type="checkbox" class="post-select-cb rounded border-gray-300" name="post_ids[]" value="{{ p.id }}" form="posts-bulk-form"><span>{{ core__('post.select') }}</span></label>{% endif %}
+        <form action="{{ core_url('post/' ~ p.id ~ '/like') }}" method="post" class="inline post-like-form" data-post-id="{{ p.id }}" data-liked="{{ p.liked_by_me ? '1' : '0' }}" data-count="{{ p.like_count ?? 0 }}" data-label-like="{{ core__('forum.like')|e('html_attr') }}" data-label-unlike="{{ core__('forum.unlike')|e('html_attr') }}">{{ core_csrf_field('post_like')|raw }}<button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200 post-like-btn"><i class="fa-regular fa-thumbs-up post-like-icon"></i><span class="post-like-label">{{ p.liked_by_me ? core__('forum.unlike') : core__('forum.like') }}</span><span class="post-like-count">({{ p.like_count ?? 0 }})</span></button></form>
+        {% if canAcceptSolution %}<form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/accept-solution') }}" method="post" class="inline" onsubmit="return confirm('{{ core__('post.accept_solution_confirm')|e('js') }}');">{{ core_csrf_field('accept_solution')|raw }}<input type="hidden" name="post_id" value="{{ p.id }}"><button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200"><i class="fa-solid fa-check-double"></i><span>{{ core__('post.accept_solution_btn') }}</span></button></form>{% endif %}
+        {% if reputationEnabled and cu and (p.user_id ?? 0) != cu.id %}<span class="inline-flex gap-1"><button type="button" class="post-rep-btn px-2 py-1 rounded text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100" data-username="{{ core_e(p.username ?? '') }}" data-value="1" data-post-id="{{ p.id }}">+ Rep</button><button type="button" class="post-rep-btn px-2 py-1 rounded text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100" data-username="{{ core_e(p.username ?? '') }}" data-value="-1" data-post-id="{{ p.id }}">− Rep</button></span>{% endif %}
+      </div>
+      {% if is_question %}
+      <div class="flex items-center gap-1 flex-shrink-0 mfbb-post-vote-wrap">
+        <form method="post" action="{{ core_url('post/' ~ p.id ~ '/vote') }}" class="inline mfbb-post-vote-form" data-post-id="{{ p.id }}" target="_self">
+          <input type="hidden" name="_token" value="{{ post_vote_csrf is defined and post_vote_csrf != '' ? post_vote_csrf : core_csrf_token('post_vote') }}">
+          <button type="submit" name="value" value="1" class="p-1.5 rounded hover:bg-gray-200 text-gray-500 hover:text-green-600 {{ voteByMe == 1 ? 'text-green-600 bg-green-50' : '' }}" title="Faydalı"><i class="fa-solid fa-caret-up"></i></button>
+        </form>
+        <span class="text-sm font-semibold text-slate-700 min-w-[1.5rem] text-center">{{ netVotes }}</span>
+        <form method="post" action="{{ core_url('post/' ~ p.id ~ '/vote') }}" class="inline mfbb-post-vote-form" data-post-id="{{ p.id }}" target="_self">
+          <input type="hidden" name="_token" value="{{ post_vote_csrf is defined and post_vote_csrf != '' ? post_vote_csrf : core_csrf_token('post_vote') }}">
+          <button type="submit" name="value" value="-1" class="p-1.5 rounded hover:bg-gray-200 text-gray-500 hover:text-red-600 {{ voteByMe == -1 ? 'text-red-600 bg-red-50' : '' }}" title="Faydalı değil"><i class="fa-solid fa-caret-down"></i></button>
+        </form>
+      </div>
+      {% endif %}
+      <div class="flex items-center gap-1 post-share-wrap" x-data="{ copied: false }">
+        {% set postShareUrl = full_site_url('topic/' ~ topic_url_path(topic) ~ '#post-' ~ p.id) %}
+        <span class="text-xs text-slate-500 mr-1 hidden sm:inline">{{ core__('forum.share')|default('Paylaş') }}</span>
+        <button type="button" class="post-share-copy px-2 py-1.5 rounded text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200" title="{{ core__('forum.copy_link')|default('Bağlantıyı kopyala') }}" data-share-url="{{ postShareUrl|e('html_attr') }}" @click="navigator.clipboard.writeText($el.dataset.shareUrl || '').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"><i class="fa-solid fa-link mr-1"></i><span x-text="copied ? '{{ core__('forum.copied')|default('Kopyalandı') }}' : '{{ core__('forum.copy_link')|default('Kopyala') }}'"></span></button>
+    </div>
+  </div>
+</article>

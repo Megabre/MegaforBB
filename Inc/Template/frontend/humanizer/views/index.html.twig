@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% include 'partials/son_olaylar.html.twig' %}
+
+<div class="mfbb-forum-index hz-forum-home">
+{% set ads = ads ?? [] %}
+{% for ci, cat in categories|default([]) %}
+{% if ci > 0 and ads.category_between is defined and ads.category_between is not empty %}
+<div class="ads-slot ads-category-between my-4">
+  {% for html in ads.category_between %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% set catColor = cat.color is not empty ? core_e(cat.color) : '#105289' %}
+<section class="hz-cat" style="--hz-accent: {{ catColor|e('css') }};" aria-labelledby="hz-cat-h-{{ cat.id ?? ci }}">
+  <h2 id="hz-cat-h-{{ cat.id ?? ci }}" class="hz-cat__head">
+    {% if cat.icon is not empty %}<i class="{{ (cat.icon|length > 0 and ' ' in cat.icon) ? core_e(cat.icon) : 'fa-solid fa-' ~ core_e(cat.icon) }} hz-cat__head-icon" aria-hidden="true"></i>{% endif %}
+    <span>{{ core_e(cat.name ?? '') }}</span>
+  </h2>
+  {% if cat.description is not empty %}
+  <p class="hz-cat__desc">{{ core_e(cat.description) }}</p>
+  {% endif %}
+
+  <div class="hz-table-scroll">
+    <table class="hz-forum-table">
+      <thead>
+        <tr>
+          <th class="hz-th hz-th--forum" scope="col">{{ core__('forum.forum')|default('Forum') }}</th>
+          <th class="hz-th hz-th--stat" scope="col">{{ core__('stats.topics')|default('Konular') }}</th>
+          <th class="hz-th hz-th--stat" scope="col">{{ core__('stats.posts')|default('Mesajlar') }}</th>
+          <th class="hz-th hz-th--last" scope="col">{{ core__('forum.last_post')|default('Son mesaj') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in cat.forums ?? [] %}
+        {% set forumUrl = core_url('forum/' ~ (f.slug ?? f.id)|e('url')) %}
+        <tr class="hz-forum-row">
+          <td class="hz-td hz-td--forum">
+            <div class="hz-forum-main">
+              {% if f.image_url is not empty %}
+              <a href="{{ forumUrl }}" class="hz-forum-thumb-link" tabindex="-1" aria-hidden="true"><img src="{{ core_e(f.image_url) }}" alt="" class="hz-forum-thumb"></a>
+              {% else %}
+              <span class="hz-forum-folder" aria-hidden="true">{% if f.icon is not empty %}<i class="{{ (f.icon|length > 0 and ' ' in f.icon) ? core_e(f.icon) : 'fa-solid fa-' ~ core_e(f.icon) }}"></i>{% else %}<i class="fa-solid fa-folder-open"></i>{% endif %}</span>
+              {% endif %}
+              <div class="hz-forum-text">
+                <a href="{{ forumUrl }}" class="hz-forum-title">{{ core_e(f.name ?? '') }}</a>
+                {% if f.description is not empty %}
+                <p class="hz-forum-desc">{{ core_e(f.description) }}</p>
+                {% endif %}
+                {% if f.subforums is defined and f.subforums is not empty %}
+                <div class="hz-subforums">
+                  <span class="hz-subforums-label">{{ core__('forum.subforums')|default('Alt forumlar') }}:</span>
+                  {% for sub in f.subforums %}
+                  {% set subUrl = sub.parent_slug is defined and sub.parent_slug is not empty ? core_url('forum/' ~ (sub.parent_slug|e('url')) ~ '/' ~ (sub.slug|e('url'))) : core_url('forum/' ~ (sub.slug|e('url'))) %}
+                  <a href="{{ subUrl }}">{{ core_e(sub.name ?? '') }}</a>{% if not loop.last %}, {% endif %}
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td class="hz-td hz-td--num">{{ (f.topic_count ?? 0)|number_format(0) }}</td>
+          <td class="hz-td hz-td--num">{{ (f.post_count ?? 0)|number_format(0) }}</td>
+          <td class="hz-td hz-td--last">
+            {% if (f.last_post_topic_id ?? 0) > 0 %}
+              {% set lastTopicUrl = core_url('topic/' ~ topic_url_path({ id: f.last_post_topic_id, slug: f.last_post_topic_slug|default('') })) %}
+              {% set lpAv = (f.last_post_avatar_path|default('')) is not empty ? asset_url(f.last_post_avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(f.last_post_username|default(''))|url_encode) ~ '&size=40&background=e8eef6&color=105289') %}
+              <div class="hz-last-cell">
+                <a href="{{ lastTopicUrl }}" class="hz-last-avatar-link" tabindex="-1" aria-hidden="true"><img src="{{ core_e(lpAv) }}" alt="" class="hz-last-avatar" width="36" height="36" loading="lazy"></a>
+                <div class="hz-last-body">
+                  <a href="{{ lastTopicUrl }}" class="hz-last-topic">{{ core_e(f.last_post_topic_title ?? '') }}</a>
+                  <div class="hz-last-meta">
+                    {% if f.last_post_username is not empty %}<span class="hz-last-user">{{ core_e(f.last_post_username) }}</span>{% endif %}
+                    {% if f.last_post_at is not empty %}<span class="hz-last-date">{{ f.last_post_at|date('d.m.Y H:i') }}</span>{% endif %}
+                  </div>
+                </div>
+              </div>
+            {% else %}
+              <span class="hz-last-none">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="hz-td hz-td--empty">{{ core__('forum.no_forums')|default('Bu kategoride forum yok.') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+    {% if ads.category_between is defined and ads.category_between is not empty %}
+    <div class="ads-slot ads-category-between my-4">
+      {% for html in ads.category_between %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% if ads.footer_above_home is defined and ads.footer_above_home is not empty %}
+<div class="ads-slot ads-footer-above mt-6 mb-4">
+  {% for html in ads.footer_above_home %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+</div>
+{% endif %}
+</div>
+{% endblock %}

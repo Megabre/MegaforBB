@@ -1,0 +1,45 @@
+{# Kaydırmalı etkinlik kutusu + AJAX #}
+{% set u = profileUser ?? null %}
+{% set activityStream = activityStream ?? [] %}
+{% set activityFilter = activityFilter ?? 'all' %}
+{% set activityHasMore = activityHasMore ?? false %}
+{% set idelistEnabled = idelistEnabled ?? (idelist_enabled ?? false) %}
+{% set portalEnabled = portal_enabled ?? false %}
+{% if u %}
+{% set baseUrl = core_url('member/' ~ member_url_path(u)) %}
+{% set ajaxUrl = core_url('member/' ~ member_url_path(u) ~ '/activity') %}
+<div class="ips-profile-activity-box" id="profile-activity-box"
+  data-ajax-url="{{ core_e(ajaxUrl) }}"
+  data-filter="{{ core_e(activityFilter) }}"
+  data-offset="{{ activityStream|length }}"
+  data-has-more="{{ activityHasMore ? '1' : '0' }}">
+  <div class="ips-profile-activity-box__head">
+    <h2 class="ips-profile-activity-box__title"><i class="fa-solid fa-chart-line"></i> {{ core__('member.tab_activity') }}</h2>
+    <nav class="ips-activity-filters" role="group" aria-label="{{ core__('member.activity_filters') }}">
+      <button type="button" class="ips-activity-filters__chip{% if activityFilter == 'all' %} is-active{% endif %}" data-filter="all">{{ core__('member.filter_all') }}</button>
+      <button type="button" class="ips-activity-filters__chip{% if activityFilter == 'forum' %} is-active{% endif %}" data-filter="forum">{{ core__('member.filter_forum') }}</button>
+      {% if portalEnabled %}
+      <button type="button" class="ips-activity-filters__chip{% if activityFilter == 'articles' %} is-active{% endif %}" data-filter="articles">{{ core__('member.filter_articles') }}</button>
+      {% endif %}
+      {% if idelistEnabled %}
+      <button type="button" class="ips-activity-filters__chip{% if activityFilter == 'ideas' %} is-active{% endif %}" data-filter="ideas">{{ core__('member.filter_ideas') }}</button>
+      {% endif %}
+    </nav>
+  </div>
+  <div class="ips-profile-activity-box__scroll" id="profile-activity-scroll">
+    <div class="ips-stream" id="profile-activity-stream">
+      {% if activityStream is empty %}
+      <div class="ips-stream__empty" id="profile-activity-empty">
+        <i class="fa-regular fa-folder-open"></i>
+        <p>{{ core__('member.activity_empty') }}</p>
+      </div>
+      {% else %}
+      {% include 'partials/profile_activity_stream_items.html.twig' with { activityStream: activityStream, profileUser: u } %}
+      {% endif %}
+    </div>
+    <div class="ips-profile-activity-box__loader{% if not activityHasMore %} is-hidden{% endif %}" id="profile-activity-loader">
+      <i class="fa-solid fa-spinner fa-spin"></i> {{ core__('member.activity_loading') }}
+    </div>
+  </div>
+</div>
+{% endif %}

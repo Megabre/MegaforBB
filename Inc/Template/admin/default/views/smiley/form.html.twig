@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set smiley = smiley ?? null %}
+{% set isEdit = smiley and smiley.id %}
+{% set action = isEdit ? core_url(adminPath ~ '/smileys/update/' ~ smiley.id) : core_url(adminPath ~ '/smileys/store') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    <a href="{{ core_url(adminPath ~ '/smileys') }}" class="btn btn-icon btn-outline-secondary me-2">←</a>
+                    {{ core_e(pageTitle) }}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" class="card">
+            {{ core_csrf_field('admin_smiley')|raw }}
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label required">{{ lang('admin.smiley.code') }}</label>
+                        <input type="text" class="form-control" name="code" value="{{ core_e(smiley.code ?? '') }}" placeholder=":)" required maxlength="32">
+                        <small class="form-hint">{{ lang('admin.smiley.code_hint') }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ lang('admin.smiley.unicode_char') }}</label>
+                        <input type="text" class="form-control" name="unicode_char" value="{{ core_e(smiley.unicode_char ?? '') }}" placeholder="🙂" maxlength="16">
+                        <small class="form-hint">{{ lang('admin.smiley.unicode_char_hint') }}</small>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">{{ lang('admin.smiley.gif_file') }}</label>
+                        <input type="file" class="form-control" name="image" accept="image/gif">
+                        {% if isEdit and smiley.image_path %}
+                        <small class="form-hint">{{ lang('admin.smiley.current_gif') }}: {{ smiley.image_path }}</small>
+                        {% endif %}
+                        <small class="form-hint">{{ lang('admin.smiley.gif_hint') }}</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ lang('admin.smiley.sort_order') }}</label>
+                        <input type="number" class="form-control" name="sort_order" value="{{ smiley.sort_order ?? 0 }}">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+{% set users = users ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle ?? admin__('users.banned_users')) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>{{ core_e(admin__('users.username')) }}</th>
+                            <th>{{ core_e(admin__('users.email')) }}</th>
+                            <th>{{ core_e(admin__('users.role')) }}</th>
+                            <th>{{ core_e(admin__('users.status')) }}</th>
+                            <th class="w-1">{{ core_e(admin__('common.actions')) }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users is empty %}
+                        <tr><td colspan="6" class="text-center text-muted">{{ core_e(admin__('users.no_banned')) }}</td></tr>
+                        {% else %}
+                        {% for u in users %}
+                        <tr>
+                            <td class="text-muted">{{ u.id|e }}</td>
+                            <td class="font-weight-bold">{{ u.username|e }}</td>
+                            <td class="text-muted">{{ u.email|e }}</td>
+                            <td><span class="badge bg-secondary">{{ core_e(u.role.name ?? admin__('users.unknown')) }}</span></td>
+                            <td><span class="badge bg-danger">{{ core_e(admin__('users.banned')) }}</span></td>
+                            <td>
+                                <a href="{{ core_url(adminPath ~ '/users/edit/' ~ u.id) }}" class="btn btn-sm btn-white">{{ core_e(admin__('users.view_profile')) }}</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

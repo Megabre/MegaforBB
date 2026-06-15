@@ -1,0 +1,130 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set target = target ?? null %}
+{% set convError = flash('conv_error') %}
+{% set pmQuota = pmQuota ?? null %}
+
+<div class="max-w-2xl mx-auto">
+  {# Üst: Başlık + Mesajlara dön #}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-[#1a252f] tracking-tight">{{ core__('conv.new_message') }}</h1>
+      <p class="text-gray-500 text-sm mt-1">{{ core__('conv.new_message_subtitle') }}</p>
+    </div>
+    <a href="{{ core_url('conversations') }}" class="inline-flex items-center gap-2 text-sm font-medium text-[#1a252f] hover:text-[#172029]">
+      <i class="fa-solid fa-arrow-left"></i>
+      {{ core__('conv.back_to_messages') }}
+    </a>
+  </div>
+
+  {% if convError %}
+  <div class="mb-4 p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm flex items-start gap-3">
+    <i class="fa-solid fa-circle-exclamation text-red-500 mt-0.5 flex-shrink-0"></i>
+    <span>{{ core_e(convError) }}</span>
+  </div>
+  {% endif %}
+
+  {% if pmQuota %}
+  <div class="mb-4">{% include 'conversations/_pm_quota.html.twig' %}</div>
+  {% endif %}
+
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <form action="{{ core_url('conversations') }}" method="post" class="p-6 sm:p-8">
+      {{ core_csrf_field('conversation_new')|raw }}
+
+      {# Alıcı alanı — AJAX ile kullanıcı arama #}
+      <div class="mb-6" x-data="{
+        users: [],
+        loading: false,
+        open: false,
+        searchUrl: '{{ core_url('api/users/search')|e('js') }}',
+        timer: null
+      }" @click.outside="open = false">
+        <label for="to_username" class="block text-sm font-semibold text-[#1a252f] mb-2">{{ core__('conv.recipient') }}</label>
+        <div class="relative">
+          <div class="relative flex items-center bg-slate-50 border border-gray-200 rounded-xl focus-within:bg-white focus-within:border-[#1a252f] focus-within:ring-2 focus-within:ring-[#1a252f]/10 transition-all duration-200 shadow-sm">
+            <span class="absolute left-4 text-gray-400 pointer-events-none flex items-center justify-center w-6 h-6">
+              <i class="fa-solid fa-user text-sm"></i>
+            </span>
+            <input type="text"
+              id="to_username"
+              name="to_username"
+              value="{{ target ? core_e(target.username) : '' }}"
+              class="w-full pl-12 pr-12 py-3.5 bg-transparent border-0 rounded-xl text-[#1a252f] placeholder-gray-400 focus:outline-none focus:ring-0 text-sm"
+              placeholder="{{ core__('conv.recipient_placeholder')|e('html_attr') }}"
+              required
+              autocomplete="off"
+              x-ref="input"
+              @input="
+                clearTimeout(timer);
+                const q = $event.target.value.trim();
+                if (q.length < 2) { users = []; open = false; return; }
+                loading = true;
+                open = true;
+                timer = setTimeout(async () => {
+                  try {
+                    const r = await fetch(searchUrl + '?q=' + encodeURIComponent(q), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+                    const d = await r.json();
+                    users = d.users || [];
+                    open = users.length > 0;
+                  } catch (e) { users = []; open = false; }
+                  loading = false;
+                }, 300);
+              "
+              @focus="if (users.length > 0) open = true">
+            <div x-show="loading" x-transition class="absolute right-4 text-[#1a252f]/60 pointer-events-none">
+              <i class="fa-solid fa-spinner fa-spin text-sm"></i>
+            </div>
+            <div x-show="!loading && users.length > 0" x-transition class="absolute right-4 text-gray-400 pointer-events-none">
+              <i class="fa-solid fa-chevron-down text-xs"></i>
+            </div>
+          </div>
+          <div x-show="open && users.length"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="absolute z-20 mt-2 w-full bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden"
+            style="max-height: 280px;">
+            <div class="overflow-y-auto py-1" style="max-height: 268px;">
+              <template x-for="u in users" :key="u.id">
+                <button type="button"
+                  class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#1a252f]/5 active:bg-[#1a252f]/10 transition-colors text-sm"
+                  @click="$refs.input.value = u.username; open = false; users = [];">
+                  <img :src="u.avatar" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0" alt="">
+                  <span class="font-medium text-[#1a252f]" x-text="u.username"></span>
+                </button>
+              </template>
+            </div>
+          </div>
+        </div>
+        <p class="mt-1.5 text-xs text-gray-400">{{ core__('conv.recipient_search_hint') }}</p>
+      </div>
+
+      {# Mesaj alanı #}
+      <div class="mb-6">
+        <label class="block text-sm font-semibold text-[#1a252f] mb-2">{{ core__('conv.message_label') }}</label>
+        <textarea name="body"
+          rows="6"
+          class="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-[#1a252f] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f] transition-shadow resize-none"
+          placeholder="{{ core__('conv.body_placeholder')|e('html_attr') }}"
+          required></textarea>
+      </div>
+
+      {# Butonlar #}
+      <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-2">
+        <a href="{{ core_url('conversations') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors sm:order-2">
+          {{ core__('common.cancel') }}
+        </a>
+        <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#1a252f] text-white font-semibold hover:bg-[#172029] transition-colors shadow-sm sm:order-1">
+          <i class="fa-solid fa-paper-plane text-sm"></i>
+          {{ core__('common.send') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

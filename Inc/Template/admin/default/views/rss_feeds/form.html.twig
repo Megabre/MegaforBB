@@ -1,0 +1,176 @@
+{% extends 'base.html.twig' %}
+{% set isEdit = feed is not null %}
+{% set rssAuthorUsers = rssAuthorUsers ?? [] %}
+{% set rssCurrentAuthorNotEligible = rssCurrentAuthorNotEligible ?? false %}
+{% set forum_prefixes_json = forum_prefixes_json ?? '{}' %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ isEdit ? lang('admin.rss_feeds.edit') : lang('admin.rss_feeds.add') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/rss-feeds') }}" class="btn">{{ lang('admin.common.back_to_list') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('admin_error', []) %}
+        <div class="alert alert-danger" role="alert">{{ core_e(msg) }}</div>
+        {% endfor %}
+        {% if rssCurrentAuthorNotEligible %}
+        <div class="alert alert-warning" role="alert">{{ lang('admin.rss_feeds.current_author_not_eligible') }}</div>
+        {% endif %}
+        {% if rssAuthorUsers is empty %}
+        <div class="alert alert-danger" role="alert">{{ lang('admin.rss_feeds.no_eligible_users') }}</div>
+        {% endif %}
+
+        <div class="card">
+            <form action="{{ isEdit ? core_url(adminPath ~ '/rss-feeds/update/' ~ feed.id) : core_url(adminPath ~ '/rss-feeds/store') }}" method="post" id="rss-feed-form" data-initial-prefix-id="{{ feed ? feed.prefix_id : 0 }}">
+                {{ core_csrf_field(isEdit ? 'admin_rss_feed_update' : 'admin_rss_feed_store')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.common.title') }}</label>
+                        <input type="text" name="title" class="form-control" value="{{ feed ? core_e(feed.title) : '' }}" placeholder="{{ lang('admin.rss_feeds.col_title') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.rss_feeds.url') }} <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="url" name="url" id="rss-url" class="form-control" value="{{ feed ? core_e(feed.url) : '' }}" required placeholder="https://…">
+                            <button type="button" class="btn btn-outline-secondary" id="rss-preview-btn">{{ lang('admin.rss_feeds.preview_btn') }}</button>
+                        </div>
+                        <div class="form-hint small text-muted" id="rss-preview-out"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.rss_feeds.forum') }} <span class="text-danger">*</span></label>
+                        <select name="forum_id" id="rss-forum-select" class="form-select" required>
+                            <option value="">{{ lang('admin.common.select') }}</option>
+                            {% for fo in forums %}
+                            <option value="{{ fo.id }}" {{ feed and feed.forum_id == fo.id ? 'selected' : '' }}>{{ fo.category ? core_e(fo.category.name) ~ ' › ' : '' }}{{ core_e(fo.name) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.rss_feeds.prefix_select') }}</label>
+                        <select name="prefix_id" id="rss-prefix-select" class="form-select"></select>
+                        <small class="form-hint">{{ lang('admin.rss_feeds.prefix_select_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.rss_feeds.user_select') }} <span class="text-danger">*</span></label>
+                        <select name="user_id" class="form-select" required>
+                            <option value="">{{ lang('admin.common.select') }}</option>
+                            {% for u in rssAuthorUsers %}
+                            <option value="{{ u.id }}" {{ feed and feed.user_id == u.id ? 'selected' : '' }}>{{ core_e(u.username) }}{% if u.role %} — {{ core_e(u.role.name) }}{% endif %} (ID {{ u.id }})</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-hint">{{ lang('admin.rss_feeds.user_select_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.rss_feeds.frequency') }}</label>
+                        <input type="number" name="frequency_minutes" class="form-control" min="5" max="10080" value="{{ feed ? feed.frequency_minutes : 60 }}">
+                        <small class="form-hint">{{ lang('admin.rss_feeds.frequency_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="is_active" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ (not feed or feed.is_active) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.rss_feeds.active') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.rss_feeds.title_template') }}</label>
+                        <input type="text" name="title_template" class="form-control" value="{{ feed ? core_e(feed.title_template) : '{title}' }}" maxlength="500">
+                        <small class="form-hint">{{ lang('admin.rss_feeds.title_template_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.rss_feeds.body_template') }}</label>
+                        <textarea name="body_template" class="form-control" rows="5" placeholder="{content}&#10;&#10;[b]Kaynak:[/b] [url={link}]{link}[/url]">{{ feed and feed.body_template ? core_e(feed.body_template) : '' }}</textarea>
+                        <small class="form-hint">{{ lang('admin.rss_feeds.body_template_hint') }}</small>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ isEdit ? lang('admin.common.update') : lang('admin.common.create') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/rss-feeds') }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="application/json" id="forum-prefixes-data">{{ forum_prefixes_json|raw }}</script>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var forumPrefixesData = {};
+    try {
+        var fpEl = document.getElementById('forum-prefixes-data');
+        if (fpEl && fpEl.textContent) {
+            forumPrefixesData = JSON.parse(fpEl.textContent);
+        }
+    } catch (e) {
+        forumPrefixesData = {};
+    }
+    var noneLabel = {{ lang('admin.rss_feeds.prefix_none')|json_encode|raw }};
+    function rssRebuildPrefixOptions(forumId, preferredPrefixId) {
+        var sel = document.getElementById('rss-prefix-select');
+        if (!sel) return;
+        var fid = forumId != null && forumId !== '' ? String(forumId) : '';
+        var list = (fid && forumPrefixesData[fid]) ? forumPrefixesData[fid] : [];
+        sel.innerHTML = '';
+        var o0 = document.createElement('option');
+        o0.value = '0';
+        o0.textContent = noneLabel;
+        sel.appendChild(o0);
+        for (var i = 0; i < list.length; i++) {
+            var o = document.createElement('option');
+            o.value = String(list[i].id);
+            o.textContent = list[i].name || ('#' + list[i].id);
+            sel.appendChild(o);
+        }
+        var want = preferredPrefixId != null ? String(preferredPrefixId) : '0';
+        if (want !== '0') {
+            sel.value = want;
+            if (sel.value !== want) {
+                sel.value = '0';
+            }
+        } else {
+            sel.value = '0';
+        }
+    }
+    var rssForm = document.getElementById('rss-feed-form');
+    var rssForumSel = document.getElementById('rss-forum-select');
+    var initialPrefix = rssForm ? parseInt(rssForm.getAttribute('data-initial-prefix-id') || '0', 10) : 0;
+    if (isNaN(initialPrefix)) initialPrefix = 0;
+    if (rssForumSel) {
+        rssRebuildPrefixOptions(rssForumSel.value, initialPrefix);
+        rssForumSel.addEventListener('change', function() {
+            rssRebuildPrefixOptions(this.value, 0);
+        });
+    }
+
+    var btn = document.getElementById('rss-preview-btn');
+    var urlIn = document.getElementById('rss-url');
+    var out = document.getElementById('rss-preview-out');
+    if (!btn || !urlIn || !out) return;
+    btn.addEventListener('click', function() {
+        var u = encodeURIComponent(urlIn.value.trim());
+        if (!u) { out.textContent = ''; return; }
+        out.textContent = '…';
+        fetch('{{ core_url(adminPath ~ '/rss-feeds/preview') }}?url=' + u, { credentials: 'same-origin' })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.ok) {
+                    out.textContent = {{ lang('admin.rss_feeds.preview_ok')|json_encode|raw }} + ' ' + (d.feed_title || '') + ' — ' + (d.sample_title || '');
+                } else {
+                    out.textContent = d.message || 'Error';
+                }
+            })
+            .catch(function() { out.textContent = 'Error'; });
+    });
+});
+</script>
+{% endblock %}

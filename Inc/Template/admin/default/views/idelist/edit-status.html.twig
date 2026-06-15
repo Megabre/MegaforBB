@@ -1,0 +1,62 @@
+{% extends "base.html.twig" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/idelist.css') }}?v={{ core_config('app.version', '1.0.0') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-3">
+  {% include 'idelist/_nav.html.twig' with { tab: 'ideas' } %}
+  <div class="card shadow-sm">
+    <div class="card-body">
+    <h3 class="mb-3">{{ core_e(idea.title) }}</h3>
+    <form method="post" action="{{ core_url(adminPath ~ '/idelist/' ~ idea.id ~ '/status') }}" class="d-grid gap-3" id="idelist-status-form">
+      {{ core_csrf_field('idelist_admin_status')|raw }}
+      <div>
+      <label class="form-label">{{ core_e(core__('idelist.admin_change_status')) }}</label>
+      <select class="form-select" name="status" id="idelist-status-select">
+        {% for s in statuses %}
+          <option value="{{ s.slug|e('html_attr') }}" data-requires-completion="{{ s.requires_completion ? '1' : '0' }}" {{ idea.status == s.slug ? 'selected' : '' }}>{{ core_e(s.name) }}</option>
+        {% endfor %}
+      </select>
+      </div>
+      <div>
+      <label class="form-label">{{ core_e(core__('idelist.completion_note_label')) }}</label>
+      <textarea class="form-control" name="completion_note" id="idelist-completion-note" placeholder="{{ core_e(core__('idelist.completion_note_label')) }}">{{ idea.completion_note ?? '' }}</textarea>
+      <small class="text-muted d-block mt-1" id="idelist-completion-help">{{ core_e(core__('idelist.completion_note_help_optional')) }}</small>
+      </div>
+      <div>
+      <label class="form-label">URL</label>
+      <input class="form-control" name="completion_url" placeholder="{{ core_e(core__('idelist.completion_url_placeholder')) }}" value="{{ idea.completion_url ?? '' }}">
+      </div>
+      <button class="btn btn-primary" type="submit">{{ core_e(core__('idelist.save_action')) }}</button>
+    </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var select = document.getElementById('idelist-status-select');
+  var note = document.getElementById('idelist-completion-note');
+  var help = document.getElementById('idelist-completion-help');
+  if (!select || !note) return;
+
+  function syncCompletionRequirement() {
+    var selected = select.options[select.selectedIndex];
+    var required = selected && selected.getAttribute('data-requires-completion') === '1';
+    note.required = required;
+    note.setAttribute('aria-required', required ? 'true' : 'false');
+    if (help) {
+      help.textContent = required
+        ? {{ core__('idelist.completion_note_help_required')|json_encode|raw }}
+        : {{ core__('idelist.completion_note_help_optional')|json_encode|raw }};
+    }
+  }
+
+  select.addEventListener('change', syncCompletionRequirement);
+  syncCompletionRequirement();
+})();
+</script>
+{% endblock %}

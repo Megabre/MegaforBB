@@ -1,0 +1,193 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set prefix = prefix ?? null %}
+{% set categories = categories ?? [] %}
+{% set stylePresetMap = stylePresetMap ?? {} %}
+{% set detectedPresetKey = detectedPresetKey ?? 'blue' %}
+{% set isCustomCss = isCustomCss ?? false %}
+{% set prefixForumIds = prefixForumIds ?? [] %}
+{% set forums_by_category_json = forums_by_category_json ?? '{}' %}
+{% set isEdit = prefix and prefix.id %}
+{% set action = isEdit ? core_url(adminPath ~ '/prefixes/update/' ~ prefix.id) : core_url(adminPath ~ '/prefixes/store') %}
+{% set currentCss = prefix.css_class ?? (stylePresetMap.blue ?? 'bg-blue-50 text-blue-700') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    <a href="{{ core_url(adminPath ~ '/prefixes') }}" class="btn btn-icon btn-outline-secondary me-2">←</a>
+                    {{ core_e(pageTitle) }}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row row-cards">
+            <div class="col-12">
+                <form action="{{ action }}" method="post" class="card" id="prefix-form">
+                    {{ core_csrf_field()|raw }}
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label required">{{ core_e(admin__('prefixes.name')) }}</label>
+                                <input type="text" class="form-control" name="name" value="{{ core_e(prefix.name ?? '') }}" placeholder="{{ core_e(admin__('prefixes.name_ph')) }}" required>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('prefixes.category')) }}</label>
+                                <select name="category_id" class="form-select">
+                                    <option value="0">{{ core_e(admin__('prefixes.category_all')) }}</option>
+                                    {% for c in categories %}
+                                    <option value="{{ c.id }}" {{ (prefix.category_id ?? 0) == c.id ? 'selected' : '' }}>{{ core_e(c.name) }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">{{ core_e(admin__('prefixes.category_hint')) }}</small>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-label">{{ core_e(admin__('prefixes.sort_order')) }}</label>
+                                <input type="number" class="form-control" name="sort_order" value="{{ prefix.sort_order ?? 0 }}">
+                            </div>
+
+                            <div class="col-12">
+                                <hr class="my-2">
+                                <h4 class="mb-2">{{ core_e(admin__('prefixes.assign_forums_title')) }}</h4>
+                                <p class="text-muted small mb-3">{{ core_e(admin__('prefixes.assign_forums_hint')) }}</p>
+                                <div id="prefix-forum-assign-wrap" class="border rounded p-3 bg-light" style="max-height:340px;overflow-y:auto;min-height:72px;">
+                                    <p id="prefix-forum-assign-placeholder" class="text-muted small mb-0">{{ core_e(admin__('prefixes.assign_need_category')) }}</p>
+                                    <div id="prefix-forum-assign-list" class="d-none"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">{{ core_e(admin__('prefixes.style')) }}</label>
+                                <p class="text-muted small mb-2">{{ core_e(admin__('prefixes.style_picker_hint')) }}</p>
+                                <input type="hidden" name="style_preset_key" id="style_preset_key" value="{{ detectedPresetKey }}">
+                                <div class="d-flex flex-wrap gap-2 mb-2" id="prefix-style-presets">
+                                    {% for key, classes in stylePresetMap %}
+                                    <button type="button" class="btn btn-sm border-2 prefix-style-btn {{ (not isCustomCss and detectedPresetKey == key) ? 'border-primary' : 'border-transparent' }}" data-preset-key="{{ key }}" data-css="{{ core_e(classes) }}" style="opacity:1;">
+                                        <span class="px-2 py-1 rounded {{ core_e(classes) }}">{{ core_e(admin__('prefixes.preset_sample_' ~ key)) }}</span>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="use_custom_css" value="1" id="use_custom_css" {{ isCustomCss ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="use_custom_css">{{ core_e(admin__('prefixes.use_custom_tailwind')) }}</label>
+                                </div>
+                                <input type="text" class="form-control font-monospace small" name="css_class_custom" id="css_class_custom" value="{{ isCustomCss ? core_e(currentCss) : '' }}" placeholder="{{ core_e(admin__('prefixes.css_class_placeholder')) }}">
+                                <small class="text-muted">{{ core_e(admin__('prefixes.css_class_hint')) }}</small>
+                            </div>
+
+                            <div class="col-12"><hr class="my-1"></div>
+                            <div class="col-12">
+                                <h4 class="mb-2">{{ core_e(admin__('prefixes.colors_section')) }}</h4>
+                                <p class="text-muted small">{{ core_e(admin__('prefixes.colors_section_hint')) }}</p>
+                                <label class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="use_hex_badge" value="1" id="use_hex_badge" {{ (prefix.badge_bg ?? '') != '' and (prefix.badge_text ?? '') != '' ? 'checked' : '' }}>
+                                    <span class="form-check-label">{{ core_e(admin__('prefixes.use_hex_badge')) }}</span>
+                                </label>
+                            </div>
+                            <div class="col-sm-6 col-md-3 hex-badge-fields">
+                                <label class="form-label">{{ core_e(admin__('prefixes.badge_bg')) }}</label>
+                                <input type="color" class="form-control form-control-color" name="badge_bg" id="badge_bg" value="{{ (prefix.badge_bg ?? '') != '' ? core_e(prefix.badge_bg) : '#22c55e' }}">
+                            </div>
+                            <div class="col-sm-6 col-md-3 hex-badge-fields">
+                                <label class="form-label">{{ core_e(admin__('prefixes.badge_text')) }}</label>
+                                <input type="color" class="form-control form-control-color" name="badge_text" id="badge_text" value="{{ (prefix.badge_text ?? '') != '' ? core_e(prefix.badge_text) : '#ffffff' }}">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">{{ core_e(admin__('prefixes.icon_class')) }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text w-5 justify-content-center"><i id="prefix-icon-preview" class="{{ (prefix.icon_class ?? '') != '' ? core_e(prefix.icon_class) : 'fa-solid fa-tag' }}"></i></span>
+                                    <input type="text" class="form-control" name="icon_class" id="prefix-icon-input" value="{{ core_e(prefix.icon_class ?? '') }}" placeholder="fa-solid fa-circle-check">
+                                    <button class="btn btn-outline-secondary icon-selector-btn" type="button" data-target="prefix-icon-input" data-preview="prefix-icon-preview">{{ lang('admin.forums.select') }}</button>
+                                </div>
+                                <small class="text-muted">{{ core_e(admin__('prefixes.icon_hint')) }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <button type="submit" class="btn btn-primary">{{ core_e(admin__('common.save')) }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+  var form = document.getElementById('prefix-form');
+  if (!form) return;
+  var presetKeyInput = document.getElementById('style_preset_key');
+  var useCustom = document.getElementById('use_custom_css');
+  var useHex = document.getElementById('use_hex_badge');
+  function toggleHexFields(){
+    var on = useHex && useHex.checked;
+    document.querySelectorAll('.hex-badge-fields').forEach(function(el){ el.style.opacity = on ? '1' : '0.5'; });
+    ['badge_bg','badge_text'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.disabled = !on;
+    });
+  }
+  if (useHex){ useHex.addEventListener('change', toggleHexFields); toggleHexFields(); }
+  document.querySelectorAll('.prefix-style-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if (useCustom) useCustom.checked = false;
+      if (presetKeyInput) presetKeyInput.value = btn.getAttribute('data-preset-key') || 'blue';
+      document.querySelectorAll('.prefix-style-btn').forEach(function(b){ b.classList.remove('border-primary'); b.classList.add('border-transparent'); });
+      btn.classList.remove('border-transparent'); btn.classList.add('border-primary');
+    });
+  });
+  if (useCustom) useCustom.addEventListener('change', function(){
+    if (this.checked) document.querySelectorAll('.prefix-style-btn').forEach(function(b){ b.classList.remove('border-primary'); b.classList.add('border-transparent'); });
+  });
+
+  var forumsByCat = {{ forums_by_category_json|raw }};
+  var checkedForumIds = {{ prefixForumIds|json_encode|raw }};
+  var subforumLbl = {{ admin__('prefixes.subforum_label')|json_encode|raw }};
+  var noForumsTxt = {{ admin__('prefixes.no_forums_in_cat')|json_encode|raw }};
+  var catSelect = form.querySelector('select[name="category_id"]');
+  var phEl = document.getElementById('prefix-forum-assign-placeholder');
+  var listEl = document.getElementById('prefix-forum-assign-list');
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+  function renderPrefixForums() {
+    if (!catSelect || !listEl || !phEl) return;
+    var cid = String(catSelect.value || '0');
+    if (cid === '0') {
+      phEl.classList.remove('d-none');
+      listEl.classList.add('d-none');
+      listEl.innerHTML = '';
+      return;
+    }
+    phEl.classList.add('d-none');
+    listEl.classList.remove('d-none');
+    var list = forumsByCat[cid] || [];
+    if (!list.length) {
+      listEl.innerHTML = '<span class="text-muted small">' + esc(noForumsTxt) + '</span>';
+      return;
+    }
+    var html = '';
+    list.forEach(function(f) {
+      var ch = checkedForumIds.indexOf(f.id) !== -1 ? ' checked' : '';
+      html += '<div class="mb-1"><label class="form-check"><input class="form-check-input" type="checkbox" name="prefix_forum_ids[]" value="' + f.id + '"' + ch + '><span class="form-check-label fw-medium">' + esc(f.name) + '</span></label></div>';
+      (f.subs || []).forEach(function(s) {
+        var ch2 = checkedForumIds.indexOf(s.id) !== -1 ? ' checked' : '';
+        html += '<div class="mb-1 ms-3"><label class="form-check"><input class="form-check-input" type="checkbox" name="prefix_forum_ids[]" value="' + s.id + '"' + ch2 + '><span class="form-check-label">' + esc(s.name) + ' <span class="badge bg-secondary-lt">' + esc(subforumLbl) + '</span></span></label></div>';
+      });
+    });
+    listEl.innerHTML = html;
+  }
+  if (catSelect) {
+    catSelect.addEventListener('change', renderPrefixForums);
+    renderPrefixForums();
+  }
+})();
+</script>
+{% endblock %}

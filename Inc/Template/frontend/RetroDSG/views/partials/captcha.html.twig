@@ -1,0 +1,18 @@
+{% set captcha_provider = captcha_provider ?? 'none' %}
+{% set captcha_site_key = captcha_site_key ?? '' %}
+{% set recaptcha_version = recaptcha_version ?? 'v2' %}
+{% if captcha_provider != 'none' and captcha_site_key is not empty %}
+<div class="captcha-widget mb-4" data-provider="{{ core_e(captcha_provider) }}" data-captcha-site-key="{{ core_e(captcha_site_key) }}" data-recaptcha-version="{{ core_e(recaptcha_version) }}">
+  {% if captcha_provider == 'recaptcha' %}
+    {% if recaptcha_version == 'v3' %}
+    <input type="hidden" name="g-recaptcha-response" id="recaptcha-v3-token" value="">
+    <script src="https://www.google.com/recaptcha/api.js?render={{ core_e(captcha_site_key) }}" async defer></script>
+    {% else %}
+    <div class="g-recaptcha" data-sitekey="{{ core_e(captcha_site_key) }}"></div>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    {% endif %}
+  {% elseif captcha_provider == 'turnstile' %}
+    <div class="cf-turnstile" data-sitekey="{{ core_e(captcha_site_key) }}"></div>
+  {% endif %}
+</div>
+{% endif %}

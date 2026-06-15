@@ -1,0 +1,40 @@
+{% for node in nodes %}
+{% set section = node.section %}
+{% set path = node.path %}
+{% set children = node.children ?? [] %}
+{% set pages = node.pages ?? [] %}
+<li class="doc-section-item border rounded mb-2" data-section-id="{{ section.id }}">
+  <div class="d-flex align-items-center gap-2 p-2 bg-white rounded">
+    <span class="doc-drag-handle cursor-grab text-muted px-1" title="{{ lang('admin.documentation.drag_to_reorder') }}"><i class="ti ti-grip-vertical"></i></span>
+    <strong>{{ section.title|e }}</strong>
+    <span class="text-muted small">/{{ path|e }}</span>
+    <div class="ms-auto d-flex gap-1">
+      <a href="{{ core_url(adminPath ~ '/documentation-settings/sections/edit/' ~ section.id) }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.common.edit') }}</a>
+      <form action="{{ core_url(adminPath ~ '/documentation-settings/sections/delete/' ~ section.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.documentation.confirm_delete_section') }}');">
+        {{ core_csrf_field('admin_documentation')|raw }}
+        <button type="submit" class="btn btn-sm btn-outline-danger">{{ lang('admin.common.delete') }}</button>
+      </form>
+    </div>
+  </div>
+  {% if children is not empty %}
+  <ul class="list-unstyled ms-4 mt-1 doc-sections-sortable doc-section-children" data-parent-id="{{ section.id }}">
+    {% include 'documentation_settings/_section_tree_item.html.twig' with { nodes: children, adminPath: adminPath } only %}
+  </ul>
+  {% endif %}
+  <ul class="list-unstyled ms-4 mt-1 doc-pages-sortable" data-section-id="{{ section.id }}">
+    {% for page in pages %}
+    <li class="d-flex align-items-center gap-2 py-1 px-2 rounded doc-page-item" data-page-id="{{ page.id }}">
+      <span class="doc-page-drag-handle cursor-grab text-muted"><i class="ti ti-grip-vertical"></i></span>
+      <a href="{{ core_url('documentation/' ~ path|e('url') ~ '/' ~ page.slug|e('url')) }}" target="_blank" class="flex-grow-1">{{ page.title|e }}</a>
+      <a href="{{ core_url(adminPath ~ '/documentation-settings/pages/edit/' ~ page.id) }}" class="btn btn-sm btn-ghost-primary">{{ lang('admin.common.edit') }}</a>
+      <form action="{{ core_url(adminPath ~ '/documentation-settings/pages/delete/' ~ page.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.documentation.confirm_delete_page') }}');">
+        {{ core_csrf_field('admin_documentation')|raw }}
+        <button type="submit" class="btn btn-sm btn-ghost-danger">{{ lang('admin.common.delete') }}</button>
+      </form>
+    </li>
+    {% else %}
+    <li class="text-muted small py-1 doc-page-no-pages">{{ lang('admin.documentation.no_pages') }}</li>
+    {% endfor %}
+  </ul>
+</li>
+{% endfor %}

@@ -1,0 +1,301 @@
+﻿{% extends 'base.html.twig' %}
+
+{% block content %}
+{% if not topic %}
+  <p class="p-4 text-gray-500">Konu bulunamadı.</p>
+{% else %}
+{% set cu = user ?? null %}
+{% set topicError = flash('topic_error') %}
+{% set topicOk = flash('topic_ok') %}
+{% set likeError = flash('like_error') %}
+{% set reportError = flash('report_error') %}
+{% set reportOk = flash('report_ok') %}
+{% set error = flash('reply_error') %}
+{% set reputationEnabled = reputationEnabled ?? false %}
+{% set isStaff = cu and ((cu.role_id ?? 0) == 1 or (cu.role_id ?? 0) == 2) %}
+{% set canManageTopic = cu and (cu.id == topic.user_id or isStaff) %}
+{% set is_question = is_question ?? false %}
+{% set accepted_post_id = accepted_post_id ?? null %}
+{% set post_vote_csrf = is_question ? core_csrf_token('post_vote') : '' %}
+{% set topicTags = topicTags ?? [] %}
+
+{% if scheduled_notice_text ?? '' %}<div class="mt-4 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm flex items-center gap-2"><i class="fa-solid fa-clock text-amber-600"></i> {{ core_e(scheduled_notice_text) }}</div>{% endif %}
+{% if topicError %}<div class="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md text-sm">{{ core_e(topicError) }}</div>{% endif %}
+{% if topicOk %}<div class="mt-4 bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-md text-sm">{{ core_e(topicOk) }}</div>{% endif %}
+{% if likeError %}<div class="mt-4 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-md text-sm">{{ core_e(likeError) }}</div>{% endif %}
+{% if reportError %}<div class="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md text-sm">{{ core_e(reportError) }}</div>{% endif %}
+{% if reportOk %}<div class="mt-4 bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-md text-sm">{{ core_e(reportOk) }}</div>{% endif %}
+
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(core__('common.home')) }}</a></li>
+      <li>›</li>
+      <li><a href="{{ core_url('forum/' ~ (topic.forum_slug ?? '')|e('url')) }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(topic.forum_name ?? '') }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">{{ core_e(topic.title) }}</li>
+    </ol>
+  </nav>
+</div>
+
+{% if ads.topic_below_breadcrumb is defined and ads.topic_below_breadcrumb is not empty %}
+<div class="ads-slot ads-topic-below-breadcrumb mt-3 mb-3">
+  {% for html in ads.topic_below_breadcrumb %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+</div>
+{% endif %}
+
+<div class="mt-6 space-y-4">
+  <div class="rdsg-topic-shell bg-white ring-1 ring-gray-200 shadow-sm rounded-lg overflow-hidden">
+    <div class="bg-[#1a252f] text-white px-3 sm:px-4 py-3 rounded-t-lg font-semibold text-sm tracking-wide flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+      <span class="break-words">
+        {% if topic.prefix_name %}{% include 'partials/topic_prefix_badge.html.twig' with { prefix_name: topic.prefix_name, prefix_css_class: topic.prefix_css_class, prefix_badge_bg: topic.prefix_badge_bg|default(''), prefix_badge_text: topic.prefix_badge_text|default(''), prefix_icon_class: topic.prefix_icon_class|default('') } only %}{% endif %}
+        {{ core_e(topic.title) }}
+        {% if (topic.is_private ?? 0) == 1 %} <span class="text-amber-300 ml-1" title="Özel Konu"><i class="fa-solid fa-eye-slash"></i></span>{% endif %}
+        {% if topic.is_locked %} <span class="text-amber-300 ml-1" title="Kilitli"><i class="fa-solid fa-lock"></i></span>{% endif %}
+        {% if topic.is_sticky %} <span class="text-amber-300 ml-1" title="Sabit"><i class="fa-solid fa-thumbtack"></i></span>{% endif %}
+      </span>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        {% if canManageTopic %}
+        <div class="relative" x-data="{ open: false }">
+          <button type="button" @click="open = !open" class="px-3 py-1.5 text-xs rounded-md text-white bg-[#2c3e50] hover:bg-gray-600 flex items-center gap-1" title="{{ core__('topic.actions')|e('html_attr') }}"><i class="fa-solid fa-bars"></i> {{ core__('topic.actions') }}</button>
+          <div x-show="open" @click.outside="open = false" x-transition class="absolute right-0 mt-1 w-52 bg-white text-[#1a252f] rounded-md shadow-lg border border-gray-200 py-1 z-20">
+            {% if isStaff %}
+            <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/toggle-sticky') }}" method="post" class="block">{{ core_csrf_field('topic_action')|raw }}<button type="submit" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-thumbtack"></i> {{ topic.is_sticky ? core__('topic.unsticky') : core__('topic.sticky') }}</button></form>
+            <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/toggle-lock') }}" method="post" class="block">{{ core_csrf_field('topic_action')|raw }}<button type="submit" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-lock"></i> {{ topic.is_locked ? core__('topic.unlock') : core__('topic.lock') }}</button></form>
+            <a href="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/move') }}" class="block px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-arrows-alt"></i> {{ core__('topic.move') }}</a>
+            {% endif %}
+            <a href="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/edit') }}" class="block px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-pen"></i> {{ core__('topic.edit_title_label') }}</a>
+            {% if isStaff %}
+            <a href="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/merge') }}" class="block px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-link"></i> {{ core__('topic.merge_with') }}</a>
+            <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/convert-to-article') }}" method="post" class="block" onsubmit="return confirm('{{ core__('topic.convert_to_article_confirm')|e('js') }}');">{{ core_csrf_field('topic_action')|raw }}<button type="submit" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"><i class="fa-solid fa-newspaper"></i> {{ core__('topic.convert_to_article') }}</button></form>
+            <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/delete') }}" method="post" class="block" onsubmit="return confirm('{{ core__('topic.delete_topic_confirm')|e('js') }}');">{{ core_csrf_field('delete_topic')|raw }}<button type="submit" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 text-red-600"><i class="fa-solid fa-trash"></i> {{ core__('topic.delete_topic') }}</button></form>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        {% if cu %}
+        {% if isSubscribed %}
+        <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/unsubscribe') }}" method="post" class="inline">{{ core_csrf_field('topic_subscribe')|raw }}<button type="submit" class="px-3 py-1.5 text-sm rounded-md text-amber-700 bg-amber-100 hover:bg-amber-200"><i class="fa-solid fa-bell-slash mr-1"></i>Abonelikten çık</button></form>
+        {% else %}
+        <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/subscribe') }}" method="post" class="inline">{{ core_csrf_field('topic_subscribe')|raw }}<button type="submit" class="px-3 py-1.5 text-sm rounded-md text-[#1a252f] bg-white hover:bg-gray-100 border border-gray-300"><i class="fa-solid fa-bell mr-1"></i>{{ core__('topic.subscribe') }}</button></form>
+        {% endif %}
+        {% if not topic.is_locked %}<a href="#reply" class="px-3 py-1.5 text-sm rounded-md text-[#1a252f] bg-white hover:bg-gray-100"><i class="fa-solid fa-reply mr-1"></i>{{ core_e(core__('forum.reply')) }}</a>{% endif %}
+        {% if can_bump|default(false) %}
+        <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/bump') }}" method="post" class="inline">{{ core_csrf_field('topic_action')|raw }}<button type="submit" class="px-3 py-1.5 text-sm rounded-md text-[#1a252f] bg-white hover:bg-gray-100 border border-gray-300"><i class="fa-solid fa-arrow-up mr-1"></i>{{ lang('topic.bump_button') }}</button></form>
+        {% endif %}
+        {% elseif topic.is_locked %}
+        <span class="px-3 py-1.5 text-sm rounded-md bg-gray-500 text-gray-300 cursor-not-allowed" title="{{ core__('forum.topic_locked_title') }}"><i class="fa-solid fa-lock mr-1"></i>{{ core__('forum.reply_disabled') }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if topicTags is not empty %}
+    <div class="px-3 sm:px-4 py-2 border-b border-gray-200 bg-slate-50/50 flex flex-wrap items-center gap-1.5">
+      <span class="text-xs text-gray-500 mr-1">Etiketler:</span>
+      {% for tag in topicTags %}
+      {% set tagName = tag.name is defined ? tag.name : (tag['name'] ?? '') %}
+      {% set tagSlug = tag.slug is defined ? tag.slug : (tag['slug'] ?? '') %}
+      <a href="{{ tagSlug != '' ? core_url('search?tag=' ~ tagSlug|e('url')) : core_url('search?q=' ~ tagName|e('url')) }}" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#1a252f]/10 text-[#1a252f] hover:bg-[#1a252f]/20">{{ core_e(tagName) }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if poll %}{% include 'partials/poll.html.twig' %}{% endif %}
+
+    {% if commerceShowBidForm is defined and commerceShowBidForm %}
+    {% include '@Commerce/showthread_bid_form.html.twig' %}
+    {% endif %}
+    {% if (commerceCanStartEscrow is defined and commerceCanStartEscrow) or (commerceEscrow is defined and commerceEscrow) %}
+    {% include '@Commerce/showthread_escrow.html.twig' %}
+    {% endif %}
+
+    {% set currentPage = currentPage ?? 1 %}
+    {% set totalPages = totalPages ?? 1 %}
+    {% set topicPageUrl = topic_url(topic) %}
+    {% set pStart = max(1, currentPage - 3) %}
+    {% set pEnd = min(totalPages, currentPage + 3) %}
+
+    {% if totalPages > 1 %}
+    <div class="px-3 sm:px-4 py-2 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm">
+      <span class="text-gray-500 text-xs sm:text-sm">Sayfa {{ currentPage }} / {{ totalPages }}</span>
+      <div class="flex items-center gap-1 flex-wrap">
+        {% if currentPage > 1 %}<a href="{{ topicPageUrl }}?page={{ currentPage - 1 }}" class="px-2.5 py-1 rounded bg-gray-200 hover:bg-gray-300 text-[#1a252f] text-xs">&laquo; Önceki</a>{% endif %}
+        {% if pStart > 1 %}<a href="{{ topicPageUrl }}?page=1" class="px-2.5 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs">1</a>{% if pStart > 2 %}<span class="text-gray-400 text-xs px-1">...</span>{% endif %}{% endif %}
+        {% for pg in pStart..pEnd %}
+        <a href="{{ topicPageUrl }}?page={{ pg }}" class="px-2.5 py-1 rounded text-xs {{ pg == currentPage ? 'bg-[#1a252f] text-white font-semibold' : 'bg-gray-100 hover:bg-gray-200 text-[#1a252f]' }}">{{ pg }}</a>
+        {% endfor %}
+        {% if pEnd < totalPages %}{% if pEnd < totalPages - 1 %}<span class="text-gray-400 text-xs px-1">...</span>{% endif %}<a href="{{ topicPageUrl }}?page={{ totalPages }}" class="px-2.5 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs">{{ totalPages }}</a>{% endif %}
+        {% if currentPage < totalPages %}<a href="{{ topicPageUrl }}?page={{ currentPage + 1 }}" class="px-2.5 py-1 rounded bg-gray-200 hover:bg-gray-300 text-[#1a252f] text-xs">Sonraki &raquo;</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if posts is empty %}
+    <div class="p-8 text-center text-gray-500">{{ core_e(core__('forum.no_messages_yet')) }}</div>
+    {% else %}
+    {% for p in posts %}
+    {% include 'partials/postbit.html.twig' with _context|merge({ p: p, postLoopIndex: loop.index }) %}
+    {% if ads.topic_between_posts is defined and ads.topic_between_posts is not empty %}
+    <div class="ads-slot ads-topic-between-posts my-4">
+      {% for html in ads.topic_between_posts %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+
+    {% if totalPages > 1 %}
+    <div class="px-3 sm:px-4 py-3 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm">
+      <span class="text-gray-500 text-xs sm:text-sm">Sayfa {{ currentPage }} / {{ totalPages }} &middot; Toplam {{ totalPosts ?? 0 }} mesaj</span>
+      <div class="flex items-center gap-1 flex-wrap">
+        {% if currentPage > 1 %}<a href="{{ topicPageUrl }}?page={{ currentPage - 1 }}" class="px-2.5 py-1 rounded bg-gray-200 hover:bg-gray-300 text-[#1a252f] text-xs">&laquo; Önceki</a>{% endif %}
+        {% if pStart > 1 %}<a href="{{ topicPageUrl }}?page=1" class="px-2.5 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs">1</a>{% if pStart > 2 %}<span class="text-gray-400 text-xs px-1">...</span>{% endif %}{% endif %}
+        {% for pg in pStart..pEnd %}
+        <a href="{{ topicPageUrl }}?page={{ pg }}" class="px-2.5 py-1 rounded text-xs {{ pg == currentPage ? 'bg-[#1a252f] text-white font-semibold' : 'bg-gray-100 hover:bg-gray-200 text-[#1a252f]' }}">{{ pg }}</a>
+        {% endfor %}
+        {% if pEnd < totalPages %}{% if pEnd < totalPages - 1 %}<span class="text-gray-400 text-xs px-1">...</span>{% endif %}<a href="{{ topicPageUrl }}?page={{ totalPages }}" class="px-2.5 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs">{{ totalPages }}</a>{% endif %}
+        {% if currentPage < totalPages %}<a href="{{ topicPageUrl }}?page={{ currentPage + 1 }}" class="px-2.5 py-1 rounded bg-gray-200 hover:bg-gray-300 text-[#1a252f] text-xs">Sonraki &raquo;</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if ads.topic_above_footer is defined and ads.topic_above_footer is not empty %}
+  <div class="ads-slot ads-topic-above-footer mt-6 mb-4">
+    {% for html in ads.topic_above_footer %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if user %}
+  {% if topic.is_locked %}
+  <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md text-sm mt-4 text-center">
+    <i class="fa-solid fa-lock mr-2"></i>{{ core__('forum.topic_locked_message') }}
+  </div>
+  {% elseif not (can_reply|default(true)) %}
+  <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md text-sm mt-4 text-center">
+    {{ core__('error.no_permission') }}
+  </div>
+  {% else %}
+  <div id="reply" class="bg-white ring-1 ring-gray-200 shadow-sm rounded-lg overflow-hidden mt-6">
+    <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 font-semibold text-gray-700">
+      <i class="fa-solid fa-reply mr-2"></i>{{ core__('forum.reply') }}
+    </div>
+    <div class="p-4">
+      {% if error %}<div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{{ core_e(error) }}</div>{% endif %}
+      <form id="topic-reply-form" action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/reply') }}" method="post" data-draft-topic-id="{{ (topic.id ?? '')|e('html_attr') }}">
+        {{ core_csrf_field('reply_topic')|raw }}
+        <input type="hidden" id="upload-attachment-csrf-reply" name="upload_attachment_token" value="{{ core_csrf_token('upload_attachment')|e('html_attr') }}">
+        <input type="hidden" name="reply_to_id" id="reply-to-id-input" value="">
+        <div id="reply-hint-box" class="hidden mb-3 bg-indigo-50 border border-indigo-200 text-indigo-800 px-3 py-2 rounded-md text-sm flex items-center justify-between">
+            <span id="reply-hint-text"></span>
+            <button type="button" id="reply-hint-cancel" class="text-indigo-600 hover:text-indigo-900"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="multi-quote-bar" class="hidden mb-3 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-md text-sm">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="flex items-center"><i class="fa-solid fa-layer-group mr-1.5 text-emerald-600"></i><strong id="multi-quote-count" class="mr-1">0</strong> {{ core__('post.multi_quotes_selected')|default('mesaj seçildi') }}</span>
+                <button type="button" id="multi-quote-insert-btn" class="text-xs font-semibold rounded border border-emerald-700 bg-emerald-700 text-emerald-100 px-3 py-1.5 hover:bg-emerald-800" style="display:inline-flex;align-items:center;gap:.4rem;"><i class="fa-solid fa-plus"></i><span>{{ core__('post.insert_multi_quotes')|default('Ekle') }}</span></button>
+                <button type="button" id="multi-quote-clear-btn" class="text-xs font-medium rounded border border-emerald-300 bg-white text-emerald-700 px-2 py-1.5 hover:bg-emerald-100" title="{{ core__('common.cancel')|default('İptal') }}" style="display:inline-flex;align-items:center;justify-content:center;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div class="mb-4">
+          <textarea name="body" id="reply-body" rows="6" data-editor data-secret-tooltip="{{ core__('editor.secret_tooltip')|e('html_attr') }}" data-secret-placeholder="{{ core__('editor.secret_placeholder')|e('html_attr') }}" class="w-full border-gray-300 rounded-md shadow-sm focus:border-[#1a252f] focus:ring-[#1a252f] sm:text-sm p-2 border" required placeholder="{{ core__('forum.reply_placeholder')|e('html_attr') }}"></textarea>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.attachments_label') }}</label>
+          <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.attachments_hint') }}</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="file" id="reply-attachment-input" class="hidden" multiple>
+            <button type="button" id="reply-attachment-btn" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+              <i class="fa-solid fa-upload"></i> {{ core__('topic_create.attachments_select') }}
+            </button>
+            <div id="reply-attachment-list" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div id="reply-attachment-ids"></div>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#1a252f] border border-transparent rounded-md hover:bg-[#172029]">{{ core__('forum.send_reply') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="bg-gray-50 border border-gray-200 text-gray-600 px-4 py-4 rounded-md text-sm mt-6 text-center">
+    {{ core__('forum.reply_login_required') }} <a href="{{ core_url('login') }}" class="text-[#1a252f] font-semibold hover:underline">{{ core__('common.login') }}</a> {{ core__('common.or') }} <a href="{{ core_url('register') }}" class="text-[#1a252f] font-semibold hover:underline">{{ core__('common.register') }}</a>.
+  </div>
+  {% endif %}
+
+  {% if isStaff and posts is not empty %}
+  <form id="posts-bulk-form" action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/posts-bulk') }}" method="post">
+    {{ core_csrf_field('posts_bulk')|raw }}
+    <div id="posts-bulk-bar" class="hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1a252f] text-white shadow-lg border-t border-gray-700 px-4 py-3 flex items-center justify-between gap-4" data-posts-selected-format="{{ core__('topic.posts_selected')|e('html_attr') }}">
+      <span id="posts-bulk-count" class="font-medium">{{ core__('topic.posts_selected', {count: 0}) }}</span>
+      <div class="flex items-center gap-2">
+        <button type="submit" name="action" value="merge" id="posts-bulk-merge" class="px-4 py-2 text-sm rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">{{ core__('topic.merge_btn') }}</button>
+        <button type="submit" name="action" value="delete" id="posts-bulk-delete" class="px-4 py-2 text-sm rounded-md bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed" onclick="return confirm('{{ core__('topic.delete_selected_confirm')|e('js') }}');">{{ core__('topic.delete') }}</button>
+        <button type="button" id="posts-bulk-report-btn" class="px-4 py-2 text-sm rounded-md bg-amber-600 hover:bg-amber-700">{{ core__('topic.report') }}</button>
+      </div>
+    </div>
+  </form>
+  <div id="posts-bulk-report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50" aria-hidden="true">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ core__('topic.report_selected_title') }}</h3>
+      <form id="posts-bulk-report-form" action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/posts-bulk-report') }}" method="post">
+        {{ core_csrf_field('posts_bulk_report')|raw }}
+        <div id="posts-bulk-report-ids"></div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Rapor sebebi</label>
+        <textarea name="reason" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4" required placeholder="Neden raporluyorsunuz?"></textarea>
+        <div class="flex justify-end gap-2">
+          <button type="button" id="posts-bulk-report-cancel" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">{{ core__('common.cancel') }}</button>
+          <button type="submit" class="px-4 py-2 text-white bg-amber-600 rounded-md hover:bg-amber-700">{{ core__('common.submit') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {% include 'partials/topic_social_panel.html.twig' with _context %}
+</div>
+
+{% if cu %}
+<div id="postbit-report-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <div class="fixed inset-0 bg-black/50" id="postbit-report-backdrop"></div>
+  <div class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-lg shadow-xl p-6 z-10">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Mesajı raporla</h3>
+    <p class="text-sm text-gray-500 mb-3">Şikayet sebebinizi yazın (zorunlu).</p>
+    <form id="postbit-report-form" method="post" action="">
+      {{ core_csrf_field('post_report')|raw }}
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Rapor sebebi</label>
+        <textarea name="reason" id="postbit-report-reason" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2" required placeholder="Neden bu mesajı raporluyorsunuz?"></textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" id="postbit-report-cancel" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">{{ core__('common.cancel') }}</button>
+        <button type="submit" class="px-4 py-2 text-white bg-[#1a252f] rounded-md hover:bg-[#172029]">{{ core__('common.submit') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% if reputationEnabled and cu %}
+<div id="postbit-rep-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <div class="fixed inset-0 bg-black/50" id="postbit-rep-backdrop"></div>
+  <div class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-lg shadow-xl p-6 z-10">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Reputation ver</h3>
+    <form id="postbit-rep-form" method="post" action="">
+      <input type="hidden" name="_token" value="{{ core_csrf_token('give_rep') }}">
+      <input type="hidden" name="value" id="postbit-rep-value" value="1">
+      <input type="hidden" name="post_id" id="postbit-rep-post-id" value="">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Açıklama (zorunlu)</label>
+        <textarea name="comment" id="postbit-rep-comment" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2" required placeholder="Neden +rep veya -rep veriyorsunuz?"></textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" id="postbit-rep-cancel" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">{{ core__('common.cancel') }}</button>
+        <button type="submit" class="px-4 py-2 text-white bg-[#1a252f] rounded-md hover:bg-[#172029]">{{ core__('common.submit') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

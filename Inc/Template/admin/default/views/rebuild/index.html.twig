@@ -1,0 +1,400 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set steps = steps ?? [] %}
+{% set csrfToken = csrfToken ?? '' %}
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-refresh me-2"></i>{{ lang('admin.rebuild.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.rebuild.description') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="text-muted mb-4">
+                <i class="ti ti-info-circle me-1"></i>
+                {{ lang('admin.rebuild.info') }}
+            </p>
+
+            <div id="rebuild-steps" class="mb-4">
+                {% for key, label in steps %}
+                <div class="rebuild-step d-flex align-items-center gap-3 py-3 px-3 border-bottom" data-step="{{ key }}">
+                    <div class="rebuild-icon" style="width:28px;text-align:center">
+                        <i class="ti ti-circle text-muted" style="font-size:20px" id="icon-{{ key }}"></i>
+                    </div>
+                    <div class="flex-fill">
+                        <div class="fw-semibold">{{ core_e(label) }}</div>
+                        <small class="text-muted" id="status-{{ key }}">{{ lang('admin.rebuild.waiting') }}</small>
+                    </div>
+                    <div id="count-{{ key }}" class="badge bg-secondary" style="display:none"></div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary" id="btn-rebuild-all">
+                    <i class="ti ti-refresh me-1"></i> {{ lang('admin.rebuild.run_all') }}
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="btn-rebuild-cancel" style="display:none" disabled>
+                    <i class="ti ti-player-stop me-1"></i> {{ lang('admin.rebuild.stop') }}
+                </button>
+            </div>
+
+            <div id="rebuild-result" class="alert alert-success mt-4" style="display:none">
+                <i class="ti ti-check me-1"></i> <span id="rebuild-result-text"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3 class="card-title"><i class="ti ti-package me-2"></i>{{ lang('admin.rebuild.composer_title') }}</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">{{ lang('admin.rebuild.composer_desc') }}</p>
+            <input type="hidden" id="composer-token" value="{{ csrfToken|e('html_attr') }}">
+            <div class="d-flex flex-wrap gap-4 mb-2">
+                <div>
+                    <button type="button" class="btn btn-outline-primary btn-composer-action" data-action="install">
+                        <i class="ti ti-download me-1"></i> {{ lang('admin.rebuild.composer_run_install') }}
+                    </button>
+                    <small class="d-block text-muted mt-1">{{ lang('admin.rebuild.composer_install_hint') }}</small>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary btn-composer-action" data-action="update">
+                        <i class="ti ti-refresh me-1"></i> {{ lang('admin.rebuild.composer_run_update') }}
+                    </button>
+                    <small class="d-block text-muted mt-1">{{ lang('admin.rebuild.composer_update_hint') }}</small>
+                </div>
+            </div>
+            <div id="composer-output" class="mt-3 p-3 bg-dark text-light rounded font-monospace small" style="max-height:300px;overflow-y:auto;display:none;white-space:pre-wrap;word-break:break-all;"></div>
+            <div id="composer-message" class="alert mt-3" style="display:none" role="alert"></div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3 class="card-title"><i class="ti ti-database-import me-2"></i>{{ lang('admin.rebuild.migration_title') }}</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">{{ lang('admin.rebuild.migration_desc') }}</p>
+            <input type="hidden" id="migration-token" value="{{ csrfToken|e('html_attr') }}">
+            <div class="d-flex flex-wrap gap-4 mb-2">
+                <div>
+                    <button type="button" class="btn btn-outline-info btn-migration-action" data-action="status">
+                        <i class="ti ti-list-check me-1"></i> {{ lang('admin.rebuild.migration_check_status') }}
+                    </button>
+                    <small class="d-block text-muted mt-1">{{ lang('admin.rebuild.migration_status_hint') }}</small>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-primary btn-migration-action" data-action="run">
+                        <i class="ti ti-database-import me-1"></i> {{ lang('admin.rebuild.migration_run') }}
+                    </button>
+                    <small class="d-block text-muted mt-1">{{ lang('admin.rebuild.migration_run_hint') }}</small>
+                </div>
+            </div>
+            <div id="migration-output" class="mt-3 p-3 bg-dark text-light rounded font-monospace small" style="max-height:300px;overflow-y:auto;display:none;white-space:pre-wrap;word-break:break-all;"></div>
+            <div id="migration-message" class="alert mt-3" style="display:none" role="alert"></div>
+        </div>
+    </div>
+
+    <div class="modal modal-blur fade" id="migrationLoadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="ti ti-loader ti-spin text-primary mb-2" style="font-size:2.5rem"></div>
+                    <p class="mb-0 text-secondary">{{ lang('admin.rebuild.migration_please_wait') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal modal-blur fade" id="composerLoadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="ti ti-loader ti-spin text-primary mb-2" style="font-size:2.5rem"></div>
+                    <p class="mb-0 text-secondary">{{ lang('admin.rebuild.composer_please_wait') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var steps = [{% for key in steps|keys %}"{{ key }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    var token = "{{ csrfToken|e('js') }}";
+    var url = "{{ core_url(adminPath ~ '/rebuild/run')|e('js') }}";
+    var running = false;
+    var hasErrors = false;
+    var hasWarnings = false;
+    var btnAll = document.getElementById('btn-rebuild-all');
+    var btnCancel = document.getElementById('btn-rebuild-cancel');
+    var resultBox = document.getElementById('rebuild-result');
+    var resultText = document.getElementById('rebuild-result-text');
+
+    if (btnAll) btnAll.addEventListener('click', function() {
+        if (running) return;
+        running = true;
+        hasErrors = false;
+        hasWarnings = false;
+        btnAll.disabled = true;
+        btnCancel.style.display = '';
+        if (resultBox) resultBox.style.display = 'none';
+        steps.forEach(function(s) {
+            var icon = document.getElementById('icon-' + s);
+            var status = document.getElementById('status-' + s);
+            var countBadge = document.getElementById('count-' + s);
+            if (icon) { icon.className = 'ti ti-circle text-muted'; icon.style.fontSize = '20px'; }
+            if (status) { status.textContent = {{ lang('admin.rebuild.waiting')|json_encode|raw }}; status.className = 'text-muted'; }
+            if (countBadge) countBadge.style.display = 'none';
+        });
+        runStep(0);
+    });
+
+    function runStep(index) {
+        if (!running || index >= steps.length) {
+            running = false;
+            if (btnAll) btnAll.disabled = false;
+            if (btnCancel) btnCancel.style.display = 'none';
+            if (resultBox && resultText && index >= steps.length) {
+                resultBox.className = 'alert mt-4 ' + (hasErrors ? 'alert-danger' : (hasWarnings ? 'alert-warning' : 'alert-success'));
+                resultText.textContent = hasErrors
+                    ? {{ lang('admin.rebuild.completed_with_errors')|json_encode|raw }}
+                    : (hasWarnings
+                        ? {{ lang('admin.rebuild.completed_with_warnings')|json_encode|raw }}
+                        : {{ lang('admin.rebuild.completed')|json_encode|raw }});
+                resultBox.style.display = '';
+            }
+            return;
+        }
+        var step = steps[index];
+        var icon = document.getElementById('icon-' + step);
+        var status = document.getElementById('status-' + step);
+        var countBadge = document.getElementById('count-' + step);
+        if (icon) { icon.className = 'ti ti-loader ti-spin text-primary'; }
+        if (status) { status.textContent = {{ lang('admin.rebuild.processing')|json_encode|raw }}; status.className = 'text-primary'; }
+        var fd = new FormData();
+        fd.append('_token', token);
+        fd.append('step', step);
+        fetch(url, { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var level = data.level || 'success';
+                    if (level === 'warning') {
+                        hasWarnings = true;
+                        if (icon) icon.className = 'ti ti-alert-triangle text-warning';
+                        if (status) { status.textContent = data.message || {{ lang('admin.rebuild.js_completed')|json_encode|raw }}; status.className = 'text-warning'; }
+                    } else if (level === 'secondary') {
+                        if (icon) icon.className = 'ti ti-player-skip-forward text-secondary';
+                        if (status) { status.textContent = data.message || {{ lang('admin.rebuild.js_completed')|json_encode|raw }}; status.className = 'text-secondary'; }
+                    } else {
+                        if (icon) icon.className = 'ti ti-circle-check text-success';
+                        if (status) { status.textContent = data.message || {{ lang('admin.rebuild.js_completed')|json_encode|raw }}; status.className = 'text-success'; }
+                    }
+                    if (countBadge && data.count !== undefined) {
+                        countBadge.textContent = data.count + ' ' + {{ lang('admin.rebuild.records')|json_encode|raw }};
+                        countBadge.className = 'badge ' + ((data.level === 'warning') ? 'bg-warning text-dark' : ((data.level === 'secondary') ? 'bg-secondary' : 'bg-success'));
+                        countBadge.style.display = '';
+                    }
+                } else {
+                    hasErrors = true;
+                    if (icon) icon.className = 'ti ti-circle-x text-danger';
+                    if (status) { status.textContent = data.message || {{ lang('admin.common.error')|json_encode|raw }}; status.className = 'text-danger'; }
+                }
+                runStep(index + 1);
+            })
+            .catch(function(err) {
+                if (icon) icon.className = 'ti ti-circle-x text-danger';
+                if (status) { status.textContent = {{ lang('admin.rebuild.js_network_error')|json_encode|raw }} + (err && err.message ? err.message : ''); status.className = 'text-danger'; }
+                running = false;
+                if (btnAll) btnAll.disabled = false;
+                if (btnCancel) btnCancel.style.display = 'none';
+            });
+    }
+
+    var composerOutput = document.getElementById('composer-output');
+    var composerMessage = document.getElementById('composer-message');
+    var composerTokenEl = document.getElementById('composer-token');
+    var composerLoadingModal = document.getElementById('composerLoadingModal');
+    var composerUpdateConfirm = {{ lang('admin.rebuild.composer_update_confirm')|json_encode|raw }};
+    var composerTimeoutMsg = {{ lang('admin.rebuild.composer_timeout')|json_encode|raw }};
+    var composer404Hint = {{ lang('admin.rebuild.composer_404_hint')|json_encode|raw }};
+    var composerTimeoutMs = 300000;
+    function showComposerLoading() {
+        if (composerLoadingModal && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var m = bootstrap.Modal.getOrCreateInstance(composerLoadingModal);
+            m.show();
+        }
+    }
+    function hideComposerLoading() {
+        try {
+            if (composerLoadingModal && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var m = bootstrap.Modal.getInstance(composerLoadingModal);
+                if (m) m.hide();
+            }
+        } catch (e) {}
+        if (composerLoadingModal) {
+            composerLoadingModal.classList.add('d-none');
+            composerLoadingModal.style.display = 'none';
+        }
+        document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+        document.body.classList.remove('modal-open');
+    }
+    document.querySelectorAll('.btn-composer-action').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (this.disabled) return;
+            var action = this.getAttribute('data-action') || 'install';
+            if (action === 'update' && composerUpdateConfirm && !confirm(composerUpdateConfirm)) return;
+            showComposerLoading();
+            document.querySelectorAll('.btn-composer-action').forEach(function(b) { b.disabled = true; });
+            if (composerOutput) { composerOutput.style.display = 'none'; composerOutput.textContent = ''; }
+            if (composerMessage) { composerMessage.style.display = 'none'; composerMessage.textContent = ''; composerMessage.className = 'alert mt-3'; }
+            var fd = new FormData();
+            fd.append('_token', composerTokenEl ? composerTokenEl.value : '');
+            fd.append('action', action);
+            var abortController = new AbortController();
+            var timeoutId = setTimeout(function() {
+                abortController.abort();
+            }, composerTimeoutMs);
+            fetch("{{ core_url(adminPath ~ '/rebuild/composer-install')|e('js') }}", { method: 'POST', body: fd, signal: abortController.signal })
+                .then(function(r) { clearTimeout(timeoutId); return r.text(); })
+                .then(function(text) {
+                    var data;
+                    try {
+                        data = text ? JSON.parse(text) : {};
+                    } catch (e) {
+                        hideComposerLoading();
+                        var is404 = text && (text.indexOf('404') !== -1 || text.indexOf('Bulunamadı') !== -1 || text.indexOf('Not Found') !== -1);
+                        if (composerOutput) {
+                            composerOutput.textContent = text ? (text.length > 5000 ? text.substring(0, 5000) + '\n\n… (kesildi)' : text) : (e && e.message) || 'Boş yanıt';
+                            composerOutput.style.display = 'block';
+                        }
+                        if (composerMessage) {
+                            composerMessage.textContent = is404 && composer404Hint ? composer404Hint : 'Sunucu JSON yerine metin döndürdü (hata sayfası olabilir).';
+                            composerMessage.className = 'alert alert-danger mt-3';
+                            composerMessage.style.display = 'block';
+                        }
+                        document.querySelectorAll('.btn-composer-action').forEach(function(b) { b.disabled = false; });
+                        return;
+                    }
+                    if (composerOutput) {
+                        composerOutput.textContent = data.output || '';
+                        composerOutput.style.display = data.output ? 'block' : 'none';
+                    }
+                    if (composerMessage) {
+                        composerMessage.textContent = data.message || '';
+                        composerMessage.className = 'alert mt-3 ' + (data.success ? 'alert-success' : 'alert-danger');
+                        composerMessage.style.display = 'block';
+                    }
+                })
+                .catch(function(err) {
+                    clearTimeout(timeoutId);
+                    if (composerMessage) {
+                        composerMessage.textContent = (err && err.name === 'AbortError') ? (composerTimeoutMsg || 'İstek zaman aşımına uğradı.') : ((err && err.message) ? err.message : 'Ağ hatası');
+                        composerMessage.className = 'alert alert-danger mt-3';
+                        composerMessage.style.display = 'block';
+                    }
+                })
+                .finally(function() {
+                    hideComposerLoading();
+                    document.querySelectorAll('.btn-composer-action').forEach(function(b) { b.disabled = false; });
+                });
+        });
+    });
+})();
+
+(function() {
+    var migrationOutput = document.getElementById('migration-output');
+    var migrationMessage = document.getElementById('migration-message');
+    var migrationTokenEl = document.getElementById('migration-token');
+    var migrationLoadingModal = document.getElementById('migrationLoadingModal');
+    var migrationRunConfirm = {{ lang('admin.rebuild.migration_run_confirm')|json_encode|raw }};
+    var migrationTimeoutMs = 300000;
+    function showMigrationLoading() {
+        if (migrationLoadingModal && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var m = bootstrap.Modal.getOrCreateInstance(migrationLoadingModal);
+            m.show();
+        }
+    }
+    function hideMigrationLoading() {
+        try {
+            if (migrationLoadingModal && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var m = bootstrap.Modal.getInstance(migrationLoadingModal);
+                if (m) m.hide();
+            }
+        } catch (e) {}
+        if (migrationLoadingModal) {
+            migrationLoadingModal.classList.add('d-none');
+            migrationLoadingModal.style.display = 'none';
+        }
+        document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+        document.body.classList.remove('modal-open');
+    }
+    document.querySelectorAll('.btn-migration-action').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (this.disabled) return;
+            var action = this.getAttribute('data-action') || 'run';
+            if (action === 'run' && migrationRunConfirm && !confirm(migrationRunConfirm)) return;
+            showMigrationLoading();
+            document.querySelectorAll('.btn-migration-action').forEach(function(b) { b.disabled = true; });
+            if (migrationOutput) { migrationOutput.style.display = 'none'; migrationOutput.textContent = ''; }
+            if (migrationMessage) { migrationMessage.style.display = 'none'; migrationMessage.textContent = ''; migrationMessage.className = 'alert mt-3'; }
+            var fd = new FormData();
+            fd.append('_token', migrationTokenEl ? migrationTokenEl.value : '');
+            fd.append('action', action);
+            var abortController = new AbortController();
+            var timeoutId = setTimeout(function() { abortController.abort(); }, migrationTimeoutMs);
+            fetch("{{ core_url(adminPath ~ '/rebuild/run-migrations')|e('js') }}", { method: 'POST', body: fd, signal: abortController.signal })
+                .then(function(r) { clearTimeout(timeoutId); return r.text(); })
+                .then(function(text) {
+                    var data;
+                    try {
+                        data = text ? JSON.parse(text) : {};
+                    } catch (e) {
+                        hideMigrationLoading();
+                        if (migrationOutput) {
+                            migrationOutput.textContent = text || 'Boş yanıt';
+                            migrationOutput.style.display = 'block';
+                        }
+                        if (migrationMessage) {
+                            migrationMessage.textContent = 'Sunucu JSON yerine metin döndürdü.';
+                            migrationMessage.className = 'alert alert-danger mt-3';
+                            migrationMessage.style.display = 'block';
+                        }
+                        document.querySelectorAll('.btn-migration-action').forEach(function(b) { b.disabled = false; });
+                        return;
+                    }
+                    if (migrationOutput) {
+                        migrationOutput.textContent = data.output || '';
+                        migrationOutput.style.display = data.output ? 'block' : 'none';
+                    }
+                    if (migrationMessage) {
+                        migrationMessage.textContent = data.message || '';
+                        migrationMessage.className = 'alert mt-3 ' + (data.success ? 'alert-success' : 'alert-danger');
+                        migrationMessage.style.display = 'block';
+                    }
+                })
+                .catch(function(err) {
+                    clearTimeout(timeoutId);
+                    if (migrationMessage) {
+                        migrationMessage.textContent = (err && err.name === 'AbortError') ? 'İstek zaman aşımına uğradı.' : ((err && err.message) ? err.message : 'Ağ hatası');
+                        migrationMessage.className = 'alert alert-danger mt-3';
+                        migrationMessage.style.display = 'block';
+                    }
+                })
+                .finally(function() {
+                    hideMigrationLoading();
+                    document.querySelectorAll('.btn-migration-action').forEach(function(b) { b.disabled = false; });
+                });
+        });
+    });
+})();
+</script>
+{% endblock %}

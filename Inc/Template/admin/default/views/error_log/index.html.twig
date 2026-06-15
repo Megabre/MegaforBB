@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+{% set logPath = logPath ?? '' %}
+{% set entries = entries ?? [] %}
+{% set levelCounts = levelCounts ?? [] %}
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-file-text me-2"></i>Hata Logu</h2>
+                <div class="text-muted mt-1">Sunucu hata logu burada okunaklı biçimde listelenir. FTP ile dosyaya erişmeye gerek yok.</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/error-log') }}" class="btn btn-primary">
+                    <i class="ti ti-refresh me-1"></i>Yenile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header py-2">
+            <div class="row align-items-center">
+                <div class="col">
+                    <span class="text-muted small"><i class="ti ti-file-code me-1"></i>Log dosyası:</span>
+                    <code class="ms-1 small">{{ logPath|e }}</code>
+                </div>
+                <div class="col-auto">
+                    {% for level, count in levelCounts %}
+                    <span class="badge me-1 error-log-badge error-log-badge-{{ level|lower }}">{{ level }}: {{ count }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if entries is empty %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="ti ti-mood-empty text-muted mb-3" style="font-size: 3rem;"></i>
+            <p class="text-muted mb-0">Henüz log kaydı yok veya dosya okunamıyor.</p>
+            <p class="text-muted small mt-1">Hatalar <code>Content/storage/logs/megaforbb-YYYY-MM-DD.log</code> dosyasına yazılır.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-vcenter table-card table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 140px;">Zaman</th>
+                            <th style="width: 100px;">Seviye</th>
+                            <th>Mesaj / Özet</th>
+                            <th style="width: 44px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries|reverse %}
+                        <tr class="error-log-row" data-entry-id="{{ loop.index }}">
+                            <td class="text-nowrap text-muted small font-monospace">{{ entry.date|e }}</td>
+                            <td>
+                                <span class="badge error-log-badge error-log-badge-{{ entry.level|lower }}">{{ entry.level|e }}</span>
+                            </td>
+                            <td>
+                                <div class="error-log-summary text-break">{{ entry.summary|e }}</div>
+                                {% if entry.body is not empty %}
+                                <div class="error-log-detail mt-2" id="detail-{{ loop.index }}" style="display: none;">
+                                    <pre class="mb-0 p-3 bg-dark text-light rounded small font-monospace" style="max-height: 280px; overflow: auto; white-space: pre-wrap; word-break: break-all;">{{ entry.body|e }}</pre>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if entry.body is not empty %}
+                                <button type="button" class="btn btn-ghost-secondary btn-sm btn-icon error-log-toggle" data-target="detail-{{ loop.index }}" aria-label="Detay göster">
+                                    <i class="ti ti-chevron-down"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer py-2 text-muted small">
+            <i class="ti ti-info-circle me-1"></i>Son {{ entries|length }} giriş (en yeniler üstte). Detay / stack trace için satırdaki ok simgesine tıklayın.
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.error-log-badge { font-weight: 600; }
+.error-log-badge-error, .error-log-badge-exception { background-color: #d63939; color: #fff; }
+.error-log-badge-warning { background-color: #f59e0b; color: #fff; }
+.error-log-badge-notice { background-color: #206bc4; color: #fff; }
+.error-log-badge-debug { background-color: #656d77; color: #fff; }
+.error-log-badge-info { background-color: #4299e1; color: #fff; }
+.error-log-row .error-log-summary { max-width: 100%; }
+.error-log-detail pre { font-size: 0.8rem; }
+</style>
+
+<script>
+(function() {
+    document.querySelectorAll('.error-log-toggle').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-target');
+            var el = id ? document.getElementById(id) : null;
+            var icon = this.querySelector('i');
+            if (!el) return;
+            if (el.style.display === 'none' || !el.style.display) {
+                el.style.display = 'block';
+                if (icon) { icon.classList.remove('ti-chevron-down'); icon.classList.add('ti-chevron-up'); }
+            } else {
+                el.style.display = 'none';
+                if (icon) { icon.classList.remove('ti-chevron-up'); icon.classList.add('ti-chevron-down'); }
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

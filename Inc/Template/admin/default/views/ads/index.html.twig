@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set ads = ads ?? [] %}
+{% set positionLabels = positionLabels ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.ads.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.ads.description') }}</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/ads/create') }}" class="btn btn-primary">{{ lang('admin.ads.new_ad') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter table-sm card-table">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.common.position') }}</th>
+                            <th>{{ lang('admin.common.name') }}</th>
+                            <th>{{ lang('admin.dashboard.table_status') }}</th>
+                            <th class="w-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ad in ads %}
+                        <tr>
+                            <td class="text-muted small">{{ core_e(positionLabels[ad.position_key] ?? ad.position_key) }}</td>
+                            <td>{{ core_e(ad.name ?: '—') }}</td>
+                            <td>{% if ad.enabled %}<span class="badge bg-success">{{ lang('admin.common.enabled') }}</span>{% else %}<span class="badge bg-secondary">{{ lang('admin.common.disabled') }}</span>{% endif %}</td>
+                            <td>
+                                <a href="{{ core_url(adminPath ~ '/ads/edit/' ~ ad.id) }}" class="btn btn-sm btn-ghost-secondary">{{ lang('admin.common.edit') }}</a>
+                                <form action="{{ core_url(adminPath ~ '/ads/delete/' ~ ad.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.ads.delete_confirm') }}');">
+                                    {{ core_csrf_field('admin_ads_delete')|raw }}
+                                    <button type="submit" class="btn btn-sm btn-ghost-secondary text-danger">{{ lang('admin.common.delete') }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if ads is empty %}
+                        <tr><td colspan="4" class="text-center text-muted py-4">{{ lang('admin.ads.no_ads') }} <a href="{{ core_url(adminPath ~ '/ads/create') }}">{{ lang('admin.ads.add_new') }}</a>.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

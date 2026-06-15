@@ -1,0 +1,143 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set prefs = prefs ?? [] %}
+{% set u = user ?? null %}
+{% if not u %}
+  <div class="mt-6 p-6 bg-white rounded-xl ring-1 ring-gray-200 shadow-md">
+    <p class="text-gray-500">{{ core__('profile.not_found') }}</p>
+  </div>
+{% else %}
+{% set error = error ?? '' %}
+{% set success = success ?? '' %}
+{% set v = prefs %}
+
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white ring-1 ring-gray-200 rounded-xl shadow-sm px-4 py-2.5">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#105289] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li class="text-gray-400">›</li>
+      <li><a href="{{ core_url('member/' ~ (u.username|e('url'))) }}" class="text-[#105289] hover:text-blue-500 hover:underline">{{ core__('common.profile') }}</a></li>
+      <li class="text-gray-400">›</li>
+      <li class="text-gray-700 font-medium">{{ core__('profile.preferences_title') }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="mt-6 bg-white ring-1 ring-gray-200 shadow-md rounded-xl overflow-hidden">
+  <div class="px-4 sm:px-6 lg:px-8 py-6">
+    <h1 class="text-xl font-semibold text-[#105289] mb-4">{{ core__('profile.preferences_title') }}</h1>
+    {% if error %}
+      <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ core_e(error) }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">{{ core_e(success) }}</div>
+    {% endif %}
+
+    <form action="{{ core_url('profile/preferences') }}" method="post">
+      {{ core_csrf_field('profile_preferences')|raw }}
+
+      {# 4 kolon: her satırda 2 alan (Etiket | Değer | Etiket | Değer) #}
+      <div class="bg-gray-50 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          {# Dil + Timezone #}
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-600 font-medium w-40">{{ core__('profile.language') }}</td>
+            <td class="py-2.5 px-4">
+              <select name="locale" class="border border-gray-300 rounded-lg px-2 py-1.5 w-full max-w-[180px] focus:ring-2 focus:ring-[#105289] focus:border-[#105289]">
+                <option value="tr" {{ (v.locale ?? u.locale ?? 'tr') == 'tr' ? 'selected' : '' }}>{{ core__('common.lang_tr') }}</option>
+                <option value="en" {{ (v.locale ?? u.locale ?? '') == 'en' ? 'selected' : '' }}>{{ core__('common.lang_en') }}</option>
+              </select>
+            </td>
+            <td class="py-2.5 px-4 text-gray-600 font-medium w-40 border-l border-gray-200">{{ core__('profile.timezone') }}</td>
+            <td class="py-2.5 px-4">
+              <input type="text" name="timezone" value="{{ core_e(v.timezone ?? 'Europe/Istanbul') }}" class="border border-gray-300 rounded-lg px-2 py-1.5 w-full max-w-[200px] focus:ring-2 focus:ring-[#105289] focus:border-[#105289]" placeholder="Europe/Istanbul">
+            </td>
+          </tr>
+          {# E-posta: 2+2 #}
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.email_newsletter') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="email_newsletter" value="1" {{ (v.email_newsletter ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.email_activity_summary') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="email_activity_summary" value="1" {{ (v.email_activity_summary ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.email_inactive_digest') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="email_inactive_digest" value="1" {{ (v.email_inactive_digest ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.email_on_dm') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="email_on_dm" value="1" {{ (v.email_on_dm ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          {# İçerik: 2+2, 2+2, 1+boş #}
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.follow_created_content') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="follow_created_content" value="1" {{ (v.follow_created_content ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.follow_created_email') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="follow_created_email" value="1" {{ (v.follow_created_email ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.follow_interacted_content') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="follow_interacted_content" value="1" {{ (v.follow_interacted_content ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.follow_interacted_email') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="follow_interacted_email" value="1" {{ (v.follow_interacted_email ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.show_signature') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="show_signature" value="1" {{ (v.show_signature ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.show_online_status') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="show_online_status" value="1" {{ (v.show_online_status ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.show_activity') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="show_activity" value="1" {{ (v.show_activity ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.allow_profile_comments') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="allow_profile_comments" value="1" {{ (v.allow_profile_comments ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.notif_followed_forum') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_followed_forum" value="1" {{ (v.notif_followed_forum ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.notif_followed_topic_reply') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_followed_topic_reply" value="1" {{ (v.notif_followed_topic_reply ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          {# Bildirimler: 2'şer #}
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.notif_quote') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_quote" value="1" {{ (v.notif_quote ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.notif_mention') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_mention" value="1" {{ (v.notif_mention ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.notif_reaction') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_reaction" value="1" {{ (v.notif_reaction ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.notif_profile_message') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_profile_message" value="1" {{ (v.notif_profile_message ?? '1') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.notif_profile_mention') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_profile_mention" value="1" {{ (v.notif_profile_mention ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.notif_profile_reaction') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_profile_reaction" value="1" {{ (v.notif_profile_reaction ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="border-b border-gray-200 hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.notif_dm_reaction') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_dm_reaction" value="1" {{ (v.notif_dm_reaction ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200">{{ core__('profile.notif_new_follower') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_new_follower" value="1" {{ (v.notif_new_follower ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+          </tr>
+          <tr class="hover:bg-gray-50/80">
+            <td class="py-2.5 px-4 text-gray-700 w-40">{{ core__('profile.notif_new_reward') }}</td>
+            <td class="py-2.5 px-4"><input type="checkbox" name="notif_new_reward" value="1" {{ (v.notif_new_reward ?? '') == '1' ? 'checked' : '' }} class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]"></td>
+            <td class="py-2.5 px-4 text-gray-700 w-40 border-l border-gray-200"></td>
+            <td class="py-2.5 px-4"></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="flex flex-wrap gap-3 pt-4 mt-4">
+        <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-[#105289] rounded-lg hover:bg-[#234a73] shadow-sm">{{ core__('common.save') }}</button>
+        <a href="{{ core_url('member/' ~ (u.username|e('url'))) }}" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">{{ core__('common.cancel') }}</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

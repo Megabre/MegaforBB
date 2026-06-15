@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+{% set formatted = formatted ?? [] %}
+{% set retentionMinutes = retentionMinutes ?? 20 %}
+{% set visitorsInWindow = visitorsInWindow ?? 0 %}
+{% set lastTs = lastTs ?? 0 %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.analytics.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.analytics.description') }} Son {{ retentionMinutes }} {{ lang('admin.analytics.retention_suffix') }}</div>
+            </div>
+            <div class="col-auto d-flex flex-wrap gap-2 align-items-center">
+                <a href="{{ core_url(adminPath ~ '/security') }}" class="btn btn-outline-primary">{{ lang('admin.analytics.back_security') }}</a>
+                <form action="{{ core_url(adminPath ~ '/analytics/purge') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.analytics.purge_confirm') }}');">
+                    {{ core_csrf_field('admin_security')|raw }}
+                    <button type="submit" class="btn btn-outline-warning">{{ lang('admin.analytics.purge_btn') }}</button>
+                </form>
+                <form action="{{ core_url(adminPath ~ '/analytics/delete-all') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.analytics.delete_all_confirm') }}');">
+                    {{ core_csrf_field('admin_security')|raw }}
+                    <button type="submit" class="btn btn-danger">{{ lang('admin.analytics.delete_all_btn') }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row mb-3">
+            <div class="col-auto">
+                <div class="card bg-primary-lt">
+                    <div class="card-body py-2 px-3">
+                        <span class="text-muted small">Son {{ retentionMinutes }} {{ lang('admin.security.minutes') }} {{ lang('admin.analytics.visitors_label') }}</span>
+                        <strong id="visitors-count">{{ visitorsInWindow }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-auto">
+                <span class="badge bg-green-lt mt-2" id="live-badge">● {{ lang('admin.analytics.live') }}</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">{{ lang('admin.analytics.log_stream_title') }}</h3>
+                <small class="text-muted" id="last-update">—</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="border-0 rounded-0 p-3" style="background: #0d1117; color: #c9d1d9; font-family: ui-monospace, monospace; font-size: 0.9rem; max-height: 70vh; overflow-y: auto;" id="log-stream">
+                    {% if formatted is empty %}
+                    <div class="text-muted">{{ lang('admin.analytics.no_records') }}</div>
+                    {% else %}
+                    {% for msg in formatted %}
+                    <div class="log-line border-bottom border-secondary mb-1 pb-1">{{ msg|e }}</div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function(){
+    var feedUrl = {{ core_url(adminPath ~ '/analytics/feed')|json_encode|raw }};
+    var since = {{ lastTs }};
+    var stream = document.getElementById('log-stream');
+    var visitorsEl = document.getElementById('visitors-count');
+    var lastUpdateEl = document.getElementById('last-update');
+    var liveBadge = document.getElementById('live-badge');
+
+    function formatTime() {
+        var d = new Date();
+        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0') + ':' + d.getSeconds().toString().padStart(2,'0');
+    }
+
+    function poll() {
+        var url = feedUrl + (feedUrl.indexOf('?') !== -1 ? '&' : '?') + 'since=' + since;
+        fetch(url, { credentials: 'same-origin' })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.raw && d.raw.length) {
+                    var frag = document.createDocumentFragment();
+                    d.raw.forEach(function(e) {
+                        var t = e.ts || 0;
+                        if (t > since) since = t;
+                    });
+                    if (d.entries && d.entries.length) {
+                        d.entries.forEach(function(msg) {
+                            var div = document.createElement('div');
+                            div.className = 'log-line border-bottom border-secondary mb-1 pb-1';
+                            div.textContent = msg;
+                            frag.appendChild(div);
+                        });
+                        if (stream) {
+                            stream.insertBefore(frag, stream.firstChild);
+                            if (stream.children.length > 500) {
+                                while (stream.children.length > 500) {
+                                    stream.removeChild(stream.lastChild);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (d.since) since = d.since;
+                if (d.visitors_in_window !== undefined && visitorsEl) visitorsEl.textContent = d.visitors_in_window;
+                if (lastUpdateEl) lastUpdateEl.textContent = {{ lang('admin.analytics.last_update')|json_encode|raw }} + ' ' + formatTime();
+                if (liveBadge) { liveBadge.classList.remove('bg-secondary'); liveBadge.classList.add('bg-green-lt'); }
+            })
+            .catch(function() {
+                if (liveBadge) { liveBadge.classList.remove('bg-green-lt'); liveBadge.classList.add('bg-secondary'); }
+            });
+    }
+
+    if (stream && stream.querySelector('.text-muted') && stream.querySelector('.text-muted').textContent.indexOf({{ lang('admin.analytics.no_records_yet')|json_encode|raw }}) !== -1) {
+        since = Math.floor(Date.now() / 1000);
+    }
+
+    poll();
+    setInterval(poll, 2500);
+})();
+</script>
+{% endblock %}

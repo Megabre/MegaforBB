@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% set error = error ?? '' %}
+<div class="min-h-[60vh] flex items-center justify-center px-4">
+  <div class="w-full max-w-md bg-white ring-1 ring-gray-200 shadow-sm rounded-lg p-6">
+    <h1 class="text-xl font-semibold text-gray-900 mb-2">{{ lang('security_check.title')|e }}</h1>
+    <p class="text-gray-600 text-sm mb-4">{{ lang('security_check.description') }}</p>
+    {% if error %}
+    <div class="p-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm mb-4">{{ core_e(error) }}</div>
+    {% endif %}
+    <form method="post" action="{{ core_url('security-check') }}">
+      {{ core_csrf_field('security_check')|raw }}
+      <input type="hidden" name="return_url" value="{{ return_url|default(core_url(''))|e }}">
+      {% if captcha_show %}
+        {% include 'partials/captcha.html.twig' %}
+      {% endif %}
+      <button type="submit" class="w-full text-white bg-[#1a252f] hover:bg-[#172029] rounded-md px-4 py-2.5 font-medium">
+        {{ lang('security_check.submit') }}
+      </button>
+    </form>
+    <p class="mt-4 text-center text-sm text-gray-500"><a href="{{ core_url('') }}" class="text-[#1a252f] hover:underline">{{ lang('security_check.back_home') }}</a></p>
+  </div>
+</div>
+{% endblock %}

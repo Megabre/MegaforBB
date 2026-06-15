@@ -1,0 +1,23 @@
+{# Profil ziyaretçi modal #}
+{% set u = profileUser ?? null %}
+{% if u %}
+{% set viewersUrl = core_url('member/' ~ member_url_path(u) ~ '/viewers') %}
+<div id="profile-viewers-modal" class="ips-profile-modal hidden" aria-hidden="true">
+  <div class="ips-profile-modal__backdrop" data-profile-modal-close></div>
+  <div class="ips-profile-modal__dialog" role="dialog" aria-labelledby="profile-viewers-title">
+    <header class="ips-profile-modal__head">
+      <h3 id="profile-viewers-title"><i class="fa-solid fa-eye"></i> {{ core__('member.profile_viewers_title') }}</h3>
+      <button type="button" class="ips-profile-modal__close" data-profile-modal-close aria-label="{{ core__('common.close') }}"><i class="fa-solid fa-xmark"></i></button>
+    </header>
+    <div class="ips-profile-modal__summary" id="profile-viewers-summary"></div>
+    <div class="ips-profile-modal__body" id="profile-viewers-list"
+      data-viewers-url="{{ core_e(viewersUrl) }}"
+      data-summary-template="{{ core_e(core__('member.profile_viewers_summary')) }}"
+      data-empty-text="{{ core_e(core__('member.profile_viewers_empty')) }}"
+      data-visits-template="{{ core_e(core__('member.profile_viewers_visits')) }}"
+      data-error-text="{{ core_e(core__('member.profile_viewers_error')) }}">
+      <p class="ips-profile-modal__loading"><i class="fa-solid fa-spinner fa-spin"></i> {{ core__('member.activity_loading') }}</p>
+    </div>
+  </div>
+</div>
+{% endif %}

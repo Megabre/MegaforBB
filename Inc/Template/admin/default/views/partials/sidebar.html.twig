@@ -1,0 +1,53 @@
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set navGroups = adminNavGroups ?? [] %}
+{% set adminActiveGroup = adminActiveGroup ?? 'dashboard' %}
+{% set adminActiveChildUrl = adminActiveChildUrl ?? '' %}
+<nav class="admin-rail" id="admin-rail">
+    <div class="admin-rail-logo">
+        <a href="{{ core_url('') }}" title="MegaforBB">
+            <img src="https://raw.githubusercontent.com/Megabre/MegaforBB/refs/heads/main/megafav.png" alt="MegaforBB" style="width:32px;height:32px;border-radius:8px;display:block;">
+        </a>
+    </div>
+    <div class="admin-rail-nav">
+        {% for group in navGroups %}
+            {% set isActive = adminActiveGroup == group.id %}
+            {% set hasChildren = group.children is defined and group.children is not empty %}
+            <a class="admin-rail-item{{ isActive ? ' active' : '' }}"
+               {% if hasChildren %}data-group="{{ group.id }}" href="javascript:void(0)"{% else %}href="{{ group.url }}"{% endif %}
+               title="{{ core_e(group.label) }}">
+                <i class="ti {{ group.icon }}"></i>
+                <span>{{ core_e(group.label) }}</span>
+            </a>
+        {% endfor %}
+    </div>
+    <div class="admin-rail-bottom">
+        <a class="admin-rail-item" href="{{ core_url('') }}" target="_blank" title="{{ core_e(admin__('header.go_to_site')) }}">
+            <i class="ti ti-external-link"></i>
+            <span>{{ lang('admin.menu.site') }}</span>
+        </a>
+    </div>
+</nav>
+
+<aside class="admin-subnav{{ adminHasSubnav ? ' open' : '' }}" id="admin-subnav">
+    {% for group in navGroups %}
+        {% if group.children is defined and group.children is not empty %}
+            <div class="admin-subnav-panel{{ (adminActiveGroup == group.id) ? ' active' : '' }}" id="panel-{{ group.id }}">
+                <div class="admin-subnav-header">
+                    <h3><i class="ti {{ group.icon }} me-2" style="font-size:1.1rem;opacity:.7"></i>{{ core_e(group.label) }}</h3>
+                </div>
+                <div class="admin-subnav-list">
+                    {% for child in group.children %}
+                        {% if child.separator is defined and child.separator %}
+                            <div class="admin-subnav-sep"></div>
+                        {% else %}
+                            <a href="{{ child.url }}" class="{{ (adminActiveChildUrl == child.url) ? 'active' : '' }}">
+                                {% if child.icon is defined and child.icon %}<i class="ti {{ child.icon }} me-2" style="font-size:1rem;opacity:.55"></i>{% endif %}
+                                {{ core_e(child.label) }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</aside>

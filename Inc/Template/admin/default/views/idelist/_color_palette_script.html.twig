@@ -1,0 +1,23 @@
+<script>
+function bindPalette(targetKey, createPrefix) {
+  var picker = document.querySelector('[data-color-target="' + targetKey + '"]');
+  var inputId = (targetKey === createPrefix) ? (createPrefix + '-color-input') : (targetKey + '-color-input');
+  var input = document.getElementById(inputId);
+  var palette = document.querySelector('[data-palette-target="' + targetKey + '"]');
+  if (!input) return;
+  if (picker) {
+    picker.addEventListener('input', function () {
+      input.value = picker.value.toUpperCase();
+    });
+  }
+  if (palette) {
+    palette.querySelectorAll('[data-color]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var val = btn.getAttribute('data-color');
+        input.value = val;
+        if (picker) picker.value = val;
+      });
+    });
+  }
+}
+</script>

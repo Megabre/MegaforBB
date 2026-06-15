@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+{% set templates = templates ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-template me-2"></i> {{ lang('admin.communication.mail_templates_title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.communication.mail_templates_desc') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.communication.template_name') }}</th>
+                            <th>Key</th>
+                            <th class="w-1">{{ lang('admin.common.action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in templates %}
+                        <tr>
+                            <td>{{ core_e(t.name) }}</td>
+                            <td class="text-muted"><code>{{ core_e(t.template_key) }}</code></td>
+                            <td>
+                                <a href="{{ core_url(adminPath ~ '/communication/mail-templates/edit/' ~ t.id) }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.common.edit') }}</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

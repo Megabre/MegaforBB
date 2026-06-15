@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set conversations = conversations ?? [] %}
+{% set stats = stats ?? null %}
+{% set convSuccess = flash('conv_success') %}
+{% set convError = flash('conv_error') %}
+
+<div class="flex flex-col md:flex-row rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden min-h-[calc(100vh-12rem)] max-h-none md:max-h-[720px]">
+  <aside class="w-full md:w-[30%] flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col bg-slate-50/50 min-h-0 max-h-[min(42vh,320px)] md:max-h-none">
+    <div class="p-4 border-b border-gray-200 bg-white flex items-center justify-between gap-3 flex-shrink-0">
+      <h2 class="text-lg font-bold text-[#105289]">
+        <i class="fa-solid fa-inbox mr-2 text-[#105289]/70"></i>{{ core__('conv.page_title') }}
+      </h2>
+      <a href="{{ core_url('conversations/new') }}" class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[#105289] hover:bg-[#234a73] rounded-lg transition-colors">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span class="hidden sm:inline">{{ core__('conv.new_message_btn') }}</span>
+      </a>
+    </div>
+    <div class="p-3 border-b border-gray-200 bg-white space-y-2 flex-shrink-0">
+      {% if convSuccess %}
+      <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">{{ core_e(convSuccess) }}</div>
+      {% endif %}
+      {% if convError %}
+      <div class="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">{{ core_e(convError) }}</div>
+      {% endif %}
+      {% include 'conversations/_pm_quota.html.twig' %}
+      {% if conversations is not empty %}
+      <form action="{{ core_url('conversations/purge') }}" method="post" onsubmit='return confirm({{ core__('conv.purge_inbox_confirm')|json_encode|raw }});'>
+        {{ core_csrf_field('conversation_manage')|raw }}
+        <button type="submit" class="w-full text-left text-xs font-medium text-red-700 hover:text-red-900 py-1.5 px-2 rounded-lg hover:bg-red-50 transition-colors">
+          <i class="fa-solid fa-trash-can mr-1.5"></i>{{ core__('conv.purge_inbox') }}
+        </button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="flex-1 min-h-0 overflow-y-auto">
+      {% if conversations is empty %}
+      <div class="p-6 text-center text-gray-500 text-sm">
+        <i class="fa-regular fa-comments text-3xl mb-3 block opacity-50"></i>
+        <p>{{ core__('conv.no_conversations_yet') }}</p>
+        <a href="{{ core_url('conversations/new') }}" class="inline-block mt-3 text-[#105289] font-medium hover:underline">{{ core__('conv.send_first_message') }}</a>
+      </div>
+      {% else %}
+      {% for c in conversations %}
+      {% set other = c.other ?? null %}
+      {% set last = c.last_message ?? null %}
+      {% set unread = c.unread ?? 0 %}
+      {% set convUrl = core_url('conversations/' ~ conversation_url_path_by_id(c.conversation_id ?? 0)) %}
+      {% set otherName = other.username ?? 'Kullanıcı' %}
+      {% set avatarUrl = (other.avatar_path|default('')) != '' ? asset_url(other.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(other.username|default(''))|url_encode) ~ '&size=48&background=1a252f&color=fff') %}
+      {% set lastSnippet = (last and (last.body|default('')) != '') ? ((last.body|striptags)|slice(0, 50) ~ ((last.body|striptags)|length > 50 ? '…' : '')) : 'Mesaj yok' %}
+      {% set lastTime = (last and last.created_at|default('') != '') ? (last.created_at|time_ago) : '' %}
+      <a href="{{ convUrl }}" class="flex items-center gap-3 px-4 py-3 hover:bg-white border-b border-gray-100 transition-colors group">
+        <img src="{{ core_e(avatarUrl) }}" alt="" class="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow flex-shrink-0 group-hover:ring-[#105289]/20">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-semibold text-[#105289] truncate block">{{ core_e(otherName) }}</span>
+            {% if unread > 0 %}
+            <span class="flex-shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold text-white bg-[#105289] rounded-full">{{ unread > 99 ? '99+' : unread }}</span>
+            {% elseif lastTime %}
+            <span class="flex-shrink-0 text-xs text-gray-400">{{ lastTime }}</span>
+            {% endif %}
+          </div>
+          <p class="text-sm text-gray-500 truncate mt-0.5">{{ core_e(lastSnippet) }}</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-gray-300 text-xs flex-shrink-0 group-hover:text-[#105289]"></i>
+      </a>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </aside>
+
+  {# Sağ: Mesajlaşma alanı (boş durum) %70 #}
+  <section class="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-br from-slate-50 to-white min-h-[320px]">
+    <div class="text-center max-w-sm">
+      <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-[#105289]/10 flex items-center justify-center">
+        <i class="fa-regular fa-message text-3xl text-[#105289]"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-[#105289] mb-2">{{ core__('conv.select_conversation') }}</h3>
+      <p class="text-gray-500 text-sm mb-6">{{ core__('conv.select_conversation_hint') }}</p>
+      <a href="{{ core_url('conversations/new') }}" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[#105289] hover:bg-[#234a73] rounded-lg transition-colors shadow-sm">
+        <i class="fa-solid fa-pen-to-square"></i>
+        {{ core__('conv.new_message_btn') }}
+      </a>
+    </div>
+  </section>
+</div>
+{% endblock %}

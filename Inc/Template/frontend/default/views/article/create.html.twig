@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set articleCategoriesWithForums = articleCategoriesWithForums ?? [] %}
+{% set defaultForumId = defaultForumId ?? 0 %}
+{% set prefixes = prefixes ?? [] %}
+{% set prefixes_by_forum_json = prefixes_by_forum_json ?? '{}' %}
+{% set error = error ?? '' %}
+{% if articleCategoriesWithForums is empty %}
+  <p class="p-4 text-gray-500">{{ core__('article.enable_in_admin') }}</p>
+  <p class="px-4 pb-4"><a href="{{ core_url('articles') }}" class="text-[#206bc4] hover:underline">{{ core__('article.articles') }}</a></p>
+{% else %}
+<div class="max-w-4xl mx-auto">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2 mb-4">
+    <ol class="flex items-center gap-2 flex-wrap">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li>›</li>
+      <li><a href="{{ core_url('articles') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core__('article.articles') }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">{{ core__('article.create_title') }}</li>
+    </ol>
+  </nav>
+
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+      <h1 class="text-xl font-semibold text-[#1a252f]">{{ core__('article.create_title') }}</h1>
+    </div>
+    <div class="p-6">
+      {% if error %}
+      <div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{{ core_e(error) }}</div>
+      {% endif %}
+      <form action="{{ core_url('articles/store') }}" method="post" class="space-y-6">
+        {{ core_csrf_field('new_topic')|raw }}
+        <div>
+          <label for="forum_id" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('article.forum_label') }}</label>
+          <select name="forum_id" id="forum_id" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" required>
+            {% for cat in articleCategoriesWithForums %}
+              <optgroup label="{{ core_e(cat.name) }}">
+                {% for f in cat.forums %}
+                <option value="{{ f.id }}" {{ (f.id == defaultForumId) ? 'selected' : '' }}>{{ core_e(f.name) }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="w-full sm:w-1/3 md:w-1/4" id="article-prefix-wrap" style="{{ prefixes is empty ? 'display:none' : '' }}">
+            <label for="prefix_id" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.prefix') }}</label>
+            <select name="prefix_id" id="prefix_id" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2">
+              <option value="0">{{ core__('topic_create.prefix_none') }}</option>
+              {% for p in prefixes %}<option value="{{ p.id ?? 0 }}">{{ core_e(p.name ?? '') }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="flex-1">
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('article.title_label') }}</label>
+            <input type="text" name="title" id="title" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" required placeholder="{{ core__('article.title_placeholder')|e('html_attr') }}">
+          </div>
+        </div>
+        <div>
+          <label for="body" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('article.body_label') }}</label>
+          <textarea name="body" id="body" rows="12" data-editor class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" required placeholder="{{ core__('article.body_placeholder')|e('html_attr') }}"></textarea>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <a href="{{ core_url('articles') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">{{ core__('topic_create.cancel') }}</a>
+          <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#1a252f] border border-transparent rounded-md hover:bg-[#172029]"><i class="fa-solid fa-paper-plane mr-2"></i>{{ core__('article.publish_btn') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var map = {{ prefixes_by_forum_json|raw }};
+  var forumSel = document.getElementById('forum_id');
+  var prefixWrap = document.getElementById('article-prefix-wrap');
+  var prefixSel = document.getElementById('prefix_id');
+  if (!forumSel || !prefixSel) return;
+  function refill(){
+    var fid = String(forumSel.value);
+    var list = map[fid] || [];
+    var v = prefixSel.value;
+    prefixSel.innerHTML = '<option value="0">' + {{ core__('topic_create.prefix_none')|json_encode|raw }} + '</option>';
+    list.forEach(function(p){ var o = document.createElement('option'); o.value = p.id; o.textContent = p.name; prefixSel.appendChild(o); });
+    if ([].slice.call(prefixSel.options).some(function(o){ return o.value === v; })) prefixSel.value = v;
+    else prefixSel.value = '0';
+    if (prefixWrap) prefixWrap.style.display = list.length ? '' : 'none';
+  }
+  forumSel.addEventListener('change', refill);
+  refill();
+})();
+</script>
+{% endif %}
+{% endblock %}

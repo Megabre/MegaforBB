@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+{% set existingLanguages = existingLanguages ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle"><a href="{{ core_url(adminPath ~ '/languages') }}">{{ lang('admin.languages.title')|e }}</a></div>
+                <h2 class="page-title">{{ lang('admin.languages.add_new')|e }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/languages/store') }}" method="post">
+                    {{ core_csrf_field()|raw }}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label required">{{ lang('admin.languages.code')|e }}</label>
+                            <input type="text" name="code" class="form-control" placeholder="{{ lang('admin.languages.code_ph')|e }}" required maxlength="10" pattern="[a-z]{2,5}">
+                            <small class="form-hint">{{ lang('admin.languages.code_hint') }}</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label required">{{ lang('admin.languages.name')|e }}</label>
+                            <input type="text" name="name" class="form-control" placeholder="{{ lang('admin.languages.name_ph')|e }}" required maxlength="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.languages.native_name')|e }}</label>
+                            <input type="text" name="native_name" class="form-control" placeholder="{{ lang('admin.languages.native_name_ph')|e }}" maxlength="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.languages.direction')|e }}</label>
+                            <select name="direction" class="form-select">
+                                <option value="ltr">{{ lang('admin.languages.ltr')|e }}</option>
+                                <option value="rtl">{{ lang('admin.languages.rtl')|e }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.languages.copy_from')|e }}</label>
+                            <select name="copy_from" class="form-select">
+                                <option value="">— Kopyalama —</option>
+                                {% for el in existingLanguages %}
+                                <option value="{{ (el.code ?? '')|e('html_attr') }}">{{ (el.name ?? '')|e }} ({{ (el.code ?? '')|e }})</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-hint">{{ lang('admin.languages.copy_from_hint')|e }}</small>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="ti ti-plus me-1"></i> {{ lang('admin.languages.add_new')|e }}</button>
+                        <a href="{{ core_url(adminPath ~ '/languages') }}" class="btn btn-outline-secondary ms-2">{{ lang('admin.common.cancel')|e }}</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

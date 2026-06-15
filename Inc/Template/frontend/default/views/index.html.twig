@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% include 'partials/son_olaylar.html.twig' %}
+
+<div class="mfbb-forum-index">
+{% set ads = ads ?? [] %}
+{% for ci, cat in categories|default([]) %}
+{% if ci > 0 and ads.category_between is defined and ads.category_between is not empty %}
+<div class="ads-slot ads-category-between my-4">
+  {% for html in ads.category_between %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+</div>
+{% endif %}
+
+{% set catColor = cat.color is not empty ? core_e(cat.color) : '#1c8b42' %}
+<div class="ips-forum-wrapper">
+    <div class="ips-category-header" style="background-color: {{ catColor }};">
+        {% if cat.icon is not empty %}<i class="{{ (cat.icon|length > 0 and ' ' in cat.icon) ? core_e(cat.icon) : 'fa-solid fa-' ~ core_e(cat.icon) }} mr-2"></i>{% endif %}
+        {{ core_e(cat.name ?? '') }}
+    </div>
+
+    {% for f in cat.forums ?? [] %}
+    {% set forumUrl = core_url('forum/' ~ (f.slug ?? f.id)|e('url')) %}
+    <div class="ips-forum-block" style="border-top: 4px solid {{ catColor }};">
+        <div class="ips-forum-info">
+            {% if f.image_url is not empty %}
+                <img src="{{ core_e(f.image_url) }}" alt="{{ core_e(f.name ?? '') }}" class="ips-forum-image">
+            {% else %}
+                <div class="ips-forum-no-image-placeholder">
+                    {% if f.icon is not empty %}<i class="{{ (f.icon|length > 0 and ' ' in f.icon) ? core_e(f.icon) : 'fa-solid fa-' ~ core_e(f.icon) }}"></i>{% else %}<i class="fa-solid fa-comments"></i>{% endif %}
+                </div>
+            {% endif %}
+            <div class="ips-forum-title-wrap" style="border-left-color: {{ catColor }};">
+                <a href="{{ forumUrl }}" class="ips-forum-title" style="color: {{ catColor }};">{{ core_e(f.name ?? '') }}</a>
+            </div>
+            {% if f.description is not empty %}
+                <p class="ips-forum-desc">{{ core_e(f.description) }}</p>
+            {% endif %}
+            <p class="ips-forum-stats"><strong>{{ (f.post_count ?? 0)|number_format(0) }}</strong> posts</p>
+            {% if f.subforums is defined and f.subforums is not empty %}
+            <div class="mt-2 pt-2 border-t border-gray-200">
+                <span class="text-xs font-semibold text-gray-500 uppercase">{{ core__('forum.subforums')|default('Alt forumlar') }}</span>
+                <ul class="mt-1 space-y-0.5">
+                    {% for sub in f.subforums %}
+                    <li><a href="{{ sub.parent_slug is defined and sub.parent_slug is not empty ? core_url('forum/' ~ (sub.parent_slug|e('url')) ~ '/' ~ (sub.slug|e('url'))) : core_url('forum/' ~ (sub.slug|e('url'))) }}" class="text-sm text-[#1a252f] hover:text-blue-600 hover:underline">{{ core_e(sub.name) }}</a> <span class="text-gray-500 text-xs">({{ (sub.topic_count ?? 0)|number_format(0) }} konu)</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="ips-topic-list">
+            {% if f.latest_topics is defined and f.latest_topics is not empty %}
+                {% for topic in (f.latest_topics)|slice(0, 6) %}
+                {% set tAvatarUrl = topic.author_avatar_path is not empty ? asset_url(topic.author_avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(topic.username)|url_encode ~ '&size=34' %}
+                {% set topicLink = topic_url(topic) %}
+                {% set timeAgo = topic.created_at is defined ? topic.created_at|date('d.m.Y H:i') : '' %}
+                <div class="ips-topic-item">
+                    <img src="{{ core_e(tAvatarUrl) }}" alt="Avatar" class="ips-topic-avatar">
+                    <div class="ips-topic-content">
+                        <a href="{{ topicLink }}" class="ips-topic-title" title="{{ core_e(topic.title) }}">{% if (topic.is_private ?? 0) == 1 %}<i class="fa-solid fa-lock text-amber-500 mr-1" title="{{ core__('topic.private_topic')|e('html_attr') }}" aria-hidden="true"></i>{% endif %}{{ core_e(topic.title) }}</a>
+                        <span class="ips-topic-meta">{{ core_e(topic.username ?? '') }} &middot; {{ timeAgo }}</span>
+                    </div>
+                    {% if (topic.reply_count ?? 0) >= 0 %}
+                        <div class="ips-topic-comments">{{ topic.reply_count }} comments</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="ips-topic-item" style="justify-content: center; color: #a0aec0; font-style: italic; height: 100%;">
+                    Bu forumda henüz konu bulunmuyor.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if ads.category_between is defined and ads.category_between is not empty %}
+    <div class="ads-slot ads-category-between my-4">
+      {% for html in ads.category_between %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endfor %}
+
+{% if ads.footer_above_home is defined and ads.footer_above_home is not empty %}
+<div class="ads-slot ads-footer-above mt-6 mb-4">
+  {% for html in ads.footer_above_home %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+</div>
+{% endif %}
+</div>
+{% endblock %}

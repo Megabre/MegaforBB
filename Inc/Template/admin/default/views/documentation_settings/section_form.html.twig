@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? 'admin' %}
+{% set section = section ?? null %}
+{% set sectionsFlat = sectionsFlat ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.documentation.edit_section') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/documentation-settings') }}" class="btn btn-outline-secondary">{{ lang('admin.common.back_to_list') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <form action="{{ core_url(adminPath ~ '/documentation-settings/sections/update/' ~ section.id) }}" method="post">
+                {{ core_csrf_field('admin_documentation')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.section_title_label') }} <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" value="{{ section.title|e }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.parent_section') }}</label>
+                        <select name="parent_id" class="form-select">
+                            <option value="" {{ section.parent_id is null ? 'selected' : '' }}>{{ lang('admin.documentation.root_section') }}</option>
+                            {% for item in sectionsFlat %}
+                            <option value="{{ item.section.id }}" {{ section.parent_id == item.section.id ? 'selected' : '' }}>{% for i in 1..item.depth %}— {% endfor %}{{ item.section.title|e }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.slug_label') }}</label>
+                        <input type="text" name="slug" class="form-control" value="{{ section.slug|e }}" placeholder="getting-started">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.sort_order') }}</label>
+                        <input type="number" name="sort_order" class="form-control" value="{{ section.sort_order ?? 0 }}">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.update') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/documentation-settings') }}" class="btn btn-outline-secondary">{{ lang('admin.common.cancel') }}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

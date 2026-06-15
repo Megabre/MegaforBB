@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set profileUser = profileUser ?? null %}
+{% if not profileUser %}
+  <p class="p-4 text-gray-500">Kullanıcı bulunamadı.</p>
+{% else %}
+{% set baseUrl = core_url('member/' ~ (profileUser.username|e('url'))) %}
+{% set subscriptions = subscriptions ?? [] %}
+{% set redirectPath = '/member/' ~ (profileUser.username|e('url')) ~ '/subscriptions' %}
+
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#105289] hover:text-blue-500 hover:underline">Ana Sayfa</a></li>
+      <li>›</li>
+      <li><a href="{{ baseUrl }}" class="text-[#105289] hover:text-blue-500 hover:underline">{{ core_e(profileUser.username) }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">Abone olunan konular</li>
+    </ol>
+  </nav>
+</div>
+<div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+    <h1 class="text-xl font-semibold text-[#105289]">Abone olunan konular</h1>
+    <p class="text-sm text-gray-500 mt-1">Takip ettiğiniz konulara yeni cevap yazıldığında bildirim alırsınız.</p>
+  </div>
+  {% if subscriptions is empty %}
+  <div class="p-8 text-center text-gray-500">
+    <i class="fa-solid fa-bell-slash text-4xl text-gray-300 mb-3 block"></i>
+    Henüz abone olduğunuz konu yok.
+  </div>
+  {% else %}
+  <ul class="divide-y divide-gray-200">
+    {% for sub in subscriptions %}
+    <li class="px-6 py-3 hover:bg-gray-50 flex flex-wrap items-center gap-2 sm:gap-4">
+      <div class="flex-1 min-w-0">
+        <a href="{{ core_url('forum/' ~ (sub.forum_slug ?? '')|e('url')) }}" class="text-xs text-gray-500">{{ core_e(sub.forum_name ?? '') }}</a>
+        <span class="text-gray-300 mx-1">›</span>
+        <a href="{{ core_url('topic/' ~ topic_url_path_by_id(sub.id ?? 0)) }}" class="font-medium text-[#105289] hover:underline">{{ core_e(sub.title ?? '') }}</a>
+        <div class="text-xs text-gray-400 mt-0.5">{{ sub.reply_count ?? 0 }} cevap · Son: {{ core_e(sub.last_post_at ?? '') }}</div>
+      </div>
+      <form action="{{ core_url('topic/' ~ topic_url_path_by_id(sub.id ?? 0) ~ '/unsubscribe') }}" method="post" class="flex-shrink-0" onsubmit="return confirm('Bu konudan abonelikten çıkmak istediğinize emin misiniz?');">
+        {{ core_csrf_field('topic_subscribe')|raw }}
+        <input type="hidden" name="redirect" value="{{ core_e(redirectPath) }}">
+        <button type="submit" class="px-3 py-1.5 text-sm rounded-md text-amber-700 bg-amber-100 hover:bg-amber-200"><i class="fa-solid fa-bell-slash mr-1"></i>Abonelikten çık</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

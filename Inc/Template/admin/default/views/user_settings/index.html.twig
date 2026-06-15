@@ -1,0 +1,303 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set s = settings ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">
+                    <a href="{{ core_url(adminPath ~ '/system-settings') }}">{{ core_e(lang('admin.common.settings')) }}</a>
+                </div>
+                <h2 class="page-title">{{ core_e(pageTitle ?? lang('admin.user_settings.page_title')) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flashSuccess|default('') is not empty %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            {{ core_e(flashSuccess) }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ lang('admin.sys_settings.alert_close') }}"></button>
+        </div>
+        {% endif %}
+        {% if flashError|default('') is not empty %}
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            {{ core_e(flashError) }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ lang('admin.sys_settings.alert_close') }}"></button>
+        </div>
+        {% endif %}
+
+        <form action="{{ core_url(adminPath ~ '/user-settings/update') }}" method="post">
+            {{ core_csrf_field('admin_user_settings')|raw }}
+            <div class="row row-cards">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="ti ti-user-edit me-2"></i>{{ lang('admin.user_settings.registration_section') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <input type="hidden" name="registration_require_email_verification" value="0">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" name="registration_require_email_verification" value="1" class="form-check-input" {{ s.registration_require_email_verification ? 'checked' : '' }}>
+                                    <span class="form-check-label">{{ lang('admin.sys_settings.require_email_verification') }}</span>
+                                </label>
+                            </div>
+                            <div class="mb-3">
+                                <input type="hidden" name="registration_requires_approval" value="0">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" name="registration_requires_approval" value="1" class="form-check-input" {{ s.registration_requires_approval ? 'checked' : '' }}>
+                                    <span class="form-check-label">{{ lang('admin.sys_settings.require_approval') }}</span>
+                                </label>
+                            </div>
+                            <div class="mb-3">
+                                <input type="hidden" name="registration_requires_invite" value="0">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" name="registration_requires_invite" value="1" class="form-check-input" {{ s.registration_requires_invite ? 'checked' : '' }}>
+                                    <span class="form-check-label">{{ lang('admin.sys_settings.require_invite') }}</span>
+                                </label>
+                            </div>
+                            <div class="mb-3">
+                                <input type="hidden" name="login_require_email_code" value="0">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" name="login_require_email_code" value="1" class="form-check-input" {{ s.login_require_email_code ? 'checked' : '' }}>
+                                    <span class="form-check-label">{{ lang('admin.sys_settings.login_require_email_code') }}</span>
+                                </label>
+                                <div class="form-text">{{ lang('admin.sys_settings.login_require_email_code_hint') }}</div>
+                            </div>
+                            <hr class="my-4">
+                            <p class="text-muted small mb-2">{{ lang('admin.sys_settings.registration_form_fields') }}</p>
+                            <div class="row g-2 mb-0">
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ lang('admin.sys_settings.reg_field_first_name') }}</label>
+                                    <select name="registration_show_first_name" class="form-select">
+                                        <option value="0" {{ (s.registration_show_first_name ?? '1') == '0' ? 'selected' : '' }}>{{ lang('admin.sys_settings.reg_field_hidden') }}</option>
+                                        <option value="1" {{ (s.registration_show_first_name ?? '1') == '1' ? 'selected' : '' }}>{{ lang('admin.sys_settings.reg_field_optional') }}</option>
+                                        <option value="2" {{ (s.registration_show_first_name ?? '1') == '2' ? 'selected' : '' }}>{{ lang('admin.sys_settings.reg_field_required') }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">{{ lang('admin.sys_settings.reg_field_last_name') }}</label>
+                                    <select name="registration_show_last_name" class="form-select">
+                                        <option value="0" {{ (s.registration_show_last_name ?? '1') == '0' ? 'selected' : '' }}>{{ lang('admin.sys_settings.reg_field_hidden') }}</option>
+                                        <option value="1" {{ (s.registration_show_last_name ?? '1') == '1' ? 'selected' : '' }}>{{ lang('admin.sys_settings.reg_field_optional') }}</option>
+                                        <option value="2" {{ (s.registration_show_last_name ?? '1') == '2' ? 'selected' : '' }}>{{ lang('admin.sys_settings.reg_field_required') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="ti ti-message-circle me-2"></i>{{ lang('admin.sys_settings.profile_comments_section') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-0">
+                                <input type="hidden" name="profile_comments_enabled" value="0">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" name="profile_comments_enabled" value="1" class="form-check-input" {{ s.profile_comments_enabled ? 'checked' : '' }}>
+                                    <span class="form-check-label">{{ lang('admin.sys_settings.profile_comments_enabled') }}</span>
+                                </label>
+                                <div class="form-text">{{ lang('admin.sys_settings.profile_comments_enabled_hint') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="ti ti-id me-2"></i>Postbit Yönetimi</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="nav nav-tabs" data-bs-toggle="tabs">
+                                <li class="nav-item"><a href="#tab-postbit-simple" class="nav-link active" data-bs-toggle="tab">Temel</a></li>
+                                <li class="nav-item"><a href="#tab-postbit-advanced" class="nav-link" data-bs-toggle="tab">Gelişmiş (Twig)</a></li>
+                            </ul>
+                            <div class="tab-content mt-3">
+                                <div class="tab-pane active show" id="tab-postbit-simple">
+                                    <div class="mb-3">
+                                        <label class="form-label">Vurgu rengi</label>
+                                        <input type="color" name="postbit_simple_accent_color" class="form-control form-control-color" value="{{ (s.postbit_simple_accent_color ?? '#1a252f')|e('html_attr') }}">
+                                        <div class="form-text">Kartın ana vurgu/başlık rengi için kullanılır.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Postbit yerleşimi</label>
+                                        <select name="postbit_simple_layout" class="form-select">
+                                            <option value="left" {{ (s.postbit_simple_layout ?? 'left') == 'left' ? 'selected' : '' }}>Sol panel (klasik)</option>
+                                            <option value="top" {{ (s.postbit_simple_layout ?? 'left') == 'top' ? 'selected' : '' }}>Üst panel (profil solda, bilgiler sağda)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3 postbit-top-layout-config" style="{{ (s.postbit_simple_layout ?? 'left') == 'top' ? '' : 'display:none;' }}">
+                                        <label class="form-label">Üst panel yerleşimi (dinamik)</label>
+                                        <div class="row g-3">
+                                            <div class="col-md-5">
+                                                <label class="form-label">Solda görünecekler</label>
+                                                <select id="postbit-top-left-list" class="form-select" multiple size="10"></select>
+                                                <div class="d-flex gap-2 mt-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="postbit-left-up">Yukarı</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="postbit-left-down">Aşağı</button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 d-flex flex-column justify-content-center gap-2">
+                                                <button type="button" class="btn btn-outline-primary" id="postbit-move-right">&larr;</button>
+                                                <button type="button" class="btn btn-outline-primary" id="postbit-move-left">&rarr;</button>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label">Sağda görünecekler</label>
+                                                <select id="postbit-top-right-list" class="form-select" multiple size="10"></select>
+                                                <div class="d-flex gap-2 mt-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="postbit-right-up">Yukarı</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="postbit-right-down">Aşağı</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="postbit_top_left_items" id="postbit-top-left-items-input" value='{{ (s.postbit_top_left_items ?? ["profile"])|json_encode|e("html_attr") }}'>
+                                        <input type="hidden" name="postbit_top_right_items" id="postbit-top-right-items-input" value='{{ (s.postbit_top_right_items ?? ["post_count","like_count","reputation","reward_points","warning_points","joined_date","location"])|json_encode|e("html_attr") }}'>
+                                        <div class="form-text">Her alanı tek tek sağ/sola taşıyabilir, sırasını yukarı-aşağı değiştirebilirsiniz. Sadece üst panelde kullanılır.</div>
+                                    </div>
+                                    {% set postbitFieldLabels = {
+                                        'custom_title': 'Özel unvan',
+                                        'role_badge': 'Rol rozeti',
+                                        'post_count': 'Mesaj sayısı',
+                                        'like_count': 'Beğeni sayısı',
+                                        'reputation': 'İtibar (rep)',
+                                        'reward_points': 'Ödül puanı',
+                                        'warning_points': 'Uyarı puanı',
+                                        'joined_date': 'Katılım tarihi',
+                                        'location': 'Konum',
+                                        'custom_fields': 'Özel profil alanları'
+                                    } %}
+                                    <label class="form-label mb-2">Gösterilecek alanlar</label>
+                                    <div class="row g-2">
+                                        {% for fieldKey in postbitAllowedFields %}
+                                        <div class="col-md-4 col-sm-6">
+                                            <label class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="postbit_simple_enabled_fields[]" value="{{ fieldKey|e('html_attr') }}" {{ fieldKey in (s.postbit_simple_enabled_fields ?? []) ? 'checked' : '' }}>
+                                                <span class="form-check-label">{{ postbitFieldLabels[fieldKey] ?? fieldKey }}</span>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <hr class="my-3">
+                                    <label class="form-label mb-2">Postbit'te gösterilecek kullanıcı özel alanları</label>
+                                    {% if (postbitCustomFieldDefs ?? []) is empty %}
+                                    <div class="text-muted small">Henüz kullanıcı özel alanı yok. Önce Kullanıcılar &gt; Özel Alanlar bölümünden alan ekleyin.</div>
+                                    {% else %}
+                                    <div class="row g-2">
+                                        {% for cf in postbitCustomFieldDefs %}
+                                        <div class="col-md-4 col-sm-6">
+                                            <label class="form-check">
+                                                <input type="checkbox" class="form-check-input" name="postbit_simple_custom_field_keys[]" value="{{ cf.field_key|e('html_attr') }}" {{ cf.field_key in (s.postbit_simple_custom_field_keys ?? []) ? 'checked' : '' }}>
+                                                <span class="form-check-label">{{ cf.name|e }}</span>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <div class="mt-3">
+                                        <label class="form-label">Postbit detayları için özel CSS</label>
+                                        <textarea class="form-control font-monospace" name="postbit_simple_custom_css" rows="8" placeholder=".postbit-meta-row { ... }">{{ s.postbit_simple_custom_css ?? '' }}</textarea>
+                                        <div class="form-text">
+                                            Kullanılabilir classlar: <code>.postbit-meta-row</code>, <code>.postbit-meta-reputation</code>, <code>.postbit-meta-reward</code>, <code>.postbit-meta-warning</code>, <code>.postbit-meta-joined</code>, <code>.postbit-meta-location</code>.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-postbit-advanced">
+                                    <div class="mb-3">
+                                        <input type="hidden" name="postbit_advanced_enabled" value="0">
+                                        <label class="form-check form-switch">
+                                            <input type="checkbox" name="postbit_advanced_enabled" value="1" class="form-check-input" {{ s.postbit_advanced_enabled ? 'checked' : '' }}>
+                                            <span class="form-check-label">Özel Twig şablonunu etkinleştir</span>
+                                        </label>
+                                        <div class="form-text">Açıldığında, aşağıdaki Twig içeriği postbit kısmi şablonu yerine çalışır.</div>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="form-label">Postbit Twig şablonu</label>
+                                        <textarea class="form-control font-monospace" name="postbit_advanced_template" rows="14" placeholder="<article>...</article>">{{ s.postbit_advanced_template ?? '' }}</textarea>
+                                        <div class="form-text">Kullanılabilir değişkenler: <code>p</code>, <code>topic</code>, <code>user</code> ve mevcut görünüm bağlamı. Hook örneği: <code>{{ "{{ hook('postbit.custom', { post: p, topic: topic })|raw }}" }}</code>. Hata durumunda varsayılan postbit devam eder.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">{{ core_e(lang('admin.common.save')) }}</button>
+                <a href="{{ core_url(adminPath ~ '/system-settings') }}" class="btn btn-link link-secondary">{{ core_e(lang('admin.common.cancel')) }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+(() => {
+  const layoutEl = document.querySelector('select[name="postbit_simple_layout"]');
+  const cfgEl = document.querySelector('.postbit-top-layout-config');
+  const leftSelect = document.getElementById('postbit-top-left-list');
+  const rightSelect = document.getElementById('postbit-top-right-list');
+  const leftHidden = document.getElementById('postbit-top-left-items-input');
+  const rightHidden = document.getElementById('postbit-top-right-items-input');
+  if (!leftSelect || !rightSelect || !leftHidden || !rightHidden) return;
+  const available = {{ (postbitTopLayoutAvailableItems ?? [])|json_encode|raw }};
+  const labelMap = {};
+  available.forEach((it) => { labelMap[it.key] = it.label; });
+  const parseList = (v) => {
+    try { const arr = JSON.parse(v || '[]'); return Array.isArray(arr) ? arr : []; } catch (_) { return []; }
+  };
+  const leftKeys = parseList(leftHidden.value);
+  const rightKeys = parseList(rightHidden.value);
+  const used = new Set([...leftKeys, ...rightKeys]);
+  for (const it of available) if (!used.has(it.key)) rightKeys.push(it.key);
+  const fill = (sel, keys) => {
+    sel.innerHTML = '';
+    keys.forEach((k) => {
+      const o = document.createElement('option');
+      o.value = k;
+      o.textContent = labelMap[k] || k;
+      sel.appendChild(o);
+    });
+  };
+  const syncHidden = () => {
+    leftHidden.value = JSON.stringify(Array.from(leftSelect.options).map((o) => o.value));
+    rightHidden.value = JSON.stringify(Array.from(rightSelect.options).map((o) => o.value));
+  };
+  const moveSelected = (from, to) => {
+    Array.from(from.selectedOptions).forEach((o) => to.appendChild(o));
+    syncHidden();
+  };
+  const moveUp = (sel) => {
+    for (let i = 1; i < sel.options.length; i++) {
+      const o = sel.options[i];
+      if (o.selected && !sel.options[i - 1].selected) sel.insertBefore(o, sel.options[i - 1]);
+    }
+    syncHidden();
+  };
+  const moveDown = (sel) => {
+    for (let i = sel.options.length - 2; i >= 0; i--) {
+      const o = sel.options[i];
+      if (o.selected && !sel.options[i + 1].selected) sel.insertBefore(sel.options[i + 1], o);
+    }
+    syncHidden();
+  };
+  fill(leftSelect, leftKeys);
+  fill(rightSelect, rightKeys);
+  syncHidden();
+  document.getElementById('postbit-move-right')?.addEventListener('click', () => moveSelected(rightSelect, leftSelect));
+  document.getElementById('postbit-move-left')?.addEventListener('click', () => moveSelected(leftSelect, rightSelect));
+  document.getElementById('postbit-left-up')?.addEventListener('click', () => moveUp(leftSelect));
+  document.getElementById('postbit-left-down')?.addEventListener('click', () => moveDown(leftSelect));
+  document.getElementById('postbit-right-up')?.addEventListener('click', () => moveUp(rightSelect));
+  document.getElementById('postbit-right-down')?.addEventListener('click', () => moveDown(rightSelect));
+  if (layoutEl && cfgEl) {
+    const toggle = () => { cfgEl.style.display = layoutEl.value === 'top' ? '' : 'none'; };
+    layoutEl.addEventListener('change', toggle);
+    toggle();
+  }
+})();
+</script>
+{% endblock %}

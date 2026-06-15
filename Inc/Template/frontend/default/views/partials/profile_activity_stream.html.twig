@@ -1,0 +1,49 @@
+{# IPS tarzı etkinlik akışı #}
+{% set items = activityStream ?? [] %}
+{% set activityFilter = activityFilter ?? 'all' %}
+{% set u = profileUser ?? null %}
+{% if u %}
+{% set baseUrl = core_url('member/' ~ member_url_path(u)) %}
+{% set viewAllUrl = activityFilter == 'forum' ? baseUrl ~ '/forum' : (activityFilter == 'articles' ? baseUrl ~ '/articles' : (activityFilter == 'ideas' ? baseUrl ~ '/ideas' : null)) %}
+{% set emptyMsg = activityFilter == 'forum' ? core__('member.contributions_forum_empty') : (activityFilter == 'articles' ? core__('member.contributions_articles_empty') : (activityFilter == 'ideas' ? core__('member.contributions_ideas_empty') : core__('member.activity_empty'))) %}
+
+<div class="ips-stream">
+  {% if items is empty %}
+    <div class="ips-stream__empty">
+      <i class="fa-regular fa-folder-open"></i>
+      <p>{{ emptyMsg }}</p>
+    </div>
+  {% else %}
+    {% for item in items %}
+    <article class="ips-stream-item ips-stream-item--{{ item.kind }}">
+      <div class="ips-stream-item__icon ips-stream-item__icon--{{ item.kind }}">
+        {% if item.kind == 'topic' %}<i class="fa-solid fa-folder-open"></i>
+        {% elseif item.kind == 'post' %}<i class="fa-solid fa-reply"></i>
+        {% elseif item.kind == 'article' %}<i class="fa-solid fa-newspaper"></i>
+        {% elseif item.kind == 'idea' %}<i class="fa-solid fa-lightbulb"></i>
+        {% else %}<i class="fa-solid fa-circle"></i>{% endif %}
+      </div>
+      <div class="ips-stream-item__body">
+        <p class="ips-stream-item__meta">
+          <a href="{{ baseUrl }}" class="ips-stream-item__user">{{ core_e(u.username) }}</a>
+          {% if item.kind == 'topic' %}{{ core__('member.activity_topic') }}
+          {% elseif item.kind == 'post' %}{{ core__('member.activity_post') }}
+          {% elseif item.kind == 'article' %}{{ core__('member.activity_article') }}
+          {% elseif item.kind == 'idea' %}{{ core__('member.activity_idea') }}
+          {% endif %}
+          {% if item.context %}<span class="ips-stream-item__in">{{ core__('member.activity_in') }}</span> <span class="ips-stream-item__context">{{ core_e(item.context) }}</span>{% endif %}
+          <time class="ips-stream-item__time">{{ core_e(item.created_at) }}</time>
+        </p>
+        <h3 class="ips-stream-item__title"><a href="{{ item.url }}">{{ core_e(item.title) }}</a></h3>
+        {% if item.excerpt %}<p class="ips-stream-item__snippet">{{ core_e(item.excerpt) }}…</p>{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+    {% if viewAllUrl %}
+    <div class="ips-stream__footer">
+      <a href="{{ viewAllUrl }}" class="ips-stream__more">{{ core__('member.view_all') }} <i class="fa-solid fa-chevron-right"></i></a>
+    </div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+{% set message = message ?? null %}
+{% set replies = replies ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-mail-opened me-2"></i> {{ lang('admin.contact.detail_title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.common.from') }}: {{ core_e(message.name) }}</div>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <a href="{{ core_url(adminPath ~ '/contact') }}" class="btn btn-secondary"><i class="ti ti-arrow-left me-1"></i> {{ lang('admin.contact.back') }}</a>
+                    <form action="{{ core_url(adminPath ~ '/contact/delete/' ~ message.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('{{ lang('admin.common.confirm_delete') }}');">
+                        {{ core_csrf_field('admin_contact')|raw }}
+                        <button type="submit" class="btn btn-danger"><i class="ti ti-trash me-1"></i> {{ lang('admin.common.delete') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flash('error') %}
+        <div class="alert alert-danger alert-dismissible mb-3" role="alert">
+            {{ core_e(flash('error')) }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        {% if flash('success') %}
+        <div class="alert alert-success alert-dismissible mb-3" role="alert">
+            {{ core_e(flash('success')) }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ core_e(message.subject) }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="datagrid mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">{{ lang('admin.contact.full_name') }}</div>
+                        <div class="datagrid-content">{{ core_e(message.name) }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">{{ lang('admin.common.email') }}</div>
+                        <div class="datagrid-content">{{ core_e(message.email) }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">{{ lang('admin.contact.ip_address') }}</div>
+                        <div class="datagrid-content">{{ core_e(message.ip_address ?? lang('admin.common.unknown')) }}</div>
+                    </div>
+                    <div class="datagrid-item">
+                        <div class="datagrid-title">{{ lang('admin.contact.sent_date') }}</div>
+                        <div class="datagrid-content">{{ message.created_at|date('d.m.Y H:i:s') }}</div>
+                    </div>
+                </div>
+                <h4 class="mt-4 mb-2">{{ lang('admin.contact.message_content') }}</h4>
+                <div class="bg-light p-4 rounded text-wrap text-break" style="min-height: 8rem; white-space: pre-wrap; font-size: 1.05rem;">
+                    {{ message.message|e|nl2br }}
+                </div>
+            </div>
+
+            {% if replies is not empty %}
+            <div class="card-body border-top">
+                <h4 class="mb-3"><i class="ti ti-send me-2"></i>{{ lang('admin.contact.replies_title') }}</h4>
+                <p class="text-muted small mb-3">{{ lang('admin.contact.replies_desc') }}</p>
+                <div class="list-group list-group-flush">
+                    {% for reply in replies %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong>{{ core_e(reply.replied_by_username ?? lang('admin.contact.replier_unknown')) }}</strong>
+                            <span class="text-muted small">{{ reply.created_at|date('d.m.Y H:i') }} {% if reply.email_sent %}<span class="badge bg-success ms-1">{{ lang('admin.contact.email_sent') }}</span>{% else %}<span class="badge bg-warning ms-1">{{ lang('admin.contact.email_failed') }}</span>{% endif %}</span>
+                        </div>
+                        <div class="bg-light p-3 rounded text-wrap text-break" style="white-space: pre-wrap;">{{ reply.reply_body|e|nl2br }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card-footer">
+                <h4 class="mb-3"><i class="ti ti-send me-2"></i>{{ lang('admin.contact.reply_title') }}</h4>
+                <p class="text-muted small mb-3">{{ lang('admin.contact.reply_desc') }}</p>
+                <form action="{{ core_url(adminPath ~ '/contact/reply/' ~ message.id) }}" method="post">
+                    {{ core_csrf_field('admin_contact')|raw }}
+                    <div class="mb-3">
+                        <label for="reply_body" class="form-label">{{ lang('admin.contact.reply_label') }}</label>
+                        <textarea name="reply_body" id="reply_body" class="form-control" rows="5" required placeholder="{{ lang('admin.contact.reply_ph') }}">{{ reply_body|default('')|e }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="ti ti-send me-1"></i> {{ lang('admin.contact.reply_submit') }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

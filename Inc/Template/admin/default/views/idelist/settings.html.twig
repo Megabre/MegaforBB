@@ -1,0 +1,52 @@
+{% extends "base.html.twig" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/idelist.css') }}?v={{ core_config('app.version', '1.0.0') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-3">
+  {% include 'idelist/_nav.html.twig' with { tab: 'settings' } %}
+  <div class="idelist-admin-stack">
+    <div class="alert alert-warning mb-0">{{ core_e(core__('idelist.disable_warning')) }}</div>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form method="post" action="{{ core_url(adminPath ~ '/idelist/settings') }}" class="d-grid gap-3" onsubmit="if(!document.getElementById('module_enabled').checked){return confirm({{ core__('idelist.disable_warning')|json_encode|raw }});}">
+      {{ core_csrf_field('idelist_admin_settings')|raw }}
+      <h4 class="mb-0">{{ core_e(core__('idelist.settings_general')) }}</h4>
+      <div class="mb-3 p-3 border rounded bg-light">
+        <label class="form-check form-switch" style="font-size:1.1rem;">
+          <input id="module_enabled" class="form-check-input" type="checkbox" name="module_enabled" value="1" {{ settings.module_enabled == '1' ? 'checked' : '' }}>
+          <span class="form-check-label ms-2 fw-semibold">{{ core_e(core__('idelist.module_enabled_label')) }}</span>
+        </label>
+      </div>
+      <label class="form-check">
+        <input class="form-check-input" type="checkbox" name="allow_anonymous_view" value="1" {{ settings.allow_anonymous_view == '1' ? 'checked' : '' }}>
+        <span class="form-check-label">{{ core_e(core__('idelist.allow_anonymous_view')) }}</span>
+      </label>
+      <h4 class="mb-0">{{ core_e(core__('idelist.settings_voting')) }}</h4>
+      <label class="form-check">
+        <input class="form-check-input" type="checkbox" name="allow_downvotes" value="1" {{ settings.allow_downvotes == '1' ? 'checked' : '' }}>
+        <span class="form-check-label">{{ core_e(core__('idelist.allow_downvotes')) }}</span>
+      </label>
+      <label class="form-check">
+        <input class="form-check-input" type="checkbox" name="show_vote_counts" value="1" {{ settings.show_vote_counts == '1' ? 'checked' : '' }}>
+        <span class="form-check-label">{{ core_e(core__('idelist.show_vote_counts')) }}</span>
+      </label>
+      <div>
+        <label class="form-label">{{ core_e(core__('idelist.votes_per_user_label')) }}</label>
+        <input class="form-control" type="number" name="votes_per_user" value="{{ settings.votes_per_user }}">
+      </div>
+      <h4 class="mb-0">{{ core_e(core__('idelist.settings_moderation')) }}</h4>
+      <label class="form-check">
+        <input class="form-check-input" type="checkbox" name="require_approval" value="1" {{ settings.require_approval == '1' ? 'checked' : '' }}>
+        <span class="form-check-label">{{ core_e(core__('idelist.require_approval')) }}</span>
+      </label>
+      <div>
+        <button class="btn btn-primary mt-2" type="submit">{{ core_e(core__('idelist.save_settings')) }}</button>
+      </div>
+    </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

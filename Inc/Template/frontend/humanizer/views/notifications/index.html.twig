@@ -1,0 +1,219 @@
+{% extends 'base.html.twig' %}
+
+{% set listForJs = listForJs ?? [] %}
+
+{% block content %}
+<script type="application/json" id="notifications-payload">{{ listForJs|json_encode|raw }}</script>
+<script>
+(function () {
+  var readOneBaseUrl = {{ (core_url('notifications/')|rtrim('/'))|json_encode|raw }};
+  function register() {
+    Alpine.data('notificationsPage', function () {
+      return {
+        list: [],
+        selected: null,
+        tab: 'all',
+        readOneBaseUrl: readOneBaseUrl,
+        get filteredList() {
+          if (this.tab === 'all') return this.list;
+          return this.list.filter(function (n) { return n.category === this.tab; }.bind(this));
+        },
+        setTab: function (t) {
+          this.tab = t;
+          var fl = this.filteredList;
+          var sel = this.selected;
+          var stillInList = sel && fl.some(function (n) { return n.id === sel.id; });
+          if (!stillInList) this.selected = fl.length > 0 ? fl[0] : null;
+        },
+        init: function () {
+          var raw = '[]';
+          var payloadEl = document.getElementById('notifications-payload');
+          if (payloadEl && payloadEl.textContent) raw = payloadEl.textContent.trim();
+          else if (this.$el) { var a = this.$el.getAttribute('data-list'); if (a) raw = a; }
+          try { this.list = JSON.parse(raw || '[]'); } catch (e) { this.list = []; }
+          var fl = this.filteredList;
+          if (fl.length > 0 && !this.selected) this.selected = fl[0];
+        },
+        select: function (n) { this.selected = n; },
+        readUrl: function (n) {
+          if (!n || !n.id) return '#';
+          return this.readOneBaseUrl + '/' + n.id + '/read';
+        },
+        dateLabel: function (n) {
+          return (n && n.created_at_label) ? n.created_at_label : '';
+        }
+      };
+    });
+  }
+  if (typeof window.Alpine !== 'undefined') register();
+  else document.addEventListener('alpine:init', register);
+})();
+</script>
+
+<div class="max-w-5xl mx-auto px-4 py-6 sm:py-8">
+  <nav class="mb-6" aria-label="Breadcrumb">
+    <ol class="flex items-center gap-2 text-sm text-gray-500">
+      <li><a href="{{ core_url('') }}" class="text-[#105289] hover:text-[#105289]/80 hover:underline">{{ core__('common.home') }}</a></li>
+      <li aria-hidden="true">/</li>
+      <li class="text-gray-600 font-medium" aria-current="page">{{ core__('notification.page_title') }}</li>
+    </ol>
+  </nav>
+
+  <div
+    class="notifications-page rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+    x-data="notificationsPage()"
+    x-init="init()"
+  >
+    <header class="border-b border-gray-100 bg-gradient-to-b from-gray-50/80 to-white px-4 sm:px-6 py-5">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-3">
+          <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#105289] text-white shadow-sm">
+            <i class="fa-solid fa-bell text-lg"></i>
+          </span>
+          <div>
+            <h1 class="text-xl font-semibold text-[#105289]">{{ core__('notification.page_title') }}</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Son 30 bildirim gösterilir</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-1.5" role="tablist">
+          <button type="button" role="tab" @click="setTab('all')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'all' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_all') }}
+          </button>
+          <button type="button" role="tab" @click="setTab('likes')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'likes' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_likes') }}
+          </button>
+          <button type="button" role="tab" @click="setTab('mentions')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'mentions' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_mentions') }}
+          </button>
+          <button type="button" role="tab" @click="setTab('replies')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'replies' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_replies') }}
+          </button>
+          <button type="button" role="tab" @click="setTab('reputation')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'reputation' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_reputation') }}
+          </button>
+          <button type="button" role="tab" @click="setTab('quotes')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'quotes' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_quotes') }}
+          </button>
+          <button type="button" role="tab" @click="setTab('announcements')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'announcements' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_announcements') }}
+          </button>
+          <button type="button" role="tab" @click="setTab('reports')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'reports' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_reports') }}
+          </button>
+          <button type="button" role="tab" @click="setTab('other')"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+            :class="tab === 'other' ? 'bg-[#105289] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#105289]'">
+            {{ core__('notification.tab_other') }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-col lg:flex-row min-h-[420px]">
+      <aside class="w-full lg:w-[400px] flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col bg-gray-50/40">
+        <div class="flex-1 overflow-y-auto min-h-[280px]">
+          <template x-if="list.length === 0">
+            <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
+              <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 mb-4">
+                <i class="fa-regular fa-bell-slash text-2xl"></i>
+              </span>
+              <p class="text-gray-500 font-medium">{{ core__('notification.none_yet') }}</p>
+              <p class="text-sm text-gray-400 mt-1">Yeni etkileşimler burada görünecek</p>
+            </div>
+          </template>
+          <template x-if="list.length > 0 && filteredList.length === 0">
+            <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
+              <span class="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-100 text-gray-400 mb-3">
+                <i class="fa-regular fa-inbox text-xl"></i>
+              </span>
+              <p class="text-gray-500 text-sm">{{ core__('notification.none_in_tab') }}</p>
+            </div>
+          </template>
+          <ul class="divide-y divide-gray-100" x-show="list.length > 0 && filteredList.length > 0">
+            <template x-for="n in filteredList" :key="n.id">
+              <li>
+                <button
+                  type="button"
+                  class="w-full text-left flex items-start gap-3 px-4 py-3.5 border-0 bg-transparent cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#105289]/20 rounded-none"
+                  :class="selected && selected.id === n.id ? 'bg-white border-l-4 border-[#105289] shadow-sm' : 'hover:bg-white/70 border-l-4 border-transparent'"
+                  @click="select(n)"
+                >
+                  <span
+                    class="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-xl text-[#105289]"
+                    :class="n.is_read ? 'bg-gray-200/80 text-gray-500' : 'bg-[#105289]/10'"
+                  >
+                    <i class="fa-solid fa-bell text-sm"></i>
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p
+                      class="text-sm line-clamp-3 leading-snug"
+                      :class="n.is_read ? 'text-gray-600' : 'text-[#105289] font-medium'"
+                      x-text="n.detail || 'Bildirim'"
+                    ></p>
+                    <p class="text-xs text-gray-400 mt-1.5" x-text="dateLabel(n)"></p>
+                  </div>
+                  <span
+                    x-show="!n.is_read"
+                    class="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-[#105289] mt-2"
+                  ></span>
+                  <i
+                    class="fa-solid fa-chevron-right text-gray-300 text-xs flex-shrink-0 mt-2"
+                    :class="selected && selected.id === n.id ? 'text-[#105289]/60' : ''"
+                  ></i>
+                </button>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="flex-1 flex flex-col min-h-0 bg-white">
+        <template x-if="!selected">
+          <div class="flex-1 flex flex-col items-center justify-center p-8 lg:p-12 text-gray-400">
+            <span class="flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-100 mb-4">
+              <i class="fa-regular fa-message text-3xl"></i>
+            </span>
+            <p class="text-gray-500 font-medium">Bir bildirim seçin</p>
+            <p class="text-sm text-gray-400 mt-1">Detayı görmek için soldan bir öğe seçin</p>
+          </div>
+        </template>
+        <template x-if="selected">
+          <div class="flex-1 flex flex-col p-6 sm:p-8 overflow-y-auto">
+            <div class="max-w-xl">
+              <p class="text-sm text-gray-500 mb-2" x-text="dateLabel(selected)"></p>
+              <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed">
+                <p class="whitespace-pre-wrap" x-text="selected.detail || 'Bildirim'"></p>
+              </div>
+              <div class="mt-6 pt-6 border-t border-gray-100" x-show="selected.url">
+                <a
+                  :href="readUrl(selected)"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#105289] text-white text-sm font-medium hover:bg-[#105289]/90 transition-colors shadow-sm"
+                >
+                  <i class="fa-solid fa-arrow-right text-xs"></i>
+                  Görüntüle
+                </a>
+              </div>
+            </div>
+          </div>
+        </template>
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

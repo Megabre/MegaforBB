@@ -1,0 +1,188 @@
+{% extends "base.html.twig" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/idelist.css') }}?v={{ core_config('app.version', '1.0.0') }}&idelist=20260421r">
+{% endblock %}
+
+{% block content %}
+{% set idelist_title_ref = "MegaforBB forum sistemi, Türkiye'de Türk yazılımcılar " %}
+{% set idelist_title_max = idelist_title_ref|length %}
+<div class="idelist-wrap">
+  <section class="idelist-hero">
+    <div class="idelist-hero-plain">
+      <div>
+        <h1>{{ core_e(core__('idelist.page_title')) }}</h1>
+        <p>{{ core_e(core__('idelist.description_help')) }}</p>
+      </div>
+      <a class="idelist-hero-plain__cta" href="{{ user ? core_url('idelist/create') : core_url('login') }}">
+        <i class="fa-solid fa-plus"></i>
+        {{ core_e(core__('idelist.new_idea_btn')) }}
+      </a>
+    </div>
+  </section>
+
+  <div class="idelist-listing">
+    <form method="get" class="idelist-filter-form">
+      <div class="idelist-filter-group">
+        <span class="idelist-filter-label">{{ core_e(core__('idelist.filter_category')) }}</span>
+        <select name="category" class="idelist-filter-select">
+          <option value="">{{ core_e(core__('idelist.filter_all')) }}</option>
+          {% for category in categories %}
+            <option value="{{ category.slug|e('html_attr') }}" {{ currentFilters.category == category.slug ? 'selected' : '' }}>{{ core_e(category.name) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="idelist-filter-group">
+        <span class="idelist-filter-label">{{ core_e(core__('idelist.filter_sort')) }}</span>
+        <select name="sort" class="idelist-filter-select">
+          <option value="votes" {{ currentFilters.sort == 'votes' ? 'selected' : '' }}>{{ core_e(core__('idelist.sort_votes')) }}</option>
+          <option value="newest" {{ currentFilters.sort == 'newest' ? 'selected' : '' }}>{{ core_e(core__('idelist.sort_newest')) }}</option>
+          <option value="oldest" {{ currentFilters.sort == 'oldest' ? 'selected' : '' }}>{{ core_e(core__('idelist.sort_oldest')) }}</option>
+        </select>
+      </div>
+      <div class="idelist-filter-group">
+        <span class="idelist-filter-label">{{ core_e(core__('idelist.filter_status')) }}</span>
+        <select name="status" class="idelist-filter-select">
+          <option value="">{{ core_e(core__('idelist.filter_all')) }}</option>
+          {% for s in statuses|default([]) %}
+            <option value="{{ s.slug|e('html_attr') }}" {{ currentFilters.status == s.slug ? 'selected' : '' }}>{{ core_e(s.name) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="idelist-filter-actions">
+        <button type="submit" class="idelist-filter-btn idelist-filter-btn--primary">
+          <i class="fa-solid fa-magnifying-glass"></i> {{ core_e(core__('common.search_btn')) }}
+        </button>
+        <a href="{{ core_url('idelist') }}" class="idelist-filter-btn idelist-filter-btn--ghost">
+          <i class="fa-solid fa-xmark"></i> {{ core_e(core__('idelist.filter_clear')) }}
+        </a>
+      </div>
+    </form>
+
+    {% if ideas is empty %}
+      <div class="idelist-empty">
+        <i class="fa-regular fa-lightbulb" style="font-size:1.5rem;display:block;margin-bottom:.5rem;opacity:.5"></i>
+        {{ core_e(core__('idelist.no_ideas')) }}
+      </div>
+    {% else %}
+      {# ── Desktop Table ── #}
+      <div class="table-responsive idelist-table-wrap">
+        <table class="table table-vcenter idelist-table">
+          <colgroup>
+            <col style="width:43%">
+            <col style="width:16%">
+            <col style="width:5%">
+            <col style="width:5%">
+            <col style="width:13%">
+            <col style="width:7%">
+            <col style="width:11%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>{{ core_e(core__('idelist.title_label')) }}</th>
+              <th>{{ core_e(core__('idelist.category_label')) }}</th>
+              <th class="idelist-col-vote">+</th>
+              <th class="idelist-col-vote">-</th>
+              <th>{{ core_e(core__('idelist.col_status')) }}</th>
+              <th>{{ core_e(core__('common.messages')) }}</th>
+              <th>{{ core_e(core__('idelist.col_last_message')) }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for idea in ideas %}
+              {% set lastCommentUser = idea.lastComment.user|default(null) %}
+              {% set lastAvatarSeed = lastCommentUser.username|default(idea.user.username|default('User')) %}
+              {% set avatarUrl = (lastCommentUser and lastCommentUser.avatar_path|default('')) != '' ? asset_url(lastCommentUser.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ avatar_display_name(lastAvatarSeed)|url_encode ~ '&size=80') %}
+              {% set upVotes = idea.upvotes_count|default(0) %}
+              {% set downVotes = idea.downvotes_count|default(0) %}
+              <tr>
+                <td class="idelist-table__title">
+                  <a class="idelist-title idelist-title--truncate" href="{{ core_url('idelist/' ~ idea.slug) }}" title="{{ core_e(idea.title) }}" style="{{ idea.category.color|default('') ? 'color:' ~ idea.category.color ~ ';' : '' }}">
+                    {% if idea.title|length > idelist_title_max %}
+                      {{ core_e(idea.title|slice(0, idelist_title_max)) }}…
+                    {% else %}
+                      {{ core_e(idea.title) }}
+                    {% endif %}
+                  </a>
+                </td>
+                <td>
+                  <span class="idelist-category-cell" style="{{ idea.category.color|default('') ? 'color:' ~ idea.category.color ~ ';' : '' }}">
+                    {% if idea.category.icon|default('') %}
+                      <i class="{{ core_e(idea.category.icon) }}"></i>
+                    {% endif %}
+                    {{ core_e(idea.category.name|default('-')) }}
+                  </span>
+                </td>
+                <td class="idelist-col-vote"><span class="idelist-vote-badge idelist-vote-badge-up">+{{ upVotes }}</span></td>
+                <td class="idelist-col-vote"><span class="idelist-vote-badge idelist-vote-badge-down">-{{ downVotes }}</span></td>
+                <td>{% include 'idelist/partials/status_badge.html.twig' with { status: idea.status, statusDefinition: idea.statusDefinition|default(null) } %}</td>
+                <td class="idelist-col-messages">{{ idea.comments_count|default(0) }}</td>
+                <td class="idelist-col-last-message">
+                  <div class="idelist-table__author">
+                    <img src="{{ core_e(avatarUrl) }}" alt="" loading="lazy" title="{{ core_e(lastCommentUser.username|default(idea.user.username|default('-'))) }}">
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {# ── Mobile Card View ── #}
+      <div class="idelist-mobile-cards">
+        {% for idea in ideas %}
+          {% set upVotes = idea.upvotes_count|default(0) %}
+          {% set downVotes = idea.downvotes_count|default(0) %}
+          <div class="idelist-mobile-card">
+            <a class="idelist-mobile-card__title" href="{{ core_url('idelist/' ~ idea.slug) }}" style="{{ idea.category.color|default('') ? 'color:' ~ idea.category.color ~ ';' : '' }}">
+              {{ core_e(idea.title) }}
+            </a>
+            <div class="idelist-mobile-card__meta">
+              {% if idea.category.name|default('') %}
+                <span class="idelist-mobile-card__meta-item">
+                  {% if idea.category.icon|default('') %}<i class="{{ core_e(idea.category.icon) }}"></i>{% endif %}
+                  {{ core_e(idea.category.name) }}
+                </span>
+              {% endif %}
+              <span class="idelist-mobile-card__meta-item">
+                <i class="fa-regular fa-comment"></i> {{ idea.comments_count|default(0) }}
+              </span>
+            </div>
+            <div class="idelist-mobile-card__footer">
+              <div class="idelist-mobile-card__votes">
+                <span class="idelist-vote-badge idelist-vote-badge-up">+{{ upVotes }}</span>
+                <span class="idelist-vote-badge idelist-vote-badge-down">-{{ downVotes }}</span>
+              </div>
+              {% include 'idelist/partials/status_badge.html.twig' with { status: idea.status, statusDefinition: idea.statusDefinition|default(null) } %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('submit', async function (e) {
+  var form = e.target;
+  if (!form.matches('form[data-vote-form="1"]')) return;
+  e.preventDefault();
+  var wrapper = form.closest('[data-idea-vote]');
+  if (!wrapper) return form.submit();
+  var countEl = wrapper.querySelector('[data-vote-count]');
+  try {
+    var fd = new FormData(form);
+    var res = await fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+    var data = await res.json();
+    if (data && data.ok && countEl && typeof data.vote_count !== 'undefined') {
+      countEl.textContent = String(data.vote_count);
+    } else {
+      form.submit();
+    }
+  } catch (err) {
+    form.submit();
+  }
+});
+</script>
+{% endblock %}

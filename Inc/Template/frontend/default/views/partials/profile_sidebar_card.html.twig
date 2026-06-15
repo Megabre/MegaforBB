@@ -1,0 +1,24 @@
+{# Sağ sidebar — bio + kişisel bilgiler (istatistik yok) #}
+{% set u = profileUser ?? null %}
+{% set rewardLevel = rewardLevel ?? null %}
+{% set isOwnProfile = isOwnProfile ?? false %}
+{% set userStats = userStats ?? {} %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% if u %}
+<aside class="ips-profile-card">
+  <h3 class="ips-profile-card__title">{{ core__('member.profile_card_title') }}</h3>
+
+  {% if u.bio is not empty %}
+  <div class="ips-profile-card__bio">{{ u.bio|e('html')|replace({"\r\n": "<br>", "\n": "<br>", "\r": "<br>"})|raw }}</div>
+  {% endif %}
+
+  {% include 'partials/profile_about_sidebar.html.twig' with {
+    profileUser: u,
+    rewardLevel: rewardLevel,
+    isOwnProfile: isOwnProfile,
+    userStats: userStats,
+    reputationEnabled: reputationEnabled,
+    variant: 'card'
+  } %}
+</aside>
+{% endif %}

@@ -1,0 +1,239 @@
+{% extends 'base.html.twig' %}
+
+{% macro extract_first_image(html) %}
+{% if '<img' in html|lower %}
+  {% set parts = (html|lower)|split('<img') %}
+  {% if parts|length > 1 %}
+    {% set afterImg = parts[1] %}
+    {% if 'src="' in afterImg %}
+      {% set srcParts = afterImg|split('src="') %}
+      {% if srcParts|length > 1 %}
+        {% set afterSrc = srcParts[1] %}
+        {% set urlParts = afterSrc|split('"') %}
+        {{ urlParts[0]|trim }}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endmacro %}
+
+{% block content %}
+{% set portalCards = portalCards ?? [] %}
+{% set portalTabLimit = portalTabLimit ?? 15 %}
+{% set portalTabMax = portalTabMax ?? 50 %}
+{% set stats = stats ?? null %}
+{% set portalHeroTitle = hero_title|default(core__('portal.default_hero_title')) %}
+{% set portalHeroDesc = hero_description|default(core__('portal.default_hero_desc')) %}
+
+  {# ----- HERO (vitrin – ay ışığı, yıldız efektleri) ----- #}
+  <header class="mfbb-portal-hero mb-8">
+    <div class="mfbb-portal-hero__bg">
+      <span class="mfbb-portal-hero__moon" aria-hidden="true"></span>
+      <span class="mfbb-portal-hero__glow" aria-hidden="true"></span>
+      <div class="mfbb-portal-hero__stars" aria-hidden="true"></div>
+      <div class="mfbb-portal-hero__reflection" aria-hidden="true"></div>
+    </div>
+    <div class="mfbb-portal-hero__inner">
+      <p class="mfbb-portal-hero__badge">
+        <span class="mfbb-portal-hero__badge-dot"></span>
+        {{ core_e(site_name|default('Topluluğa')) }} Hoş Geldiniz
+      </p>
+      <h1 class="mfbb-portal-hero__title">{{ core_e(portalHeroTitle) }}</h1>
+      <p class="mfbb-portal-hero__desc">{{ core_e(portalHeroDesc) }}</p>
+      <div class="mfbb-portal-hero__actions">
+        <a href="{{ core_url('register') }}" class="mfbb-portal-hero__btn mfbb-portal-hero__btn--primary">
+          Aramıza Katıl <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </a>
+        <a href="{{ core_url('forum') }}" class="mfbb-portal-hero__btn mfbb-portal-hero__btn--secondary">
+          Topluluğu Keşfet
+        </a>
+      </div>
+    </div>
+  </header>
+
+  {# ----- FEATURES (vitrin – forum yazılımı tanıtımı) ----- #}
+  <section class="mfbb-portal-features mb-10">
+    <p class="mfbb-portal-features__intro">{{ core_e(site_name|default('MegaforBB')) }} ile topluluğunuzu bir üst seviyeye taşıyın.</p>
+    <div class="mfbb-portal-features__grid">
+      <article class="mfbb-portal-feature">
+        <div class="mfbb-portal-feature__icon mfbb-portal-feature__icon--indigo">
+          <i class="{{ core_e(hero_f1_icon|default('fa-solid fa-gem')) }}" aria-hidden="true"></i>
+        </div>
+        <h3 class="mfbb-portal-feature__title">{{ core_e(hero_f1_title|default('Pırlanta Kalite')) }}</h3>
+        <p class="mfbb-portal-feature__text">{{ core_e(hero_f1_desc|default('Modern mimari, güvenli altyapı ve sınırsız özelleştirme ile forum yazılımının zirvesi.')) }}</p>
+      </article>
+      <article class="mfbb-portal-feature">
+        <div class="mfbb-portal-feature__icon mfbb-portal-feature__icon--emerald">
+          <i class="{{ core_e(hero_f2_icon|default('fa-solid fa-bolt')) }}" aria-hidden="true"></i>
+        </div>
+        <h3 class="mfbb-portal-feature__title">{{ core_e(hero_f2_title|default('Hızlı & Akıcı')) }}</h3>
+        <p class="mfbb-portal-feature__text">{{ core_e(hero_f2_desc|default('Laravel ve Symfony gücüyle optimize edilmiş, her ölçekte kusursuz performans.')) }}</p>
+      </article>
+      <article class="mfbb-portal-feature">
+        <div class="mfbb-portal-feature__icon mfbb-portal-feature__icon--blue">
+          <i class="{{ core_e(hero_f3_icon|default('fa-solid fa-palette')) }}" aria-hidden="true"></i>
+        </div>
+        <h3 class="mfbb-portal-feature__title">{{ core_e(hero_f3_title|default('Özelleştirilebilir')) }}</h3>
+        <p class="mfbb-portal-feature__text">{{ core_e(hero_f3_desc|default('Tema, eklenti ve modül desteği ile hayalinizdeki topluluğu kurun.')) }}</p>
+      </article>
+      <article class="mfbb-portal-feature">
+        <div class="mfbb-portal-feature__icon mfbb-portal-feature__icon--amber">
+          <i class="{{ core_e(hero_f4_icon|default('fa-solid fa-shield-halved')) }}" aria-hidden="true"></i>
+        </div>
+        <h3 class="mfbb-portal-feature__title">{{ core_e(hero_f4_title|default('Güvenli & Kararlı')) }}</h3>
+        <p class="mfbb-portal-feature__text">{{ core_e(hero_f4_desc|default('Güncel güvenlik standartları ve düzenli güncellemelerle güvende kalın.')) }}</p>
+      </article>
+    </div>
+  </section>
+
+<!-- Trending & Tab Section -->
+<div class="mb-10">
+  {% include 'partials/son_olaylar.html.twig' %}
+</div>
+
+<!-- Dynamic Magazine Blocks – tüm değerler Admin → Portal ve Makaleler → Ana sayfa kartlarından gelir -->
+<div class="space-y-12">
+{% for card in portalCards %}
+  {# Kart ayarları (portal_card_1/2/3): tip, başlık, açıklama, layout, per_slide, total, color, border_color #}
+  {% set items = card.items ?? [] %}
+  {% set layout = (card.layout ?? 'grid') == 'list' ? 'list' : 'grid' %}
+  {% set perSlide = (card.per_slide ?? 4) %}
+  {% set perRow = perSlide < 2 ? 2 : (perSlide > 6 ? 6 : perSlide) %}
+  {% set title = card.title ?? core__('portal.default_card_title') %}
+  {% set catColor = card.color ?? '#1c8b42' %}
+  {% set borderColorRaw = card.border_color|default('')|trim|lower %}
+  {% set useBorderStyle = borderColorRaw is not empty and borderColorRaw != '#fff' and borderColorRaw != '#ffffff' and borderColorRaw != 'fff' and borderColorRaw != 'ffffff' %}
+
+  {% set gridCols = perRow == 2 ? 'grid-cols-1 md:grid-cols-2' : (perRow == 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : (perRow == 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : (perRow == 5 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6'))) %}
+  {# Forum kategorileri gibi: 1px çerçeve + başlık = Kart Vurgu Rengi (catColor). Opsiyonel arka plan = Çerçeve & Arkaplan Rengi (border_color) #}
+  {% set sectionStyle = 'border: 1px solid ' ~ (catColor|e('css')) ~ '; border-radius: 1rem; overflow: hidden;' %}
+  {% if useBorderStyle %}
+    {% set sectionStyle = sectionStyle ~ ' background-color: ' ~ (borderColorRaw|e('css')) ~ '08; box-shadow: 0 2px 12px ' ~ (borderColorRaw|e('css')) ~ '18;' %}
+  {% endif %}
+
+  <section class="mb-10 transition-all duration-300 bg-white dark:bg-slate-900" style="{{ sectionStyle }}">
+    <!-- Başlık satırı – forum kategori başlığı gibi: vurgu rengi ile (Kart Vurgu Rengi) -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-700" style="border-left: 4px solid {{ catColor|e('css') }}; background-color: {{ catColor|e('css') }}08;">
+      <div class="min-w-0">
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight truncate" style="color: {{ catColor|e('css') }}">{{ core_e(title) }}</h2>
+        {% if card.description is defined and card.description is not empty %}
+        <p class="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-2xl leading-relaxed">{{ core_e(card.description) }}</p>
+        {% endif %}
+      </div>
+      <a href="{{ core_url('forum') }}" class="text-sm font-semibold px-4 py-2 rounded-lg shrink-0 transition-colors flex items-center gap-2" style="color: {{ catColor|e('css') }}; background-color: {{ catColor|e('css') }}15;" onmouseover="this.style.backgroundColor='{{ catColor|e('css') }}22'" onmouseout="this.style.backgroundColor='{{ catColor|e('css') }}15'">
+        {{ core__('portal.view_all') }} <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </a>
+    </div>
+
+    <!-- Articles Feed -->
+    <div class="px-4 sm:px-5 py-4 sm:py-5">
+    {% if items is empty %}
+      <div class="py-12 text-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+        <i class="fa-regular fa-folder-open text-4xl text-slate-300 dark:text-slate-600 mb-4 block"></i>
+        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">{{ core__('portal.no_content') }}</p>
+      </div>
+    {% else %}
+      <div class="grid {{ gridCols }} gap-6 lg:gap-8">
+        {% for item in items %}
+          {% set itemType = item.item_type ?? 'topic' %}
+          {% set itemUrl = itemType == 'article' ? core_url(article_url_path_by_id(item.id ?? 0)) : topic_url(item) %}
+          
+          {# Resim çıkartma veya Fallback Gradyan #}
+          {% set rawSnippet = (item.first_body_html|default(''))|striptags %}
+          {% set snippet = rawSnippet|length > 110 ? (rawSnippet|slice(0, 110) ~ '…') : rawSnippet %}
+          {% set firstImage = _self.extract_first_image(item.first_body_html|default(''))|trim %}
+          
+          {# Hover ve yapıyı list/grid moduna göre değiştiriyoruz #}
+          {% if layout == 'list' %}
+            <article class="flex items-start gap-4 group">
+              <a href="{{ itemUrl }}" class="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800">
+                {% if firstImage != '' %}
+                  <img src="{{ firstImage }}" alt="" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out">
+                {% else %}
+                  <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-700 dark:to-slate-800 group-hover:scale-105 transition-transform duration-500">
+                     <i class="fa-regular {{ itemType == 'article' ? 'fa-newspaper' : 'fa-comments' }} text-2xl" style="color: {{ catColor|e('css') }}"></i>
+                  </div>
+                {% endif %}
+                <div class="absolute inset-0 outline outline-1 outline-black/5 rounded-xl pointer-events-none"></div>
+              </a>
+              <div class="flex-1 min-w-0 py-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style="color: {{ catColor|e('css') }}; background-color: {{ catColor|e('css') }}15;">
+                    {{ itemType == 'article' ? core__('portal.type_article') : core__('portal.type_topic') }}
+                  </span>
+                  <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">{{ core_e((item.created_at|default(''))|date('d M Y')) }}</span>
+                </div>
+                <h3 class="font-bold text-slate-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                  <a href="{{ itemUrl }}">{{ core_e(item.title|default('')) }}</a>
+                </h3>
+                <div class="text-xs text-slate-500 font-medium mt-2 flex items-center gap-3">
+                  <span class="truncate"><i class="fa-solid fa-user-pen mr-1 text-slate-300"></i>{{ core_e(item.username|default('')) }}</span>
+                  <span class="shrink-0"><i class="fa-regular fa-comment mr-1 text-slate-300"></i>{{ (item.reply_count ?? 0) }}</span>
+                </div>
+              </div>
+            </article>
+          {% else %}
+            {# GRID KART MODU #}
+            <article class="flex flex-col group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-200/60 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 ease-out">
+              <a href="{{ itemUrl }}" class="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800 w-full block">
+                {% if firstImage != '' %}
+                  <img src="{{ firstImage }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out">
+                {% else %}
+                  <div class="w-full h-full p-6 flex flex-col justify-end opacity-90 group-hover:scale-105 transition-transform duration-700 ease-in-out" style="background: linear-gradient(135deg, {{ catColor|e('css') }} 0%, #1e293b 100%);">
+                     <i class="fa-regular {{ itemType == 'article' ? 'fa-newspaper' : 'fa-comments' }} text-white/20 text-6xl absolute top-4 right-4"></i>
+                     <span class="text-white/80 font-bold text-lg leading-tight line-clamp-2">{{ core_e(item.title|default('')) }}</span>
+                  </div>
+                {% endif %}
+                
+                {# Type Badge Top Left #}
+                <div class="absolute top-3 left-3 z-10">
+                  <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md bg-black/40 rounded-lg shadow-sm">
+                     {{ itemType == 'article' ? core__('portal.type_article') : core__('portal.type_topic') }}
+                  </span>
+                </div>
+              </a>
+              
+              <div class="p-5 flex flex-col flex-1">
+                <div class="flex items-center justify-between text-xs font-medium mb-3">
+                  <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                    <span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                      <i class="fa-solid fa-user text-[10px]"></i>
+                    </span>
+                    <span class="truncate">{{ core_e(item.username|default('Anonim')) }}</span>
+                  </span>
+                  <span class="text-slate-400 dark:text-slate-500 shrink-0">{{ core_e((item.created_at|default(''))|date('d M Y')) }}</span>
+                </div>
+                
+                <h3 class="font-bold text-lg text-slate-900 dark:text-white leading-snug mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                  <a href="{{ itemUrl }}" class="focus:outline-none">
+                    {{ core_e(item.title|default('')) }}
+                  </a>
+                </h3>
+                
+                {% if snippet %}
+                  <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 flex-1">
+                    {{ core_e(snippet) }}
+                  </p>
+                {% else %}
+                  <div class="flex-1"></div>
+                {% endif %}
+                
+                <div class="flex items-center gap-4 mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 font-medium">
+                  <span class="flex items-center gap-1.5 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+                    <i class="fa-regular fa-comment"></i> {{ (item.reply_count ?? 0) }}
+                  </span>
+                  <span class="flex items-center gap-1.5 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+                    <i class="fa-regular fa-eye"></i> {{ (item.view_count ?? 0) }}
+                  </span>
+                </div>
+              </div>
+            </article>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+    </div>
+  </section>
+{% endfor %}
+</div>
+{% endblock %}

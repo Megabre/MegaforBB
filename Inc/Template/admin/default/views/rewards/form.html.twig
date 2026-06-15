@@ -1,0 +1,69 @@
+{% extends 'base.html.twig' %}
+{% set level = level ?? null %}
+{% set isEdit = level is not null %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ isEdit ? lang('admin.rewards.edit_level') : lang('admin.rewards.create_level') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/rewards') }}" class="btn">{{ lang('admin.common.back') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ isEdit ? core_url(adminPath ~ '/rewards/update/' ~ level.id) : core_url(adminPath ~ '/rewards/store') }}" method="post">
+                    {{ core_csrf_field('admin_reward')|raw }}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.rewards.level_name') }}</label>
+                            <input type="text" name="name" class="form-control" value="{{ level ? level.name|e : '' }}" required placeholder="{{ lang('admin.rewards.level_name_ph') }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.rewards.sort_order') }}</label>
+                            <input type="number" name="sort_order" class="form-control" value="{{ level ? (level.sort_order ?? 0) : 0 }}" min="0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ lang('admin.rewards.min_posts_label') }}</label>
+                            <input type="number" name="min_posts" class="form-control" value="{{ level ? (level.min_posts ?? 0) : 0 }}" min="0">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ lang('admin.rewards.min_rep_label') }}</label>
+                            <input type="number" name="min_reputation" class="form-control" value="{{ level ? (level.min_reputation ?? 0) : 0 }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ lang('admin.rewards.min_likes_label') }}</label>
+                            <input type="number" name="min_likes" class="form-control" value="{{ level ? (level.min_likes ?? 0) : 0 }}" min="0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.rewards.badge_label') }}</label>
+                            <input type="text" name="badge_label" class="form-control" value="{{ level ? (level.badge_label ?? '')|e : '' }}" placeholder="{{ lang('admin.rewards.badge_label_ph') }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.rewards.badge_icon') }}</label>
+                            <input type="text" name="badge_icon" class="form-control" value="{{ level ? (level.badge_icon ?? '')|e : '' }}" placeholder="{{ lang('admin.rewards.badge_icon_ph') }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.rewards.badge_css') }}</label>
+                        <input type="text" name="badge_css" class="form-control" value="{{ level ? (level.badge_css ?? '')|e : '' }}" placeholder="{{ lang('admin.rewards.badge_css_ph') }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ isEdit ? lang('admin.common.update') : lang('admin.common.create') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/rewards') }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? 'admin' %}
+{% set documentation_enabled = documentation_enabled ?? false %}
+{% set documentation_title = documentation_title ?? 'Documentation' %}
+{% set sectionTree = sectionTree ?? [] %}
+{% set sectionsFlat = sectionsFlat ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.documentation.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.documentation.description') }}</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/settings/general') }}" class="btn btn-outline-secondary">{{ lang('admin.documentation.back_to_general') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if not documentation_enabled %}
+        <div class="alert alert-warning">
+            {{ lang('admin.documentation.disabled_hint') }}
+            <a href="{{ core_url(adminPath ~ '/settings/general') }}">{{ lang('admin.documentation.enable_in_general') }}</a>
+        </div>
+        {% endif %}
+
+        {% if flashDocOk %}
+        <div class="alert alert-success alert-dismissible">
+            {{ flashDocOk|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="card mb-4 border-info">
+            <div class="card-header bg-info bg-opacity-10">
+                <h3 class="card-title mb-0"><i class="ti ti-link me-2"></i>{{ lang('admin.documentation.public_url_title') }}</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">{{ lang('admin.documentation.public_url_hint') }}</p>
+                <div class="input-group">
+                    <input type="text" class="form-control font-monospace" id="doc-public-url" value="{{ core_url('documentation') }}" readonly>
+                    <button type="button" class="btn btn-outline-primary" onclick="navigator.clipboard.writeText(document.getElementById('doc-public-url').value); this.querySelector('span').textContent='{{ lang('admin.documentation.copied')|e('js') }}'; setTimeout(function(){ this.querySelector('span').textContent='{{ lang('admin.documentation.copy_url')|e('js') }}'; }.bind(this), 2000);">
+                        <i class="ti ti-copy me-1"></i><span>{{ lang('admin.documentation.copy_url') }}</span>
+                    </button>
+                </div>
+                <p class="form-text mb-0 mt-2">{{ lang('admin.documentation.menu_hint') }} <a href="{{ core_url(adminPath ~ '/settings/menu') }}">{{ lang('admin.sys_settings.tab_menu_title') }}</a>{{ lang('admin.documentation.menu_hint_after') }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ lang('admin.documentation.general') }}</h3></div>
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/documentation-settings/update') }}" method="post" class="mb-0">
+                    {{ core_csrf_field('admin_documentation')|raw }}
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.doc_title_label') }}</label>
+                        <input type="text" name="documentation_title" class="form-control" value="{{ documentation_title|e }}" placeholder="Documentation">
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                </form>
+            </div>
+        </div>
+
+        {% if documentation_enabled %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">{{ lang('admin.documentation.sections') }}</h3>
+                <span class="text-muted small">{{ lang('admin.documentation.drag_to_reorder') }}</span>
+            </div>
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/documentation-settings/sections/store') }}" method="post" class="mb-4 p-3 border rounded bg-light">
+                    {{ core_csrf_field('admin_documentation')|raw }}
+                    <h5 class="mb-3">{{ lang('admin.documentation.add_section') }}</h5>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.documentation.parent_section') }}</label>
+                            <select name="parent_id" class="form-select">
+                                <option value="">{{ lang('admin.documentation.root_section') }}</option>
+                                {% for item in sectionsFlat %}
+                                <option value="{{ item.section.id }}">{% for i in 1..item.depth %}— {% endfor %}{{ item.section.title|e }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.documentation.section_title_ph') }}</label>
+                            <input type="text" name="title" class="form-control" required placeholder="{{ lang('admin.documentation.section_title_ph') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">{{ lang('admin.common.add') }}</button>
+                        </div>
+                    </div>
+                </form>
+
+                <ul id="doc-sections-root" class="list-unstyled mb-0 doc-sections-sortable" data-parent-id="">
+                    {% include 'documentation_settings/_section_tree_item.html.twig' with { nodes: sectionTree, adminPath: adminPath } only %}
+                </ul>
+                {% if sectionTree is empty %}
+                <p class="text-muted mb-0">{{ lang('admin.documentation.no_sections') }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ lang('admin.documentation.add_page') }}</h3></div>
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/documentation-settings/pages/store') }}" method="post">
+                    {{ core_csrf_field('admin_documentation')|raw }}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ lang('admin.documentation.section_label') }}</label>
+                            <select name="section_id" class="form-select" required>
+                                <option value="">{{ lang('admin.documentation.select_section') }}</option>
+                                {% for item in sectionsFlat %}
+                                <option value="{{ item.section.id }}">{% for i in 1..item.depth %}— {% endfor %}{{ item.section.title|e }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ lang('admin.documentation.page_title_label') }}</label>
+                            <input type="text" name="title" class="form-control" required placeholder="{{ lang('admin.documentation.page_title_ph') }}">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">{{ lang('admin.common.add') }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function() {
+    var reorderSectionsUrl = {{ core_url(adminPath ~ '/documentation-settings/sections/reorder')|json_encode|raw }};
+    var reorderPagesUrl = {{ core_url(adminPath ~ '/documentation-settings/pages/reorder')|json_encode|raw }};
+    var csrfToken = {{ core_csrf_token('admin_documentation')|json_encode|raw }};
+
+    function collectSectionsOrder() {
+        var order = [];
+        function walk(ul, parentId) {
+            if (!ul || !ul.classList.contains('doc-sections-sortable')) return;
+            var items = ul.querySelectorAll(':scope > li.doc-section-item');
+            items.forEach(function(li, idx) {
+                var id = li.getAttribute('data-section-id');
+                if (id) order.push({ id: parseInt(id, 10), parent_id: parentId || null, sort_order: idx });
+                var childUl = li.querySelector(':scope > .doc-section-children');
+                if (childUl) walk(childUl, id ? parseInt(id, 10) : null);
+            });
+        }
+        walk(document.getElementById('doc-sections-root'), null);
+        return order;
+    }
+
+    function saveSectionsOrder() {
+        var order = collectSectionsOrder();
+        fetch(reorderSectionsUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ _token: csrfToken, order: order })
+        }).then(function(r) { return r.json(); }).then(function(d) {
+            if (d && d.ok) window.mfbbToast && window.mfbbToast('Sıra kaydedildi.', 'success');
+        }).catch(function() {});
+    }
+
+    function initSectionSortable(ul) {
+        if (!ul || ul._sortable) return;
+        ul._sortable = new Sortable(ul, {
+            group: 'doc-sections',
+            handle: '.doc-drag-handle',
+            animation: 150,
+            fallbackOnBody: true,
+            swapThreshold: 0.65,
+            onEnd: function() { saveSectionsOrder(); }
+        });
+    }
+
+    function savePageList(ul) {
+        if (!ul || !ul.classList.contains('doc-pages-sortable')) return;
+        var sectionId = ul.getAttribute('data-section-id');
+        if (!sectionId) return;
+        var order = Array.from(ul.children).filter(function(li) { return li.getAttribute('data-page-id'); }).map(function(li) { return parseInt(li.getAttribute('data-page-id'), 10); });
+        fetch(reorderPagesUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ _token: csrfToken, section_id: parseInt(sectionId, 10), order: order })
+        }).then(function(r) { return r.json(); }).then(function(d) {
+            if (d && d.ok) window.mfbbToast && window.mfbbToast('Sayfa sırası kaydedildi.', 'success');
+        }).catch(function() {});
+    }
+
+    function initPageSortables() {
+        document.querySelectorAll('.doc-pages-sortable').forEach(function(ul) {
+            if (ul._sortable) return;
+            ul._sortable = new Sortable(ul, {
+                group: 'doc-pages',
+                handle: '.doc-page-drag-handle',
+                filter: '.doc-page-no-pages',
+                animation: 150,
+                onEnd: function(evt) {
+                    var toEl = evt.to;
+                    var fromEl = evt.from;
+                    savePageList(toEl);
+                    if (fromEl !== toEl) savePageList(fromEl);
+                }
+            });
+        });
+    }
+
+    document.querySelectorAll('.doc-sections-sortable').forEach(initSectionSortable);
+    initPageSortables();
+})();
+</script>
+{% endblock %}

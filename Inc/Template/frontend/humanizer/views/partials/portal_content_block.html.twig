@@ -1,0 +1,60 @@
+{# Portal: İçerik bloğu – admin ayarlarına göre (Başlık, Açıklama, Tip, Layout, Sütun, Toplam, Vurgu Rengi, Çerçeve Rengi) #}
+{% set items = card.items ?? [] %}
+{% set layout = (card.layout ?? 'grid') == 'list' ? 'list' : 'grid' %}
+{% set perSlide = card.per_slide ?? 4 %}
+{% set perRow = layout == 'list' ? 1 : (perSlide < 2 ? 2 : (perSlide > 6 ? 6 : perSlide)) %}
+{% set title = card.title ?? core__('portal.default_card_title') %}
+{% set catColor = card.color ?? '#105289' %}
+{% set borderColor = card.border_color|default('') %}
+{# Liste modunda tek sütun; grid modunda admin’deki sütun sayısı #}
+{% set gridCols = layout == 'list' ? 'mfbb-cards--list-only' : (perRow == 2 ? 'mfbb-cards--cols-2' : (perRow == 3 ? 'mfbb-cards--cols-3' : (perRow == 4 ? 'mfbb-cards--cols-4' : (perRow == 5 ? 'mfbb-cards--cols-5' : 'mfbb-cards--cols-6'))) %}
+{% set useSlider = (layout != 'list') and (items|length > 4) %}
+{% set slides = useSlider ? items|batch(perSlide) : [items] %}
+
+<section class="mfbb-block" style="--block-accent: {{ catColor|e('css') }}{% if borderColor %}; --block-border: {{ borderColor|e('css') }}{% endif %}">
+  <header class="mfbb-block__head">
+    <div class="mfbb-block__title-row">
+      <span class="mfbb-block__accent" style="background-color: {{ catColor|e('css') }}"></span>
+      <h2 class="mfbb-block__title" style="color: {{ catColor|e('css') }}">{{ core_e(title) }}</h2>
+    </div>
+    {% if card.description is defined and card.description is not empty %}
+    <p class="mfbb-block__desc">{{ core_e(card.description) }}</p>
+    {% endif %}
+    <a href="{{ core_url('forum') }}" class="mfbb-block__link">
+      Tümünü Gör <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+    </a>
+  </header>
+
+  <div class="mfbb-block__body">
+    {% if items is empty %}
+    <div class="mfbb-block-empty">
+      <div class="mfbb-block-empty__icon"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i></div>
+      <p class="mfbb-block-empty__text">Henüz içerik yok.</p>
+    </div>
+    {% else %}
+    <div class="mfbb-cards-wrapper{% if useSlider %} mfbb-cards-wrapper--slider{% endif %}">
+      {% if useSlider %}
+      <div class="mfbb-cards-slider" role="region" aria-label="{{ core_e(title) }}">
+        <div class="mfbb-cards-slider__track">
+          {% for slideItems in slides %}
+          <div class="mfbb-cards-slider__slide">
+            <div class="mfbb-cards mfbb-cards--{{ layout }} mfbb-cards--text {{ gridCols }}">
+              {% for item in slideItems %}
+                {% include 'partials/portal_content_card.html.twig' with { item: item, catColor: catColor, borderColor: borderColor, layout: layout } %}
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div class="mfbb-cards mfbb-cards--{{ layout }} mfbb-cards--text {{ gridCols }}">
+        {% for item in items %}
+          {% include 'partials/portal_content_card.html.twig' with { item: item, catColor: catColor, borderColor: borderColor, layout: layout } %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>

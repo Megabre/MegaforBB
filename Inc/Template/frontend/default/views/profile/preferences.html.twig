@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% set prefs = prefs ?? [] %}
+{% set u = user ?? null %}
+{% if not u %}<div class="ips-profile-page"><div class="ips-profile-empty"><p>{{ core__('profile.not_found') }}</p></div></div>
+{% else %}
+{% set error = error ?? '' %}
+{% set success = success ?? '' %}
+{% set v = prefs %}
+<div class="ips-profile-page">
+{% include 'partials/profile_breadcrumb.html.twig' with { crumbs: [{ label: u.username, href: core_url('member/' ~ (u.username|e('url'))) }, { label: core__('profile.preferences_title') }] } %}
+{% include 'partials/profile_settings_shell.html.twig' with { user: u, active: 'preferences' } %}
+<div class="ips-profile-settings-body">
+  <div class="ips-profile-content-card">
+    <div class="ips-profile-content-card__body">
+      {% if error %}<div class="ips-profile-alert ips-profile-alert--error">{{ core_e(error) }}</div>{% endif %}
+      {% if success %}<div class="ips-profile-alert ips-profile-alert--success">{{ core_e(success) }}</div>{% endif %}
+      <form action="{{ core_url('profile/preferences') }}" method="post">
+        {{ core_csrf_field('profile_preferences')|raw }}
+        <div class="ips-form-section"><h2 class="ips-form-section__title">{{ core__('profile.language') }} & {{ core__('profile.timezone') }}</h2>
+          <div class="ips-form-grid">
+            <div class="ips-form-field"><label for="locale">{{ core__('profile.language') }}</label><select name="locale" id="locale"><option value="tr" {{ (v.locale ?? u.locale ?? 'tr') == 'tr' ? 'selected' : '' }}>{{ core__('common.lang_tr') }}</option><option value="en" {{ (v.locale ?? u.locale ?? '') == 'en' ? 'selected' : '' }}>{{ core__('common.lang_en') }}</option></select></div>
+            <div class="ips-form-field"><label for="timezone">{{ core__('profile.timezone') }}</label><input type="text" name="timezone" id="timezone" value="{{ core_e(v.timezone ?? 'Europe/Istanbul') }}"></div>
+          </div>
+        </div>
+        <div class="ips-form-section"><h2 class="ips-form-section__title">E-posta</h2><div class="ips-prefs-grid">
+          <div class="ips-pref-row"><span>{{ core__('profile.email_newsletter') }}</span><input type="checkbox" name="email_newsletter" value="1" {{ (v.email_newsletter ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.email_activity_summary') }}</span><input type="checkbox" name="email_activity_summary" value="1" {{ (v.email_activity_summary ?? '') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.email_inactive_digest') }}</span><input type="checkbox" name="email_inactive_digest" value="1" {{ (v.email_inactive_digest ?? '') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.email_on_dm') }}</span><input type="checkbox" name="email_on_dm" value="1" {{ (v.email_on_dm ?? '1') == '1' ? 'checked' : '' }}></div>
+        </div></div>
+        <div class="ips-form-section"><h2 class="ips-form-section__title">Görünürlük</h2><div class="ips-prefs-grid">
+          <div class="ips-pref-row"><span>{{ core__('profile.follow_created_content') }}</span><input type="checkbox" name="follow_created_content" value="1" {{ (v.follow_created_content ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.follow_created_email') }}</span><input type="checkbox" name="follow_created_email" value="1" {{ (v.follow_created_email ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.follow_interacted_content') }}</span><input type="checkbox" name="follow_interacted_content" value="1" {{ (v.follow_interacted_content ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.follow_interacted_email') }}</span><input type="checkbox" name="follow_interacted_email" value="1" {{ (v.follow_interacted_email ?? '') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.show_signature') }}</span><input type="checkbox" name="show_signature" value="1" {{ (v.show_signature ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.show_online_status') }}</span><input type="checkbox" name="show_online_status" value="1" {{ (v.show_online_status ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.show_activity') }}</span><input type="checkbox" name="show_activity" value="1" {{ (v.show_activity ?? '') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.allow_profile_comments') }}</span><input type="checkbox" name="allow_profile_comments" value="1" {{ (v.allow_profile_comments ?? '1') == '1' ? 'checked' : '' }}></div>
+        </div></div>
+        <div class="ips-form-section"><h2 class="ips-form-section__title">Bildirimler</h2><div class="ips-prefs-grid">
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_followed_forum') }}</span><input type="checkbox" name="notif_followed_forum" value="1" {{ (v.notif_followed_forum ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_followed_topic_reply') }}</span><input type="checkbox" name="notif_followed_topic_reply" value="1" {{ (v.notif_followed_topic_reply ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_quote') }}</span><input type="checkbox" name="notif_quote" value="1" {{ (v.notif_quote ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_mention') }}</span><input type="checkbox" name="notif_mention" value="1" {{ (v.notif_mention ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_reaction') }}</span><input type="checkbox" name="notif_reaction" value="1" {{ (v.notif_reaction ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_profile_message') }}</span><input type="checkbox" name="notif_profile_message" value="1" {{ (v.notif_profile_message ?? '1') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_profile_mention') }}</span><input type="checkbox" name="notif_profile_mention" value="1" {{ (v.notif_profile_mention ?? '') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_profile_reaction') }}</span><input type="checkbox" name="notif_profile_reaction" value="1" {{ (v.notif_profile_reaction ?? '') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_dm_reaction') }}</span><input type="checkbox" name="notif_dm_reaction" value="1" {{ (v.notif_dm_reaction ?? '') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_new_follower') }}</span><input type="checkbox" name="notif_new_follower" value="1" {{ (v.notif_new_follower ?? '') == '1' ? 'checked' : '' }}></div>
+          <div class="ips-pref-row"><span>{{ core__('profile.notif_new_reward') }}</span><input type="checkbox" name="notif_new_reward" value="1" {{ (v.notif_new_reward ?? '') == '1' ? 'checked' : '' }}></div>
+        </div></div>
+        <div class="ips-form-actions"><button type="submit" class="ips-profile__action-btn ips-profile__action-btn--primary">{{ core__('common.save') }}</button><a href="{{ core_url('member/' ~ (u.username|e('url'))) }}" class="ips-profile__action-btn">{{ core__('common.cancel') }}</a></div>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+{% endif %}
+{% endblock %}

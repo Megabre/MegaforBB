@@ -1,0 +1,375 @@
+{% extends 'base.html.twig' %}
+{% set s = settings ?? {} %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.security.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.security.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('security_rtbh_ok', []) %}
+            <div class="alert alert-success">{{ msg|e }}</div>
+        {% endfor %}
+        {% for msg in app.session.getFlashBag().get('security_rtbh_error', []) %}
+            <div class="alert alert-danger">{{ msg|e }}</div>
+        {% endfor %}
+        <div class="card">
+            <form action="{{ core_url(adminPath ~ '/security/update') }}" method="post">
+                {{ core_csrf_field('admin_security')|raw }}
+                <div class="card-header">
+                    <h3 class="card-title">{{ lang('admin.security.anti_bump') }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning border-warning mb-4">
+                        <h4 class="alert-heading">{{ lang('admin.security.attack_mode') }}</h4>
+                        <input type="hidden" name="security_attack_mode" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="security_attack_mode" value="1" class="form-check-input" id="security_attack_mode" {{ s.security_attack_mode ? 'checked' : '' }}>
+                            <span class="form-check-label fw-bold">{{ lang('admin.security.attack_mode_on') }}</span>
+                        </label>
+                        <p class="small mb-0 mt-2">{{ lang('admin.security.attack_mode_desc') }}</p>
+                        {% if s.security_attack_mode %}<p class="small text-success fw-bold mt-2 mb-0">{{ lang('admin.security.attack_mode_active') }}</p>{% endif %}
+                    </div>
+                    <div class="mb-4">
+                        <input type="hidden" name="security_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="security_enabled" value="1" class="form-check-input" {{ s.security_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.security.enable_system') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-4">
+                        <input type="hidden" name="security_notification_email_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="security_notification_email_enabled" value="1" class="form-check-input" {{ s.security_notification_email_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.security.notification_email_enabled') }}</span>
+                        </label>
+                        <p class="small text-muted mt-1 mb-0">{{ lang('admin.security.notification_email_desc') }}</p>
+                    </div>
+
+                    <hr class="my-4">
+                    <h4 class="mb-3">{{ lang('admin.security.layer1_title') }}</h4>
+                    <div class="row g-3 mb-3">
+                        <div class="col-auto">
+                            <input type="hidden" name="security_global_rate_enabled" value="0">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="security_global_rate_enabled" value="1" class="form-check-input" {{ s.security_global_rate_enabled ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.security.global_rate_on') }}</span>
+                            </label>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ lang('admin.security.rate_per_minute') }}</label>
+                            <input type="number" name="security_global_rate_per_minute" class="form-control" value="{{ s.security_global_rate_per_minute ?? 120 }}" min="30" max="1000">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ lang('admin.security.rate_block_minutes') }}</label>
+                            <input type="number" name="security_global_rate_block_minutes" class="form-control" value="{{ s.security_global_rate_block_minutes ?? 5 }}" min="1">
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h4 class="mb-3">{{ lang('admin.security.http_headers') }}</h4>
+                    <div class="row g-3 mb-3">
+                        <div class="col-auto">
+                            <input type="hidden" name="security_headers_enabled" value="0">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="security_headers_enabled" value="1" class="form-check-input" {{ (s.security_headers_enabled ?? true) ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.security.send_headers') }}</span>
+                            </label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="hidden" name="security_hsts_enabled" value="0">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="security_hsts_enabled" value="1" class="form-check-input" {{ s.security_hsts_enabled ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.security.hsts') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h4 class="mb-3">{{ lang('admin.security.cooldown_title') }}</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_reply') }}</label>
+                            <input type="number" name="security_cooldown_reply" class="form-control" value="{{ s.security_cooldown_reply ?? 60 }}" min="0">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_new_topic') }}</label>
+                            <input type="number" name="security_cooldown_new_topic" class="form-control" value="{{ s.security_cooldown_new_topic ?? 30 }}" min="0">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_edit_post') }}</label>
+                            <input type="number" name="security_cooldown_edit_post" class="form-control" value="{{ s.security_cooldown_edit_post ?? 10 }}" min="0">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_edit_topic') }}</label>
+                            <input type="number" name="security_cooldown_edit_topic" class="form-control" value="{{ s.security_cooldown_edit_topic ?? 10 }}" min="0">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_login') }}</label>
+                            <input type="number" name="security_cooldown_login" class="form-control" value="{{ s.security_cooldown_login ?? 30 }}" min="0">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_register') }}</label>
+                            <input type="number" name="security_cooldown_register" class="form-control" value="{{ s.security_cooldown_register ?? 60 }}" min="0">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_send_pm') }}</label>
+                            <input type="number" name="security_cooldown_send_pm" class="form-control" value="{{ s.security_cooldown_send_pm ?? 30 }}" min="0">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_report') }}</label>
+                            <input type="number" name="security_cooldown_report" class="form-control" value="{{ s.security_cooldown_report ?? 60 }}" min="0">
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label">{{ lang('admin.security.cooldown_like') }}</label>
+                            <input type="number" name="security_cooldown_like" class="form-control" value="{{ s.security_cooldown_like ?? 5 }}" min="0">
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h4 class="mb-3">{{ lang('admin.security.violation_title') }}</h4>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.security.violations_before') }}</label>
+                            <input type="number" name="security_violations_before_block" class="form-control" value="{{ s.security_violations_before_block ?? 5 }}" min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.security.violation_window') }}</label>
+                            <input type="number" name="security_violation_window_minutes" class="form-control" value="{{ s.security_violation_window_minutes ?? 5 }}" min="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.security.block_duration') }}</label>
+                            <input type="number" name="security_block_duration_minutes" class="form-control" value="{{ s.security_block_duration_minutes ?? 15 }}" min="1">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.security.suspicious_threshold') }}</label>
+                            <input type="number" name="security_suspicious_blocks_threshold" class="form-control" value="{{ s.security_suspicious_blocks_threshold ?? 3 }}" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.security.suspicious_minutes') }}</label>
+                            <input type="number" name="security_suspicious_block_minutes" class="form-control" value="{{ s.security_suspicious_block_minutes ?? 1440 }}" min="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.security.block_message') }}</label>
+                        <textarea name="security_block_message" class="form-control" rows="3" placeholder="{{ lang('admin.security.block_message_ph') }}">{{ s.security_block_message ?? '' }}</textarea>
+                    </div>
+
+                    <hr class="my-4">
+                    <h4 class="mb-2">{{ lang('admin.security_rtbh.title') }}</h4>
+                    <p class="text-secondary small mb-3">{{ lang('admin.security_rtbh.intro')|raw }}</p>
+                    <input type="hidden" name="rtbh_enabled" value="0">
+                    <div class="mb-3">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="rtbh_enabled" value="1" class="form-check-input" id="rtbh_enabled" {{ s.rtbh_enabled ?? false ? 'checked' : '' }}>
+                            <span class="form-check-label fw-bold">{{ lang('admin.security_rtbh.enable') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.security_rtbh.action_label') }}</label>
+                        <select name="rtbh_action" id="rtbh_action_select" class="form-select" style="max-width: 32rem;">
+                            <option value="log_only" {{ (s.rtbh_action ?? 'log_only') == 'log_only' ? 'selected' : '' }}>{{ lang('admin.security_rtbh.action_log_only') }}</option>
+                            <option value="pending_approval" {{ (s.rtbh_action ?? '') == 'pending_approval' ? 'selected' : '' }}>{{ lang('admin.security_rtbh.action_pending') }}</option>
+                            <option value="block_register" {{ (s.rtbh_action ?? '') == 'block_register' ? 'selected' : '' }}>{{ lang('admin.security_rtbh.action_block_register') }}</option>
+                            <option value="block_register_and_login" {{ (s.rtbh_action ?? '') == 'block_register_and_login' ? 'selected' : '' }}>{{ lang('admin.security_rtbh.action_block_both') }}</option>
+                            <option value="redirect_url" {{ (s.rtbh_action ?? '') == 'redirect_url' ? 'selected' : '' }}>{{ lang('admin.security_rtbh.action_redirect_url') }}</option>
+                        </select>
+                        <p class="form-hint mb-0 mt-1">{{ lang('admin.security_rtbh.action_hint') }}</p>
+                    </div>
+                    <div id="rtbh-redirect-url-wrap" class="mb-3 {{ (s.rtbh_action ?? '') == 'redirect_url' ? '' : 'd-none' }}">
+                        <label class="form-label">{{ lang('admin.security_rtbh.attack_redirect_label') }}</label>
+                        <input type="url" name="rtbh_attack_redirect_url" class="form-control" value="{{ s.rtbh_attack_redirect_url ?? '' }}" placeholder="https://www.youtube.com/watch?v=..." maxlength="2048" autocomplete="off">
+                        <p class="form-hint mb-0 mt-1">{{ lang('admin.security_rtbh.attack_redirect_hint')|raw }}</p>
+                    </div>
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <div class="row g-2 small">
+                            <div class="col-md-4"><strong>{{ lang('admin.security_rtbh.stat_file') }}</strong><br>
+                                {% if s.rtbh_storage_exists ?? false %}<span class="text-success">{{ lang('admin.security_rtbh.stat_yes') }}</span>{% else %}<span class="text-warning">{{ lang('admin.security_rtbh.stat_no') }}</span>{% endif %}
+                            </div>
+                            <div class="col-md-4"><strong>{{ lang('admin.security_rtbh.stat_count') }}</strong><br>{{ s.rtbh_list_count ?? 0 }}</div>
+                            <div class="col-md-4"><strong>{{ lang('admin.security_rtbh.stat_updated') }}</strong><br>
+                                {{ (s.rtbh_list_updated_formatted ?? '') != '' ? s.rtbh_list_updated_formatted : '—' }}
+                            </div>
+                        </div>
+                        {% if (s.rtbh_list_last_error ?? '') != '' %}
+                            <p class="text-danger small mb-0 mt-2">{{ lang('admin.security_rtbh.last_error', { code: s.rtbh_list_last_error }) }}</p>
+                        {% endif %}
+                    </div>
+
+                    <hr class="my-4">
+                    <h4 class="mb-3">{{ lang('admin.security.captcha_title') }}</h4>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.security.captcha_provider') }}</label>
+                        <select name="captcha_provider" id="captcha_provider" class="form-select">
+                            <option value="none" {{ (s.captcha_provider ?? '') == 'none' ? 'selected' : '' }}>{{ lang('admin.security.captcha_off') }}</option>
+                            <option value="recaptcha" {{ (s.captcha_provider ?? '') == 'recaptcha' ? 'selected' : '' }}>Google reCAPTCHA</option>
+                            <option value="turnstile" {{ (s.captcha_provider ?? '') == 'turnstile' ? 'selected' : '' }}>Cloudflare Turnstile</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="captcha_on_login" value="0">
+                        <input type="checkbox" name="captcha_on_login" value="1" class="form-check-input" id="captcha_on_login" {{ s.captcha_on_login ? 'checked' : '' }}>
+                        <label class="form-check-label" for="captcha_on_login">{{ lang('admin.security.captcha_on_login') }}</label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="captcha_on_register" value="0">
+                        <input type="checkbox" name="captcha_on_register" value="1" class="form-check-input" id="captcha_on_register" {{ (s.captcha_on_register ?? true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="captcha_on_register">{{ lang('admin.security.captcha_on_register') }}</label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="captcha_on_contact" value="0">
+                        <input type="checkbox" name="captcha_on_contact" value="1" class="form-check-input" id="captcha_on_contact" {{ (s.captcha_on_contact ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="captcha_on_contact">{{ lang('admin.security.captcha_on_contact') }}</label>
+                    </div>
+
+                    <div id="recaptcha-fields" class="border rounded p-3 mb-3" style="display:{{ (s.captcha_provider ?? '') == 'recaptcha' ? 'block' : 'none' }}">
+                        <h5 class="mb-2">Google reCAPTCHA</h5>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Site key</label>
+                                <input type="text" name="recaptcha_site_key" class="form-control" value="{{ s.recaptcha_site_key ?? '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Secret key</label>
+                                <input type="password" name="recaptcha_secret_key" class="form-control" value="{{ s.recaptcha_secret_key ?? '' }}" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ lang('admin.security.recaptcha_version') }}</label>
+                                <select name="recaptcha_version" class="form-select">
+                                    <option value="v2" {{ (s.recaptcha_version ?? 'v2') == 'v2' ? 'selected' : '' }}>v2</option>
+                                    <option value="v3" {{ (s.recaptcha_version ?? '') == 'v3' ? 'selected' : '' }}>v3</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="recaptcha-threshold-wrap" style="display:{{ (s.recaptcha_version ?? '') == 'v3' ? 'block' : 'none' }}">
+                                <label class="form-label">{{ lang('admin.security.recaptcha_score') }}</label>
+                                <input type="number" name="recaptcha_score_threshold" class="form-control" step="0.1" min="0" max="1" value="{{ s.recaptcha_score_threshold ?? '0.5' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="turnstile-fields" class="border rounded p-3 mb-3" style="display:{{ (s.captcha_provider ?? '') == 'turnstile' ? 'block' : 'none' }}">
+                        <h5 class="mb-2">Cloudflare Turnstile</h5>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Site key</label>
+                                <input type="text" name="turnstile_site_key" class="form-control" value="{{ s.turnstile_site_key ?? '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Secret key</label>
+                                <input type="password" name="turnstile_secret_key" class="form-control" value="{{ s.turnstile_secret_key ?? '' }}" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h4 class="mb-3">{{ lang('admin.security.tracking_title') }}</h4>
+                    <div class="mb-3">
+                        <input type="hidden" name="security_tracking_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="security_tracking_enabled" value="1" class="form-check-input" {{ s.security_tracking_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label fw-bold">{{ lang('admin.security.tracking_enabled') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="analytics_visitor_log_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="analytics_visitor_log_enabled" value="1" class="form-check-input" {{ s.analytics_visitor_log_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label fw-bold">{{ lang('admin.security.visitor_tracker') }}</span>
+                        </label>
+                        <small class="form-hint d-block"><a href="{{ core_url(adminPath ~ '/analytics') }}">{{ lang('admin.security.live_traffic') }}</a></small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.security.log_retention') }}</label>
+                        <select name="analytics_log_retention_minutes" class="form-select" style="max-width: 12rem;">
+                            <option value="10" {{ (s.analytics_log_retention_minutes ?? 20) == 10 ? 'selected' : '' }}>10 {{ lang('admin.security.minutes') }}</option>
+                            <option value="20" {{ (s.analytics_log_retention_minutes ?? 20) == 20 ? 'selected' : '' }}>20 {{ lang('admin.security.minutes') }}</option>
+                            <option value="30" {{ (s.analytics_log_retention_minutes ?? 20) == 30 ? 'selected' : '' }}>30 {{ lang('admin.security.minutes') }}</option>
+                            <option value="60" {{ (s.analytics_log_retention_minutes ?? 20) == 60 ? 'selected' : '' }}>60 {{ lang('admin.security.minutes') }}</option>
+                        </select>
+                    </div>
+
+                    <hr class="my-4">
+                    <h4 class="mb-3">{{ lang('admin.security.log_title') }}</h4>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.security.log_retention_days') }}</label>
+                            <select name="security_log_retention_days" class="form-select">
+                                {% for d in [1, 2, 3, 7, 14, 30] %}
+                                <option value="{{ d }}" {{ (s.security_log_retention_days ?? 7) == d ? 'selected' : '' }}>{{ d }} {{ lang('admin.security.days') }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <a href="{{ core_url(adminPath ~ '/security/log') }}" class="btn btn-outline-secondary me-2">{{ lang('admin.security.btn_log') }}</a>
+                        <a href="{{ core_url(adminPath ~ '/analytics') }}" class="btn btn-outline-primary">{{ lang('admin.security.btn_live') }}</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.security_rtbh.refresh_card') }}</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary small mb-3">{{ lang('admin.security_rtbh.refresh_help') }}</p>
+                <form action="{{ core_url(adminPath ~ '/security/rtbh-refresh') }}" method="post" class="d-inline">
+                    {{ core_csrf_field('admin_security')|raw }}
+                    <button type="submit" class="btn btn-outline-primary">{{ lang('admin.security_rtbh.refresh_btn') }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function(){
+    var sel = document.getElementById('captcha_provider');
+    var rec = document.getElementById('recaptcha-fields');
+    var turn = document.getElementById('turnstile-fields');
+    var vSel = document.querySelector('select[name="recaptcha_version"]');
+    var thresh = document.getElementById('recaptcha-threshold-wrap');
+    function toggle(){
+        var v = sel.value;
+        rec.style.display = v === 'recaptcha' ? 'block' : 'none';
+        turn.style.display = v === 'turnstile' ? 'block' : 'none';
+    }
+    function toggleThreshold(){
+        thresh.style.display = vSel && vSel.value === 'v3' ? 'block' : 'none';
+    }
+    if (sel) sel.addEventListener('change', toggle);
+    if (vSel) vSel.addEventListener('change', toggleThreshold);
+    toggle(); if (thresh) toggleThreshold();
+})();
+(function(){
+    var rtbhSel = document.getElementById('rtbh_action_select');
+    var rtbhWrap = document.getElementById('rtbh-redirect-url-wrap');
+    if (!rtbhSel || !rtbhWrap) return;
+    function toggleRtbhRedirect(){
+        if (rtbhSel.value === 'redirect_url') {
+            rtbhWrap.classList.remove('d-none');
+        } else {
+            rtbhWrap.classList.add('d-none');
+        }
+    }
+    rtbhSel.addEventListener('change', toggleRtbhRedirect);
+    toggleRtbhRedirect();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% set currentVote = userVotes[idea.id] ?? 0 %}
+<div class="idelist-vote" data-idea-vote="{{ idea.id }}">
+  {% if user %}
+  <form method="post" action="{{ core_url('idelist/' ~ idea.id ~ '/vote') }}" data-vote-form="1">
+    {{ core_csrf_field('idelist_vote')|raw }}
+    <input type="hidden" name="value" value="1">
+    <button title="{{ core_e(core__('idelist.vote_up')) }}" class="idelist-vote-btn idelist-vote-btn--up {{ currentVote == 1 ? 'idelist-vote-btn--active' : '' }}" type="submit">
+      <i class="fa-solid fa-caret-up"></i>
+    </button>
+  </form>
+  {% endif %}
+  {% if showVoteCounts|default(true) %}
+    <span class="idelist-vote__count" data-vote-count>{{ idea.vote_count }}</span>
+  {% endif %}
+  {% if user and allowDownvotes %}
+  <form method="post" action="{{ core_url('idelist/' ~ idea.id ~ '/vote') }}" data-vote-form="1">
+    {{ core_csrf_field('idelist_vote')|raw }}
+    <input type="hidden" name="value" value="-1">
+    <button title="{{ core_e(core__('idelist.vote_down')) }}" class="idelist-vote-btn idelist-vote-btn--down {{ currentVote == -1 ? 'idelist-vote-btn--active' : '' }}" type="submit">
+      <i class="fa-solid fa-caret-down"></i>
+    </button>
+  </form>
+  {% endif %}
+</div>

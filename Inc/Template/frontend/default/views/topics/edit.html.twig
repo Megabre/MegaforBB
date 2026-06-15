@@ -1,0 +1,208 @@
+﻿{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set topic = topic ?? null %}
+{% set post = post ?? null %}
+{% set prefixes = prefixes ?? [] %}
+{% set allowedQuestion = (allowedTypes is defined and 'question' in allowedTypes) %}
+{% set error = error ?? '' %}
+{% set topicTags = topicTags ?? [] %}
+{% if not topic or not post %}
+  <p class="p-4 text-gray-500">Konu veya mesaj bulunamadı.</p>
+{% else %}
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-2.5">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li>›</li>
+      <li><a href="{{ core_url('forum/' ~ (topic.forum_slug ?? '')|e('url')) }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(topic.forum_name ?? '') }}</a></li>
+      <li>›</li>
+      <li><a href="{{ topic_url(topic) }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(topic.title) }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">{{ core__('common.edit') }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+  <div class="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-4">
+    <h1 class="text-lg sm:text-xl font-semibold text-[#1a252f]"><i class="fa-solid fa-pen-to-square mr-2 text-gray-500"></i>{{ core__('topic.edit_page_title')|default('Konuyu Düzenle') }}</h1>
+  </div>
+  <div class="p-4 sm:p-6">
+    {% if error %}
+    <div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{{ core_e(error) }}</div>
+    {% endif %}
+
+    <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/edit') }}" method="post" class="space-y-6" id="topic-edit-form">
+      {{ core_csrf_field('edit_topic')|raw }}
+      {{ core_csrf_field('api_tag_create', 'api_tag_csrf')|raw }}
+      <input type="hidden" name="upload_attachment_token" value="{{ core_csrf_token('upload_attachment')|e('html_attr') }}">
+      <div class="flex flex-col sm:flex-row gap-4">
+        {% if prefixes is not empty %}
+        <div class="w-full sm:w-1/3 md:w-1/4">
+          <label for="prefix_id" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.prefix')|default('Ön Ek') }}</label>
+          <select name="prefix_id" id="prefix_id" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2">
+            <option value="0">Ön Ek Yok</option>
+            {% for p in prefixes %}
+            <option value="{{ p.id ?? 0 }}" {{ (topic.prefix_id ?? 0) == (p.id ?? 0) ? 'selected' : '' }}>{{ core_e(p.name ?? '') }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+        <div class="flex-1">
+          <label for="title" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.title')|default('Konu Başlığı') }}</label>
+          <input type="text" name="title" id="title" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" required value="{{ core_e(topic.title ?? '') }}" placeholder="Konu başlığını girin...">
+        </div>
+      </div>
+
+      <div class="mfbb-topic-create-editor-section rounded-lg border border-gray-200 overflow-hidden bg-white">
+        <div class="mb-0">
+          <label for="body" class="block text-sm font-medium text-gray-700 mb-1 px-4 pt-4">{{ core__('topic_create.body_label')|default('Mesaj İçeriği') }}</label>
+          <textarea name="body" id="body" rows="10" data-editor{% if post_body_base64 is defined and post_body_base64 != '' %} data-initial-base64="{{ post_body_base64 }}"{% endif %} class="w-full border-0 rounded-none px-4 shadow-none" required placeholder="Mesajınızı buraya yazın..."></textarea>
+        </div>
+        <div class="mfbb-topic-create-tabs border-t border-gray-200 bg-gray-50" id="topic-create-tabs" role="tablist" aria-label="{{ core__('topic_create.tab_poll') }}"
+          {% if topicTags is not empty %} data-initial-tags="{{ topicTags|json_encode|e('html_attr') }}"{% endif %}
+          {% if topicPrivateViewers is defined and topicPrivateViewers is not empty %} data-initial-private-viewers="{{ topicPrivateViewers|json_encode|e('html_attr') }}"{% endif %}>
+          <div class="flex border-b border-gray-200 overflow-x-auto">
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="poll" aria-selected="false" id="tab-poll">
+              <i class="fa-solid fa-chart-pie mr-2 text-gray-400"></i>{{ core__('topic_create.tab_poll') }}
+            </button>
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="files" aria-selected="false" id="tab-files">
+              <i class="fa-solid fa-paperclip mr-2 text-gray-400"></i>{{ core__('topic_create.tab_files') }}
+            </button>
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="tags" aria-selected="false" id="tab-tags">
+              <i class="fa-solid fa-tags mr-2 text-gray-400"></i>{{ core__('topic_create.tab_tags') }}
+            </button>
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="settings" aria-selected="false" id="tab-settings">
+              <i class="fa-solid fa-sliders mr-2 text-gray-400"></i>{{ core__('topic_create.tab_settings') }}
+            </button>
+            <button type="button" class="mfbb-topic-create-tab px-4 py-3 text-sm font-medium text-gray-600 hover:text-[#1a252f] hover:bg-gray-100 border-b-2 border-transparent data-[active]:border-[#1a252f] data-[active]:text-[#1a252f] data-[active]:bg-white whitespace-nowrap" role="tab" data-tab="schedule" aria-selected="false" id="tab-schedule">
+              <i class="fa-regular fa-clock mr-2 text-gray-400"></i>{{ core__('topic_create.tab_schedule') }}
+            </button>
+          </div>
+          <div class="mfbb-topic-create-panels p-4 bg-white min-h-[100px] relative">
+            <p class="mfbb-topic-create-tabs-placeholder text-sm text-gray-500 italic py-2" id="topic-create-tabs-placeholder">{{ core__('topic_create.tabs_placeholder')|default('Yukarıdaki sekmelerden birini seçin.') }}</p>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-poll" aria-labelledby="tab-poll" data-panel="poll">
+              <div class="flex items-center gap-2 mb-2">
+                <label class="block text-sm font-medium text-gray-700">{{ core__('topic_create.poll_label') }}</label>
+              </div>
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.poll_hint') }}</p>
+              <div class="space-y-2 mb-2">
+                <input type="text" name="poll_question" id="poll_question" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm" placeholder="{{ core__('topic_create.poll_question_placeholder')|e('html_attr') }}" value="{{ (poll_question ?? '')|e('html_attr') }}">
+                <div id="poll-options-container" class="space-y-2" data-option-placeholder="{{ core__('topic_create.poll_option')|e('html_attr') }}">
+                  {% for opt in poll_options|default([]) %}
+                  <input type="text" name="poll_options[]" class="w-full border border-gray-300 rounded-md shadow-sm focus:border-[#1a252f] focus:ring-[#1a252f] sm:text-sm p-2 border" placeholder="{{ core__('topic_create.poll_option')|e('html_attr') }} {{ loop.index }}" value="{{ opt|e('html_attr') }}">
+                  {% else %}
+                  <input type="text" name="poll_options[]" class="w-full border border-gray-300 rounded-md shadow-sm focus:border-[#1a252f] focus:ring-[#1a252f] sm:text-sm p-2 border" placeholder="{{ core__('topic_create.poll_option') }} 1">
+                  <input type="text" name="poll_options[]" class="w-full border border-gray-300 rounded-md shadow-sm focus:border-[#1a252f] focus:ring-[#1a252f] sm:text-sm p-2 border" placeholder="{{ core__('topic_create.poll_option') }} 2">
+                  {% endfor %}
+                </div>
+                <button type="button" id="poll-add-option" class="text-sm text-[#1a252f] hover:text-blue-600 font-medium"><i class="fa-solid fa-plus mr-1"></i>{{ core__('topic_create.poll_add_option') }}</button>
+              </div>
+              <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <label class="inline-flex items-center gap-1.5">
+                  <input type="number" name="poll_max_votes" value="{{ poll_max_votes|default(1) }}" min="1" class="w-14 border border-gray-300 rounded px-2 py-1 text-sm"> {{ core__('topic_create.poll_max_votes') }}
+                </label>
+                <label class="inline-flex items-center gap-1.5">
+                  <input type="checkbox" name="poll_allow_change_vote" value="1" class="rounded border-gray-300 text-[#1a252f] focus:ring-[#1a252f]" {{ (poll_allow_change_vote|default(0)) ? 'checked' : '' }}> {{ core__('topic_create.poll_allow_change') }}
+                </label>
+                <label class="inline-flex items-center gap-1.5">
+                  <span class="text-gray-500">{{ core__('topic_create.poll_closes_at') }}:</span>
+                  <input type="datetime-local" name="poll_closes_at" class="border border-gray-300 rounded px-2 py-1 text-sm" value="{{ poll_closes_at|default('')|e('html_attr') }}">
+                </label>
+              </div>
+            </div>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-files" aria-labelledby="tab-files" data-panel="files">
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('topic_create.attachments_label') }}</label>
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.attachments_hint') }}</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <input type="file" id="topic-create-attachment-input" class="hidden" multiple>
+                <button type="button" id="topic-create-attachment-btn" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                  <i class="fa-solid fa-upload"></i> {{ core__('topic_create.attachments_select') }}
+                </button>
+                <div id="topic-create-attachment-list" class="flex flex-wrap gap-2"></div>
+              </div>
+              <div id="topic-create-attachment-ids"></div>
+            </div>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-tags" aria-labelledby="tab-tags" data-panel="tags">
+              <label for="topic-create-tag-input" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.tags_label') }}</label>
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.tags_hint') }}</p>
+              <div id="topic-create-tag-chips" class="flex flex-wrap gap-2 mb-2"></div>
+              <div class="relative flex gap-2 flex-wrap">
+                <div class="flex-1 min-w-[200px] relative">
+                  <input type="text" id="topic-create-tag-input" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" placeholder="{{ core__('topic_create.tags_placeholder')|e('html_attr') }}" autocomplete="off">
+                  <div id="topic-create-tag-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto z-20"></div>
+                </div>
+                <button type="button" id="topic-create-tag-add-btn" class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">{{ core__('topic_create.tag_add') }}</button>
+              </div>
+              <div id="topic-create-tag-ids"></div>
+            </div>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings" data-panel="settings">
+              <label class="block text-sm font-medium text-gray-700 mb-3">{{ core__('topic_create.tab_settings') }}</label>
+              <table class="w-full border-collapse" style="table-layout: fixed;">
+                <tbody>
+                  {% if allowedQuestion %}
+                  <tr>
+                    <td colspan="2" class="py-2">
+                      <label class="inline-flex items-center gap-2 cursor-pointer" for="topic-edit-is-question">
+                        <input type="checkbox" name="is_question" value="1" id="topic-edit-is-question" class="rounded border-gray-300 text-[#1a252f] focus:ring-[#1a252f]" {{ (topic.type ?? 'topic') == 'question' ? 'checked' : '' }}>
+                        <span class="text-sm text-gray-700">{{ core__('topic_create.settings_question_answer')|default('Soru – Cevap (Q&A)') }}</span>
+                      </label>
+                      <p class="text-xs text-gray-500 mt-1 ml-6">{{ core__('topic_create.settings_question_answer_hint')|default('Konu soru/çözüm formatında olur; bir cevabı çözüm olarak işaretleyebilirsiniz.') }}</p>
+                    </td>
+                  </tr>
+                  {% endif %}
+                  <tr>
+                    <td class="align-top pr-4 py-2" style="width: 42%;">
+                      <label class="inline-flex items-center gap-2 cursor-pointer" for="topic-create-is-private">
+                        <input type="checkbox" name="is_private" value="1" id="topic-create-is-private" class="rounded border-gray-300 text-[#1a252f] focus:ring-[#1a252f]" {{ (topic.is_private ?? 0) == 1 ? 'checked' : '' }}>
+                        <span class="text-sm text-gray-700">{{ core__('topic_create.private_topic') }}</span>
+                      </label>
+                    </td>
+                    <td class="align-top pl-0 py-2" style="width: 58%;">
+                      <div id="topic-create-private-viewers-wrap">
+                        <label for="topic-create-private-viewer-input" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('topic_create.private_viewers_label') }}</label>
+                        <input type="text" id="topic-create-private-viewer-input" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm" placeholder="{{ core__('topic_create.private_viewers_placeholder')|e('html_attr') }}" autocomplete="off">
+                        <div id="topic-create-private-viewer-suggestions" class="hidden mt-2 border border-gray-200 rounded-lg bg-white shadow-md overflow-hidden" style="max-height: 200px; overflow-y: auto;"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr id="topic-create-private-viewers-chips-row">
+                    <td colspan="2" class="pt-3 border-t border-gray-100">
+                      <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.private_viewers_hint') }}</p>
+                      <div id="topic-create-private-viewer-chips" class="flex flex-wrap gap-2"></div>
+                      <div id="topic-create-private-viewer-ids"></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mfbb-topic-create-panel hidden p-0" role="tabpanel" id="panel-schedule" aria-labelledby="tab-schedule" data-panel="schedule">
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ core__('topic_create.schedule_label') }}</label>
+              {% if (topic.status ?? '') == 'scheduled' %}
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.schedule_hint') }}</p>
+              <div class="max-w-xs">
+                <input type="datetime-local" name="scheduled_publish_at" id="scheduled_publish_at" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm" value="{{ topic.scheduled_publish_at is defined and topic.scheduled_publish_at ? (topic.scheduled_publish_at|date('Y-m-d\\TH:i')) : '' }}" min="{{ 'now'|date('Y-m-d\\TH:i') }}">
+              </div>
+              <p class="text-xs text-amber-600 mt-2">{{ core__('topic_create.schedule_clear_hint') }}</p>
+              {% else %}
+              <p class="text-xs text-gray-500 mb-2">{{ core__('topic_create.schedule_published_hint') }}</p>
+              <div class="max-w-xs">
+                <input type="datetime-local" name="scheduled_publish_at" id="scheduled_publish_at" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm" value="" min="{{ 'now'|date('Y-m-d\\TH:i') }}" placeholder="">
+              </div>
+              <p class="text-xs text-gray-500 mt-2">{{ core__('topic_create.schedule_hint') }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+        <a href="{{ topic_url(topic) }}" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">{{ core__('common.cancel') }}</a>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#1a252f] rounded-md hover:bg-[#172029]">{{ core__('common.save') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

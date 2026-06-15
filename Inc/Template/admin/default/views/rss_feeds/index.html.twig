@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+{% set feeds = feeds ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.rss_feeds.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.rss_feeds.description') }}</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/rss-feeds/create') }}" class="btn btn-primary">{{ lang('admin.rss_feeds.new') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('admin_success', []) %}
+        <div class="alert alert-success alert-dismissible" role="alert"><div class="d-flex"><div>{{ core_e(msg) }}</div></div></div>
+        {% endfor %}
+        {% for msg in app.session.getFlashBag().get('admin_error', []) %}
+        <div class="alert alert-danger alert-dismissible" role="alert"><div class="d-flex"><div>{{ core_e(msg) }}</div></div></div>
+        {% endfor %}
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-sm card-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ lang('admin.rss_feeds.col_title') }}</th>
+                                <th>{{ lang('admin.rss_feeds.col_url') }}</th>
+                                <th>{{ lang('admin.rss_feeds.col_forum') }}</th>
+                                <th>{{ lang('admin.rss_feeds.col_user') }}</th>
+                                <th>{{ lang('admin.rss_feeds.col_freq') }}</th>
+                                <th>{{ lang('admin.rss_feeds.col_active') }}</th>
+                                <th>{{ lang('admin.rss_feeds.col_last') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in feeds %}
+                            <tr>
+                                <td><strong>{{ core_e(f.title) }}</strong></td>
+                                <td class="text-muted small" style="max-width:220px;overflow:hidden;text-overflow:ellipsis"><code>{{ core_e(f.url) }}</code></td>
+                                <td>{{ f.forum ? core_e(f.forum.name) : '—' }}</td>
+                                <td>{{ f.user ? core_e(f.user.username) : ('#' ~ f.user_id) }}</td>
+                                <td>{{ f.frequency_minutes }}</td>
+                                <td>{% if f.is_active %}<span class="badge bg-success">{{ lang('admin.common.yes') }}</span>{% else %}<span class="badge bg-secondary">{{ lang('admin.common.no') }}</span>{% endif %}</td>
+                                <td class="text-muted small">
+                                    {{ f.last_fetch_at ? (f.last_fetch_at|date('d.m.Y H:i')) : lang('admin.rss_feeds.never') }}
+                                    {% if f.last_error %}<div class="text-danger small mt-1">{{ core_e(f.last_error) }}</div>{% endif %}
+                                </td>
+                                <td>
+                                    <form action="{{ core_url(adminPath ~ '/rss-feeds/import-now/' ~ f.id) }}" method="post" class="d-inline">
+                                        {{ core_csrf_field('admin_rss_feed_import')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-primary">{{ lang('admin.rss_feeds.import_now') }}</button>
+                                    </form>
+                                    <a href="{{ core_url(adminPath ~ '/rss-feeds/edit/' ~ f.id) }}" class="btn btn-sm btn-ghost-secondary">{{ lang('admin.common.edit') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/rss-feeds/delete/' ~ f.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.rss_feeds.delete_confirm') }}');">
+                                        {{ core_csrf_field('admin_rss_feed_delete')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-ghost-secondary text-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if feeds is empty %}
+                            <tr><td colspan="8" class="text-center text-muted py-4"><a href="{{ core_url(adminPath ~ '/rss-feeds/create') }}">{{ lang('admin.rss_feeds.add') }}</a></td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

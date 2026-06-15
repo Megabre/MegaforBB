@@ -1,0 +1,116 @@
+{# IPS tarzı profil başlığı — ipsPhotoPanel düzeni #}
+{% set u = profileUser ?? null %}
+{% set isOwnProfile = isOwnProfile ?? false %}
+{% set compact = compact ?? false %}
+{% set showCoverUpload = showCoverUpload ?? false %}
+{% set coverUrl = coverUrl ?? null %}
+{% set avatarUrl = avatarUrl ?? '' %}
+{% set rewardLevel = rewardLevel ?? null %}
+{% set showActions = showActions ?? true %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set showFullProfile = showFullProfile ?? true %}
+{% set userStats = userStats ?? {} %}
+{% set profileViewStats = profileViewStats ?? { unique_viewers: 0, total_views: 0 } %}
+{% set showWatcher = showWatcher ?? false %}
+{% if u %}
+{% set displayName = '' %}
+{% if u.show_name and ((u.first_name ?? '')|trim != '' or (u.last_name ?? '')|trim != '') %}
+  {% set displayName = ((u.first_name ?? '') ~ ' ' ~ (u.last_name ?? ''))|trim %}
+{% endif %}
+{% set roleColor = u.role and (u.role.color|default('')) != '' ? u.role.color : '#105289' %}
+{% set viewersUrl = core_url('member/' ~ member_url_path(u) ~ '/viewers') %}
+
+<div class="ips-profile{% if compact %} ips-profile--compact{% endif %}" id="ips-profile-header">
+  <div class="ips-profile__cover">
+    {% if coverUrl %}
+      <img src="{{ core_e(coverUrl) }}" alt="" class="ips-profile__cover-img ips-profile__cover-img--lightbox" data-lightbox-src="{{ core_e(coverUrl) }}" role="button" tabindex="0" title="{{ core__('member.cover_lightbox_hint') }}">
+    {% endif %}
+    <div class="ips-profile__cover-fade" aria-hidden="true"></div>
+    {% if showWatcher and showFullProfile and not compact %}
+    <div class="ips-profile__watcher" id="profile-watcher" aria-hidden="true">
+      <div class="ips-profile__eyes">
+        <div class="ips-profile__eye"><div class="ips-profile__pupil"></div></div>
+        <div class="ips-profile__eye"><div class="ips-profile__pupil"></div></div>
+      </div>
+      <button type="button" class="ips-profile__viewers-btn" id="profile-viewers-btn" title="{{ core__('member.profile_viewers_title') }}">
+        <i class="fa-solid fa-eye"></i>
+        <span class="ips-profile__viewers-count" id="profile-viewers-count">{{ (profileViewStats.unique_viewers ?? 0)|number_format(0) }}</span>
+        <span class="ips-profile__viewers-label">{{ core__('member.profile_viewers_short') }}</span>
+      </button>
+    </div>
+    {% endif %}
+    {% if isOwnProfile and showCoverUpload %}
+    <div class="ips-profile__cover-tools">
+      <label class="ips-profile__cover-btn cursor-pointer">
+        <input type="file" accept="image/*" id="cover-upload" class="hidden" data-upload-url="{{ core_e(core_url('profile/cover-upload')) }}" data-csrf="{{ core_e(core_csrf_token('profile_cover')) }}">
+        <i class="fa-solid fa-camera"></i>
+      </label>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="ips-profile__band">
+    <div class="ips-profile__header">
+      <div class="ips-profile__photo-panel">
+        <div class="ips-profile__avatar-wrap">
+          <img src="{{ core_e(avatarUrl) }}" alt="" class="ips-profile__avatar">
+          {% if u.is_verified %}
+          <span class="ips-profile__verified" title="{{ core__('profile.verified_badge_title') }}"><i class="fa-solid fa-check"></i></span>
+          {% endif %}
+        </div>
+
+        <div class="ips-profile__identity">
+          {% if u.is_banned|default(false) %}
+          <span class="ips-profile__banned">{{ core__('member.banned_badge') }}</span>
+          {% endif %}
+          <h1 class="ips-profile__username" style="color: {{ core_e(roleColor) }};">{{ core_e(u.username) }}</h1>
+          {% if u.custom_title is not empty %}
+          <p class="ips-profile__title">{{ core_e(u.custom_title) }}</p>
+          {% endif %}
+          {% if displayName != '' %}
+          <p class="ips-profile__realname">{{ core_e(displayName) }}</p>
+          {% endif %}
+          <ul class="ips-profile__badges">
+            {% if u.role_name is not empty %}
+            <li><span class="ips-profile-group-badge" style="background-color: {{ core_e(roleColor) }};">{{ core_e(u.role_name) }}</span></li>
+            {% endif %}
+            {% if rewardLevel %}
+            <li>
+              <span class="ips-profile-level-badge {{ core_e(rewardLevel.badge_css ?? '') }}">
+                {% if rewardLevel.badge_icon %}<i class="fa {{ core_e(rewardLevel.badge_icon) }}"></i>{% endif %}
+                {{ core_e(rewardLevel.badge_label ?? rewardLevel.name ?? '') }}
+              </span>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+
+      {% if showActions and not compact %}
+      <div class="ips-profile__header-actions">
+        {% if isOwnProfile %}
+          <a href="{{ core_url('profile/edit') }}" class="ips-profile__action-btn ips-profile__action-btn--primary"><i class="fa-solid fa-pen"></i> {{ core__('profile.edit_link') }}</a>
+          <a href="{{ core_url('profile/preferences') }}" class="ips-profile__action-btn" title="{{ core__('profile.preferences_title') }}"><i class="fa-solid fa-sliders"></i></a>
+        {% elseif user and showFullProfile %}
+          <a href="{{ core_url('conversations/new/' ~ u.username|e('url')) }}" class="ips-profile__action-btn ips-profile__action-btn--primary"><i class="fa-regular fa-envelope"></i> {{ core__('member.send_message') }}</a>
+          {% if reputationEnabled %}
+            <button type="button" class="give-rep-btn ips-profile__action-btn ips-profile__action-btn--rep-up" data-username="{{ core_e(u.username) }}" data-value="1" title="+ Rep"><i class="fa-solid fa-thumbs-up"></i></button>
+            <button type="button" class="give-rep-btn ips-profile__action-btn ips-profile__action-btn--rep-down" data-username="{{ core_e(u.username) }}" data-value="-1" title="− Rep"><i class="fa-solid fa-thumbs-down"></i></button>
+          {% endif %}
+          <form method="post" action="{{ core_url('member/' ~ member_url_path(u) ~ '/block') }}" class="inline">
+            <input type="hidden" name="_token" value="{{ core_e(core_csrf_token('member_block')) }}">
+            <button type="submit" class="ips-profile__action-btn" title="{{ core__('member.block_btn') }}"><i class="fa-solid fa-ban"></i></button>
+          </form>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if u.bio is not empty and showFullProfile and not compact %}
+    <div class="ips-profile__bio-strip">
+      <p class="ips-profile__bio">{{ u.bio|striptags|slice(0, 220) }}{% if u.bio|striptags|length > 220 %}…{% endif %}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

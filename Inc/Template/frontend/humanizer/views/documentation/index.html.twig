@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+{% block head_extra %}
+  {# Dokümantasyon stilleri public/css — main.css ile aynı sunum (theme-assets bağımlılığı yok) #}
+  <link rel="stylesheet" href="{{ core_url('css/documentation.css') }}?v={{ core_config('app.version', '1.0.0') }}">
+{% endblock %}
+{% set docTitle = docTitle ?? 'Documentation' %}
+{% set sectionTree = sectionTree ?? [] %}
+{% block content %}
+<div class="doc-layout-wrapper">
+  <div class="doc-root">
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-inner">
+        <div class="doc-sidebar-header">
+          <a href="{{ core_url('documentation') }}" class="doc-sidebar-title">
+            <i class="fa-solid fa-book"></i>
+            {{ docTitle|e }}
+          </a>
+        </div>
+        {% include 'documentation/_doc_sidebar.html.twig' with { sectionTree: sectionTree, currentSection: null, currentPage: null } only %}
+      </div>
+    </aside>
+
+    <main class="doc-main">
+      <div class="doc-main-inner">
+        <div class="doc-landing">
+          <div>
+            <div class="doc-landing-icon">
+              <i class="fa-solid fa-book-open"></i>
+            </div>
+            <h1>{{ docTitle|e }}</h1>
+            <p>
+              {% if sectionTree is empty %}
+                {{ core__('documentation.empty')|default('No documentation sections have been added yet.') }}
+              {% else %}
+                {{ core__('documentation.welcome')|default('Select a topic from the sidebar.') }}
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html.twig" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/idelist.css') }}?v={{ core_config('app.version', '1.0.0') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-3">
+  {% include 'idelist/_nav.html.twig' with { tab: 'ideas' } %}
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <form method="get" action="{{ core_url(adminPath ~ '/idelist') }}" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+          <label class="form-label mb-1">{{ core_e(core__('common.search')) }}</label>
+          <input type="text" class="form-control" name="q" value="{{ filters.q|default('')|e('html_attr') }}" placeholder="{{ core_e(core__('idelist.title_label')) }}">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">{{ core_e(core__('idelist.col_status')) }}</label>
+          <select class="form-select" name="status">
+            <option value="">{{ core_e(core__('idelist.filter_all')) }}</option>
+            {% for st in statuses %}
+            <option value="{{ st.slug|e('html_attr') }}" {{ filters.status|default('') == st.slug ? 'selected' : '' }}>{{ core_e(st.name) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">{{ core_e(core__('idelist.category_label')) }}</label>
+          <select class="form-select" name="category_id">
+            <option value="">{{ core_e(core__('idelist.filter_all')) }}</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}" {{ filters.category_id|default('') == (c.id ~ '') ? 'selected' : '' }}>{{ core_e(c.name) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">{{ core_e(core__('idelist.filter_sort')) }}</label>
+          <select class="form-select" name="sort">
+            <option value="latest" {{ filters.sort|default('latest') == 'latest' ? 'selected' : '' }}>{{ core_e(core__('idelist.sort_newest')) }}</option>
+            <option value="oldest" {{ filters.sort|default('latest') == 'oldest' ? 'selected' : '' }}>{{ core_e(core__('idelist.sort_oldest')) }}</option>
+            <option value="votes" {{ filters.sort|default('latest') == 'votes' ? 'selected' : '' }}>{{ core_e(core__('idelist.sort_votes')) }}</option>
+            <option value="updated" {{ filters.sort|default('latest') == 'updated' ? 'selected' : '' }}>Son güncelleme</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-1">
+          <label class="form-label mb-1">/Sayfa</label>
+          <select class="form-select" name="per_page">
+            {% for size in [20, 50, 100] %}
+            <option value="{{ size }}" {{ pagination.per_page == size ? 'selected' : '' }}>{{ size }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-1 d-grid">
+          <button type="submit" class="btn btn-primary">{{ core_e(core__('common.search')) }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center gap-2">
+      <h3 class="card-title mb-0">{{ core_e(core__('idelist.admin_title')) }}</h3>
+      <span class="badge bg-secondary">{{ pagination.total|default(ideas|length) }}</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table card-table table-vcenter idelist-admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>{{ core_e(core__('idelist.title_label')) }}</th>
+            <th>{{ core_e(core__('idelist.votes_count', { count: 0 })) }}</th>
+            <th class="text-end">{{ core_e(core__('idelist.save_action')) }}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for idea in ideas %}
+          <tr>
+            <td>{{ idea.id }}</td>
+            <td>
+              <div class="fw-semibold">{{ core_e(idea.title) }}</div>
+              <small class="text-muted">{{ core_e(idea.status ?? 'open') }}</small>
+            </td>
+            <td>{{ idea.vote_count }}</td>
+            <td class="text-end d-flex gap-1 justify-content-end">
+              <a class="btn btn-sm btn-outline-primary" href="{{ core_url(adminPath ~ '/idelist/' ~ idea.id ~ '/status') }}">{{ core_e(core__('idelist.admin_change_status')) }}</a>
+              <form class="d-inline" method="post" action="{{ core_url(adminPath ~ '/idelist/' ~ idea.id ~ '/pin') }}">{{ core_csrf_field('idelist_admin_pin')|raw }}<button class="btn btn-sm">{{ idea.is_pinned ? core_e(core__('idelist.unpin_idea')) : core_e(core__('idelist.pin_idea')) }}</button></form>
+              <form class="d-inline" method="post" action="{{ core_url(adminPath ~ '/idelist/' ~ idea.id ~ '/delete') }}" onsubmit="return confirm({{ core__('idelist.confirm_delete_idea')|json_encode|raw }})">{{ core_csrf_field('idelist_admin_delete')|raw }}<button class="btn btn-sm btn-danger">{{ core_e(core__('idelist.delete_action')) }}</button></form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">{{ core_e(core__('idelist.no_ideas')) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <small class="text-muted">Sayfa {{ pagination.page }} / {{ pagination.total_pages }} · Toplam {{ pagination.total }} kayıt</small>
+      <div class="d-flex gap-2">
+        {% set prevPage = pagination.page - 1 %}
+        {% set nextPage = pagination.page + 1 %}
+        {% if pagination.page > 1 %}
+        <a class="btn btn-sm btn-outline-secondary" href="{{ core_url(adminPath ~ '/idelist') }}?q={{ filters.q|url_encode }}&status={{ filters.status|url_encode }}&category_id={{ filters.category_id|url_encode }}&sort={{ filters.sort|url_encode }}&per_page={{ pagination.per_page }}&page={{ prevPage }}">Önceki</a>
+        {% endif %}
+        {% if pagination.page < pagination.total_pages %}
+        <a class="btn btn-sm btn-outline-secondary" href="{{ core_url(adminPath ~ '/idelist') }}?q={{ filters.q|url_encode }}&status={{ filters.status|url_encode }}&category_id={{ filters.category_id|url_encode }}&sort={{ filters.sort|url_encode }}&per_page={{ pagination.per_page }}&page={{ nextPage }}">Sonraki</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

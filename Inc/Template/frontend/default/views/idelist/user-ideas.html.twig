@@ -1,0 +1,101 @@
+{% extends "base.html.twig" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/idelist.css') }}?v={{ core_config('app.version', '1.0.0') }}&idelist=20260421r">
+{% endblock %}
+
+{% block content %}
+<div class="idelist-wrap">
+  <section class="idelist-hero">
+    <div>
+      <div style="margin-bottom:.45rem">
+        <a href="{{ core_url('idelist') }}" class="idelist-back-link">
+          <i class="fa-solid fa-arrow-left"></i> {{ core_e(core__('idelist.back_to_list')) }}
+        </a>
+      </div>
+      <h1>{{ core_e(core__('idelist.user_ideas_title')|replace({':username': author.username|default('-')})) }}</h1>
+      <p>{{ core_e(core__('idelist.user_ideas_count')|replace({':count': pagination.total|default(0)})) }}</p>
+    </div>
+  </section>
+
+  <div class="idelist-listing">
+    {% if ideas is empty %}
+      <div class="idelist-empty">
+        <i class="fa-regular fa-lightbulb" style="font-size:1.5rem;display:block;margin-bottom:.5rem;opacity:.5"></i>
+        {{ core_e(core__('idelist.user_no_ideas')) }}
+      </div>
+    {% else %}
+      {# ── Desktop Table ── #}
+      <div class="table-responsive idelist-table-wrap">
+        <table class="table table-vcenter idelist-table">
+          <colgroup>
+            <col style="width:40%">
+            <col style="width:18%">
+            <col style="width:15%">
+            <col style="width:10%">
+            <col style="width:17%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>{{ core_e(core__('idelist.title_label')) }}</th>
+              <th>{{ core_e(core__('idelist.category_label')) }}</th>
+              <th>{{ core_e(core__('idelist.col_status')) }}</th>
+              <th>{{ core_e(core__('idelist.col_votes')) }}</th>
+              <th>{{ core_e(core__('idelist.col_date')) }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for idea in ideas %}
+              <tr>
+                <td class="idelist-table__title">
+                  <a class="idelist-title idelist-title--truncate" href="{{ core_url('idelist/' ~ idea.slug) }}" title="{{ core_e(idea.title) }}">
+                    {{ core_e(idea.title) }}
+                  </a>
+                </td>
+                <td>
+                  <span class="idelist-category-cell" style="{{ idea.category.color|default('') ? 'color:' ~ idea.category.color ~ ';' : '' }}">
+                    {% if idea.category.icon|default('') %}
+                      <i class="{{ core_e(idea.category.icon) }}"></i>
+                    {% endif %}
+                    {{ core_e(idea.category.name|default('-')) }}
+                  </span>
+                </td>
+                <td>{% include 'idelist/partials/status_badge.html.twig' with { status: idea.status, statusDefinition: idea.statusDefinition|default(null) } %}</td>
+                <td class="idelist-col-messages">{{ idea.vote_count|default(0) }}</td>
+                <td><span style="color:var(--il-muted);font-size:.84rem">{{ idea.created_at ? idea.created_at|date('d.m.Y H:i') : '-' }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {# ── Mobile Card View ── #}
+      <div class="idelist-mobile-cards">
+        {% for idea in ideas %}
+          <div class="idelist-mobile-card">
+            <a class="idelist-mobile-card__title" href="{{ core_url('idelist/' ~ idea.slug) }}">
+              {{ core_e(idea.title) }}
+            </a>
+            <div class="idelist-mobile-card__meta">
+              {% if idea.category.name|default('') %}
+                <span class="idelist-mobile-card__meta-item" style="{{ idea.category.color|default('') ? 'color:' ~ idea.category.color ~ ';' : '' }}">
+                  {% if idea.category.icon|default('') %}<i class="{{ core_e(idea.category.icon) }}"></i>{% endif %}
+                  {{ core_e(idea.category.name) }}
+                </span>
+              {% endif %}
+              <span class="idelist-mobile-card__meta-item">
+                <i class="fa-solid fa-check-to-slot"></i> {{ idea.vote_count|default(0) }} oy
+              </span>
+              <span class="idelist-mobile-card__meta-item">
+                <i class="fa-regular fa-calendar"></i> {{ idea.created_at ? idea.created_at|date('d.m.Y') : '-' }}
+              </span>
+            </div>
+            <div class="idelist-mobile-card__footer">
+              {% include 'idelist/partials/status_badge.html.twig' with { status: idea.status, statusDefinition: idea.statusDefinition|default(null) } %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

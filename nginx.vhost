@@ -1,0 +1,202 @@
+server {
+  listen 80;
+  listen [::]:80;
+  listen 443 quic;
+  listen 443 ssl;
+  listen [::]:443 quic;
+  listen [::]:443 ssl;
+  http2 on;
+  http3 off;
+  {{ssl_certificate_key}}
+  {{ssl_certificate}}
+  server_name megaforbb.com.tr;
+  return 301 https://www.megaforbb.org$request_uri;
+}
+
+server {
+  listen 80;
+  listen [::]:80;
+  listen 443 quic;
+  listen 443 ssl;
+  listen [::]:443 quic;
+  listen [::]:443 ssl;
+  http2 on;
+  http3 off;
+  {{ssl_certificate_key}}
+  {{ssl_certificate}}
+  server_name www.megaforbb.org www1.megaforbb.org;
+  {{root}}
+
+  {{nginx_access_log}}
+  {{nginx_error_log}}
+
+  if ($scheme != "https") {
+    rewrite ^ https://$host$request_uri permanent;
+  }
+
+  location ~ /.well-known {
+    auth_basic off;
+    allow all;
+  }
+
+  {{settings}}
+
+  # Edge-level deny rules for sensitive paths/files.
+  location ~* ^/(App|Forecor|Inc|Library|Route|bin)(/|$) {
+    return 403;
+  }
+
+  location ~* ^/Content/(storage|build)(/|$) {
+    return 403;
+  }
+
+  location ~* /migrate\.php$ {
+    return 403;
+  }
+
+  # theme-assets PHP ile sunulur; statik .js/.css location'ına düşmesin (404 önleme)
+  location ^~ /theme-assets/ {
+    {{varnish_proxy_pass}}
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_hide_header X-Varnish;
+    proxy_redirect off;
+    proxy_max_temp_file_size 0;
+    proxy_connect_timeout 720;
+    proxy_send_timeout 720;
+    proxy_read_timeout 720;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    proxy_temp_file_write_size 256k;
+  }
+
+  # uploads: dosyalar Content/storage/uploads veya uploads'ta; URL hep /uploads/... → backend (UploadsServeController) ile sunulur
+  location ^~ /uploads/ {
+    {{varnish_proxy_pass}}
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_hide_header X-Varnish;
+    proxy_redirect off;
+    proxy_max_temp_file_size 0;
+    proxy_connect_timeout 720;
+    proxy_send_timeout 720;
+    proxy_read_timeout 720;
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    proxy_temp_file_write_size 256k;
+  }
+
+  location / {
+    {{varnish_proxy_pass}}
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_hide_header X-Varnish;
+    proxy_redirect off;
+    proxy_max_temp_file_size 0;
+    proxy_connect_timeout      720;
+    proxy_send_timeout         720;
+    proxy_read_timeout         720;
+    proxy_buffer_size          128k;
+    proxy_buffers              4 256k;
+    proxy_busy_buffers_size    256k;
+    proxy_temp_file_write_size 256k;
+  }
+
+  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map|mjs)$ {
+    add_header Access-Control-Allow-Origin "*";
+    add_header alt-svc 'h3=":443"; ma=86400';
+    expires max;
+    access_log off;
+  }
+
+  location ~ /\.(ht|svn|git) {
+    deny all;
+  }
+
+  if (-f $request_filename) {
+    break;
+  }
+}
+
+server {
+  listen 8080;
+  listen [::]:8080;
+  server_name www.megaforbb.org www1.megaforbb.org;
+  {{root}}
+
+  include /etc/nginx/global_settings;
+
+  # --- HTACCESS GÜVENLİK KURALLARI (Uyarlanmış) ---
+
+  # 1. Klasör listelemeyi kapat (Options -Indexes)
+  autoindex off;
+
+  # 2. Gizli dosya ve klasörlere erişimi engelle (RewriteRule (^|/)\. - [F,L])
+  location ~ /\. {
+    deny all;
+  }
+
+  # 3. Hassas uygulama dizinlerini koru
+  location ~* ^/(App|Forecor|Inc|Library|Route)(/|$) {
+    deny all;
+  }
+  
+  # 4. Storage ve Build klasörlerini koru
+  location ~* ^/Content/(storage|build)(/|$) {
+    deny all;
+  }
+
+  # 5. Migration dosyasına manuel erişimi kapat
+  location ~* migrate\.php$ {
+    deny all;
+  }
+
+  # 6. /public/ altındaki PHP dosyalarına tarayıcıdan doğrudan erişimi yasakla
+  if ($request_uri ~* "^/public/.*\.php$") {
+    return 403;
+  }
+
+  # 7. Hassas konfigürasyon dosyalarına erişimi engelle (FilesMatch Karşılığı)
+  # Sadece belirtilen JSON ve ayar dosyaları engellenir (manifest.json gibi sistem json'ları çalışmaya devam eder).
+  location ~* /(composer\.(json|lock)|phpunit\.xml|tailwind\.config\.(js|cjs|mjs|ts)|postcss\.config\.(js|cjs|mjs|ts)|vite\.config\.(js|cjs|mjs|ts)|webpack\.config\.(js|cjs|mjs|ts)|rollup\.config\.(js|cjs|mjs|ts)|tsconfig\.json|jsconfig\.json)$ {
+    deny all;
+  }
+
+  # 8. Eski /Content statik URL'lerini koruma
+  # Nginx "root" dizin yapısına göre dinamik olarak en doğru yeri bulması için try_files kullanıldı.
+  location ~* ^/Content/(css|js|img|smileys)/(.*)$ {
+    try_files /public/$1/$2 /$1/$2 =404;
+  }
+
+  # --- ÇALIŞAN ANA YÖNLENDİRME (Hiç ellenmedi) ---
+  try_files $uri $uri/ /index.php?$args;
+  index index.php index.html;
+
+  location ~ \.php$ {
+    include fastcgi_params;
+    fastcgi_intercept_errors on;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    try_files $uri =404;
+    fastcgi_read_timeout 3600;
+    fastcgi_send_timeout 3600;
+    fastcgi_param HTTPS "on";
+    fastcgi_param SERVER_PORT 443;
+    fastcgi_pass 127.0.0.1:{{php_fpm_port}};
+    fastcgi_param PHP_VALUE "{{php_settings}}";
+  }
+
+  if (-f $request_filename) {
+    break;
+  }
+}

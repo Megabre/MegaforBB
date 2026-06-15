@@ -1,0 +1,42 @@
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Composer dependencies
+Library/vendor/
+
+# Release packages (distributed via GitHub Releases)
+megaforbb-upload.zip
+megaforbb-database.zip
+
+# Runtime storage
+Content/storage/cache/
+Content/storage/logs/
+Content/storage/sessions/
+Content/storage/views/
+Content/storage/backups/
+Content/storage/analytics_logs/
+Content/storage/secure_logs/
+Content/storage/license/
+Content/storage/verification/
+Content/storage/tracker_last_ping.txt
+Content/storage/uploads/*
+!Content/storage/uploads/.htaccess
+
+uploads/
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Tooling cache
+.phpunit.result.cache
+.php-cs-fixer.cache
+phpstan.neon.dist.local
+
+node_modules/

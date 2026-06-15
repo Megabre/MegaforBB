@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set roles = roles ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle ?? admin__('menu.groups')) }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/roles/create') }}" class="btn btn-primary d-none d-sm-inline-block">
+                    <i class="ti ti-plus"></i> {{ core_e(admin__('groups.new_group')) }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>{{ core_e(admin__('groups.name')) }}</th>
+                            <th>{{ core_e(admin__('groups.color')) }}</th>
+                            <th>{{ core_e(admin__('groups.sort_order')) }}</th>
+                            <th>{{ core_e(admin__('groups.is_staff')) }}</th>
+                            <th class="w-1">{{ core_e(admin__('common.actions')) }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if roles is empty %}
+                        <tr><td colspan="6" class="text-center text-muted">{{ core_e(admin__('groups.no_groups')) }}</td></tr>
+                        {% else %}
+                        {% for r in roles %}
+                        <tr>
+                            <td class="text-muted">{{ r.id }}</td>
+                            <td class="font-weight-bold">
+                                <span class="badge" style="background-color: {{ core_e(r.color ?? '#6c757d') }};">{{ core_e(r.name) }}</span>
+                            </td>
+                            <td class="text-muted">{{ core_e(r.color) }}</td>
+                            <td class="text-muted">{{ r.sort_order }}</td>
+                            <td>
+                                {% if r.is_staff %}<span class="badge bg-success">{{ core_e(admin__('common.yes')) }}</span>
+                                {% else %}<span class="badge bg-secondary">{{ core_e(admin__('common.no')) }}</span>{% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a href="{{ core_url(adminPath ~ '/roles/edit/' ~ r.id) }}" class="btn btn-sm btn-white">{{ core_e(admin__('common.edit')) }}</a>
+                                    {% if r.id not in [1, 2] %}
+                                    <form action="{{ core_url(adminPath ~ '/roles/delete/' ~ r.id) }}" method="post" onsubmit="return confirm('{{ core_e(admin__('common.are_you_sure')) }}');" style="display:inline;">
+                                        {{ core_csrf_field()|raw }}
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ core_e(admin__('common.delete')) }}</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

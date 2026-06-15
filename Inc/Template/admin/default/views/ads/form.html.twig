@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set ad = ad ?? null %}
+{% set positionLabels = positionLabels ?? [] %}
+{% set isEdit = ad is not null %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ isEdit ? lang('admin.ads.edit_ad') : lang('admin.ads.new_ad') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/ads') }}" class="btn">{{ lang('admin.common.back_to_list') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <form action="{{ isEdit ? core_url(adminPath ~ '/ads/update/' ~ ad.id) : core_url(adminPath ~ '/ads/store') }}" method="post">
+                {{ core_csrf_field(isEdit ? 'admin_ads_update' : 'admin_ads_store')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.common.position') }}</label>
+                        <select name="position_key" class="form-select">
+                            {% for k, v in positionLabels %}
+                            <option value="{{ core_e(k) }}" {{ (ad and ad.position_key == k) ? 'selected' : '' }}>{{ core_e(v) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.ads.name') }}</label>
+                        <input type="text" name="name" class="form-control" value="{{ core_e(ad ? ad.name : '') }}" placeholder="{{ lang('admin.ads.name_ph') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.ads.html_content') }}</label>
+                        <textarea name="html_content" class="form-control font-monospace" rows="8" placeholder="{{ lang('admin.ads.html_content_ph') }}">{{ core_e(ad ? (ad.html_content ?? '') : '') }}</textarea>
+                        <small class="form-hint">{{ lang('admin.ads.html_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.ads.sort_hint') }}</label>
+                        <input type="number" name="sort_order" class="form-control" value="{{ ad ? (ad.sort_order|default(0)) : 0 }}">
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="enabled" value="1" class="form-check-input" {{ (not ad or ad.enabled) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.common.enabled') }}</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ isEdit ? lang('admin.common.update') : lang('admin.common.create') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/ads') }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

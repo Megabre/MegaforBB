@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% if forumIstatistik %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <h2 class="page-title">{{ lang('admin.forum_istatistik.delete_title') }}</h2>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-body">
+                <p>{{ lang('admin.forum_istatistik.delete_confirm', {'title': forumIstatistik.title|e}) }}</p>
+                <form method="post" action="{{ core_url(adminPath ~ '/forum-istatistik/sil/' ~ forumIstatistik.veri_id) }}" class="d-inline">
+                    {{ core_csrf_field('forum_istatistik_delete')|raw }}
+                    <button type="submit" class="btn btn-danger">{{ lang('admin.common.delete') }}</button>
+                </form>
+                <a href="{{ core_url(adminPath ~ '/forum-istatistik') }}" class="btn btn-ghost-secondary">{{ lang('admin.common.cancel') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="page-body"><div class="container-xl"><p class="text-muted">{{ lang('admin.forum_istatistik.invalid_data') }}</p></div></div>
+{% endif %}
+{% endblock %}

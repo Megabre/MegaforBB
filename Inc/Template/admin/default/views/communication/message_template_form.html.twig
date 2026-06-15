@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+{% set template = template ?? null %}
+{% set isEdit = template is not null %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ isEdit ? lang('admin.communication.message_template_edit') : lang('admin.communication.message_template_new') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/communication/message-templates') }}" class="btn btn-secondary">{{ lang('admin.common.back_to_list') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <form action="{{ isEdit ? core_url(adminPath ~ '/communication/message-templates/update/' ~ template.id) : core_url(adminPath ~ '/communication/message-templates/store') }}" method="post">
+                {{ core_csrf_field('admin_communication')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.template_name') }}</label>
+                        <input type="text" name="name" class="form-control" value="{{ template ? core_e(template.name) : '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.subject') }}</label>
+                        <input type="text" name="subject" class="form-control" value="{{ template ? core_e(template.subject) : '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.body') }}</label>
+                        <textarea id="msg-tpl-body" name="body_html" class="form-control" rows="10">{{ template ? (template.body_html ?? '')|e : '' }}</textarea>
+                        {% if placeholders is defined and placeholders is not empty %}
+                        <div class="mt-2 p-3 bg-light rounded small">
+                            <strong>{{ lang('admin.communication.available_tags') }}</strong>
+                            <p class="text-muted mb-1 mt-1">{{ lang('admin.communication.available_tags_hint') }}</p>
+                            <code class="d-inline-flex flex-wrap gap-1">{% for key, desc in placeholders %}<span title="{{ desc|e('html_attr') }}">{{ '{' ~ key ~ '}' }}</span>{% if not loop.last %} · {% endif %}{% endfor %}</code>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ isEdit ? lang('admin.common.save') : lang('admin.common.create') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script>document.addEventListener('DOMContentLoaded', function() { if (typeof jQuery !== 'undefined' && jQuery().summernote) jQuery('#msg-tpl-body').summernote({ height: 280 }); });</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set categories = categories ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle ?? admin__('menu.forums')) }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <button type="button" id="forum-order-save-btn" class="btn btn-warning d-none d-sm-inline-block">
+                        <i class="ti ti-device-floppy"></i> {{ core_e(admin__('common.save')) }}
+                    </button>
+                    <a href="{{ core_url(adminPath ~ '/categories/create') }}" class="btn btn-primary d-none d-sm-inline-block">
+                        <i class="ti ti-plus"></i> {{ core_e(admin__('common.add') ~ ' ' ~ lang('admin.forums.add_category')) }}
+                    </a>
+                    <a href="{{ core_url(adminPath ~ '/forums/create') }}" class="btn btn-success d-none d-sm-inline-block">
+                        <i class="ti ti-plus"></i> {{ core_e(admin__('common.add') ~ ' ' ~ lang('admin.forums.add_forum')) }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row row-cards">
+            <div class="col-12" id="categories-container">
+                {% for category in categories %}
+                <div class="card mb-3 category-item" data-id="{{ category.id }}">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="category-drag-handle me-2 text-muted" style="cursor: grab;" title="{{ lang('admin.forums.drag_hint') }}">
+                                <i class="ti ti-grip-vertical"></i>
+                            </span>
+                            {{ core_e(category.name) }}
+                        </h3>
+                        <div class="card-actions">
+                            <a href="{{ core_url(adminPath ~ '/categories/edit/' ~ category.id) }}" class="btn btn-sm btn-outline-secondary">{{ core_e(admin__('common.edit')) }}</a>
+                            <form action="{{ core_url(adminPath ~ '/categories/delete/' ~ category.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ core_e(admin__('common.are_you_sure')) }}');">
+                                {{ core_csrf_field()|raw }}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">{{ core_e(admin__('common.delete')) }}</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter text-nowrap datatable">
+                            <thead>
+                                <tr>
+                                    <th>{{ core_e(admin__('menu.forums')) }}</th>
+                                    <th>{{ core_e(admin__('categories.description')) }}</th>
+                                    <th>{{ core_e(admin__('categories.sort_order')) }}</th>
+                                    <th>{{ core_e(admin__('forums.messages')) }}</th>
+                                    <th class="w-1">{{ core_e(admin__('common.actions')) }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="forums-container" data-category-id="{{ category.id }}">
+                                {% set topForums = category.forumsTopLevel ?? category.forums|default([]) %}
+                                {% if topForums is iterable and topForums|length == 0 %}
+                                <tr class="empty-placeholder"><td colspan="5" class="text-muted text-center py-4">{{ core_e(admin__('forums.no_forums_in_category')) }}</td></tr>
+                                {% endif %}
+                                {% for forum in topForums %}
+                                <tr class="forum-item" data-id="{{ forum.id }}" data-parent-id="">
+                                    <td>
+                                        <div class="d-flex py-1 align-items-center">
+                                            <span class="forum-drag-handle me-2 text-muted" style="cursor: grab;" title="{{ lang('admin.forums.drag_hint') }}"><i class="ti ti-grip-vertical"></i></span>
+                                            {% if forum.icon %}
+                                            <span class="avatar me-2"><i class="{{ forum.icon|length > 0 and ' ' in forum.icon ? forum.icon : 'fa-solid fa-' ~ forum.icon }}"></i></span>
+                                            {% else %}
+                                            <span class="avatar me-2"><i class="fa-solid fa-folder"></i></span>
+                                            {% endif %}
+                                            <div class="flex-fill"><div class="font-weight-medium">{{ core_e(forum.name) }}</div></div>
+                                        </div>
+                                    </td>
+                                    <td><div class="text-truncate" style="max-width: 250px;">{{ core_e(forum.description) }}</div></td>
+                                    <td class="forum-sort-number">{{ forum.sort_order }}</td>
+                                    <td>{{ forum.topic_count }} {{ lang('admin.forums.topic_count') }} / {{ forum.post_count }} {{ lang('admin.forums.post_count') }}</td>
+                                    <td>
+                                        <a href="{{ core_url(adminPath ~ '/forums/edit/' ~ forum.id) }}#forum-prefixes" class="btn btn-sm btn-outline-primary" title="{{ core_e(admin__('prefixes.forum_prefixes_short')) }}">{{ core_e(admin__('prefixes.forum_prefixes_short')) }}</a>
+                                        <a href="{{ core_url(adminPath ~ '/forums/edit/' ~ forum.id) }}" class="btn btn-sm btn-outline-secondary">{{ core_e(admin__('common.edit')) }}</a>
+                                        <form action="{{ core_url(adminPath ~ '/forums/delete/' ~ forum.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ core_e(admin__('forums.delete_forum_confirm')) }}');">
+                                            {{ core_csrf_field()|raw }}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ core_e(admin__('common.delete')) }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% if forum.subforums is defined and forum.subforums is not empty %}
+                                {% for sub in forum.subforums %}
+                                <tr class="forum-item forum-subforum" data-id="{{ sub.id }}" data-parent-id="{{ forum.id }}">
+                                    <td>
+                                        <div class="d-flex py-1 align-items-center ps-4">
+                                            <span class="forum-drag-handle me-2 text-muted" style="cursor: grab;" title="{{ lang('admin.forums.drag_hint') }}"><i class="ti ti-grip-vertical"></i></span>
+                                            {% if sub.icon %}
+                                            <span class="avatar me-2"><i class="{{ sub.icon|length > 0 and ' ' in sub.icon ? sub.icon : 'fa-solid fa-' ~ sub.icon }}"></i></span>
+                                            {% else %}
+                                            <span class="avatar me-2"><i class="fa-solid fa-folder-tree"></i></span>
+                                            {% endif %}
+                                            <div class="flex-fill"><div class="font-weight-medium">{{ core_e(sub.name) }} <span class="badge bg-azure-lt ms-1">{{ core_e(lang('admin.forums.subforum')|default('Alt forum')) }}</span></div></div>
+                                        </div>
+                                    </td>
+                                    <td><div class="text-truncate" style="max-width: 250px;">{{ core_e(sub.description) }}</div></td>
+                                    <td class="forum-sort-number">{{ sub.sort_order }}</td>
+                                    <td>{{ sub.topic_count }} {{ lang('admin.forums.topic_count') }} / {{ sub.post_count }} {{ lang('admin.forums.post_count') }}</td>
+                                    <td>
+                                        <a href="{{ core_url(adminPath ~ '/forums/edit/' ~ sub.id) }}#forum-prefixes" class="btn btn-sm btn-outline-primary" title="{{ core_e(admin__('prefixes.forum_prefixes_short')) }}">{{ core_e(admin__('prefixes.forum_prefixes_short')) }}</a>
+                                        <a href="{{ core_url(adminPath ~ '/forums/edit/' ~ sub.id) }}" class="btn btn-sm btn-outline-secondary">{{ core_e(admin__('common.edit')) }}</a>
+                                        <form action="{{ core_url(adminPath ~ '/forums/delete/' ~ sub.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ core_e(admin__('forums.delete_forum_confirm')) }}');">
+                                            {{ core_csrf_field()|raw }}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">{{ core_e(admin__('common.delete')) }}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if categories is empty %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <p class="text-muted mb-4">{{ core_e(admin__('forums.no_categories')) }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var reorderUrl = "{{ core_url(adminPath ~ '/forums/reorder')|e('js') }}";
+    var csrfToken = "{{ core_csrf_token()|e('js') }}";
+    var saveBtn = document.getElementById('forum-order-save-btn');
+    var hasPendingChanges = false;
+    var isSaving = false;
+    var showToast = function(message, type) {
+        if (window.mfbbToast) {
+            window.mfbbToast(message, type || 'info');
+        }
+    };
+    var setSaveButtonVisible = function(visible) {
+        if (!saveBtn) return;
+        saveBtn.classList.toggle('d-none', !visible);
+    };
+    var markDirty = function() {
+        hasPendingChanges = true;
+        setSaveButtonVisible(true);
+    };
+    var normalizeForumParents = function() {
+        document.querySelectorAll('.forums-container').forEach(function(container) {
+            var currentTopForumId = null;
+            container.querySelectorAll('.forum-item').forEach(function(forumEl) {
+                var forumId = forumEl.getAttribute('data-id');
+                var isSubforum = forumEl.classList.contains('forum-subforum');
+                if (isSubforum && currentTopForumId) {
+                    forumEl.setAttribute('data-parent-id', currentTopForumId);
+                } else {
+                    forumEl.setAttribute('data-parent-id', '');
+                    if (forumId) {
+                        currentTopForumId = forumId;
+                    }
+                }
+            });
+        });
+    };
+    var saveOrder = function() {
+        if (!hasPendingChanges || isSaving) return;
+        isSaving = true;
+        if (saveBtn) saveBtn.disabled = true;
+        normalizeForumParents();
+        var payload = { _token: csrfToken, categories: [], forums: [] };
+        document.querySelectorAll('#categories-container > .category-item').forEach(function(catEl) {
+            var catId = catEl.getAttribute('data-id');
+            if (catId) {
+                payload.categories.push(catId);
+                var tbody = catEl.querySelector('.forums-container');
+                if (tbody) {
+                    var orderByParent = {};
+                    tbody.querySelectorAll('.forum-item').forEach(function(forumEl) {
+                        var forumId = forumEl.getAttribute('data-id');
+                        var parentId = forumEl.getAttribute('data-parent-id');
+                        if (parentId === '') parentId = null;
+                        if (forumId) {
+                            var key = parentId || 'null';
+                            if (!orderByParent[key]) orderByParent[key] = 0;
+                            payload.forums.push({ id: forumId, category_id: catId, parent_id: parentId, sort_order: orderByParent[key]++ });
+                        }
+                    });
+                }
+            }
+        });
+        var formData = new FormData();
+        formData.append('_token', csrfToken);
+        formData.append('payload', JSON.stringify(payload));
+        fetch(reorderUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        }).then(function(r) {
+            if (!r.ok) return r.text().then(function(t) { throw new Error(t || ('HTTP ' + r.status)); });
+            return r.json();
+        }).then(function(data) {
+            if (data.success) {
+                document.querySelectorAll('#categories-container > .category-item').forEach(function(catEl) {
+                    var forumIndex = 0;
+                    catEl.querySelectorAll('.forums-container .forum-item').forEach(function(forumEl) {
+                        var span = forumEl.querySelector('.forum-sort-number');
+                        if (span) span.innerText = forumIndex;
+                        forumIndex++;
+                    });
+                });
+                hasPendingChanges = false;
+                setSaveButtonVisible(false);
+                showToast('Forum sirasi kaydedildi.', 'success');
+            } else {
+                showToast('Forum sirasi kaydedilemedi.', 'danger');
+            }
+        }).catch(function() {
+            showToast('Forum sirasi kaydedilemedi.', 'danger');
+        }).finally(function() {
+            isSaving = false;
+            if (saveBtn) saveBtn.disabled = false;
+        });
+    };
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveOrder);
+    }
+    var catContainer = document.getElementById('categories-container');
+    if (catContainer && typeof Sortable !== 'undefined') {
+        new Sortable(catContainer, { handle: '.category-drag-handle', animation: 150, onEnd: markDirty });
+    }
+    document.querySelectorAll('.forums-container').forEach(function(container) {
+        if (typeof Sortable !== 'undefined') {
+            new Sortable(container, {
+                group: 'forums',
+                handle: '.forum-drag-handle',
+                animation: 150,
+                onAdd: function(evt) {
+                    var emptyRow = evt.to.querySelector('.empty-placeholder');
+                    if (emptyRow) emptyRow.style.display = 'none';
+                    normalizeForumParents();
+                    markDirty();
+                },
+                onRemove: function(evt) {
+                    if (evt.from.querySelectorAll('.forum-item').length === 0) {
+                        var emptyRow = evt.from.querySelector('.empty-placeholder');
+                        if (emptyRow) emptyRow.style.display = 'table-row';
+                    }
+                    normalizeForumParents();
+                    markDirty();
+                },
+                onEnd: function() {
+                    normalizeForumParents();
+                    markDirty();
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

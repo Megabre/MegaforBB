@@ -1,0 +1,55 @@
+﻿{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set topic = topic ?? null %}
+{% set post = post ?? null %}
+{% set error = error ?? '' %}
+{% if not topic or not post %}
+  <p class="p-4 text-gray-500">Konu veya mesaj bulunamadı.</p>
+{% else %}
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li>›</li>
+      <li><a href="{{ core_url('forum/' ~ (topic.forum_slug ?? '')|e('url')) }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(topic.forum_name ?? '') }}</a></li>
+      <li>›</li>
+      <li><a href="{{ topic_url(topic) }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(topic.title) }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">{{ core__('post.edit_page_title') }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+  <div class="border-b border-gray-200 bg-gray-50 px-6 py-4 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-pen-to-square text-[#1a252f]"></i>
+      <h1 class="text-xl font-semibold text-[#1a252f]">{{ core__('post.edit_page_title') }}</h1>
+    </div>
+    <a href="{{ core_url('post/' ~ post_url_path(post) ~ '/edit-history') }}" class="text-sm text-[#206bc4] hover:underline"><i class="fa-solid fa-clock-rotate-left mr-1"></i>{{ core__('post.edit_history') }}</a>
+  </div>
+  <div class="p-6">
+    {% if error %}
+    <div class="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">{{ core_e(error) }}</div>
+    {% endif %}
+
+    <form action="{{ core_url('post/' ~ post_url_path(post) ~ '/edit') }}" method="post" class="space-y-6">
+      {{ core_csrf_field('edit_post')|raw }}
+      <div>
+        <label for="body" class="block text-sm font-medium text-gray-700 mb-1">Mesaj İçeriği</label>
+        <textarea name="body" id="body" rows="12" data-editor data-secret-tooltip="{{ core__('editor.secret_tooltip')|e('html_attr') }}" data-secret-placeholder="{{ core__('editor.secret_placeholder')|e('html_attr') }}"{% if post_body_base64 is defined and post_body_base64 != '' %} data-initial-base64="{{ post_body_base64 }}"{% endif %} class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" required placeholder="{{ core__('post.body_placeholder')|e('html_attr') }}"></textarea>
+      </div>
+      <div>
+        <label for="edit_reason" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('post.edit_reason_optional') }}</label>
+        <input type="text" name="edit_reason" id="edit_reason" maxlength="255" class="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2" placeholder="Örn: Yazım hatası düzeltildi">
+      </div>
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+        <a href="{{ topic_url(topic) }}" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">{{ core__('common.cancel') }}</a>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#1a252f] rounded-md hover:bg-[#172029]">{{ core__('common.save') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

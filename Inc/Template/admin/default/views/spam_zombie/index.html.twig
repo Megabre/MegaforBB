@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.spam_zombie.page_title') }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('spam_zombie_ok', []) %}
+            <div class="alert alert-success">{{ core_e(msg) }}</div>
+        {% endfor %}
+
+        <form action="{{ core_url(adminPath ~ '/spam-zombie/save') }}" method="post" class="card mb-4">
+            {{ core_csrf_field()|raw }}
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.spam_zombie.spam_section') }}</h3>
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="spam_control_enabled" value="0">
+                <label class="form-check form-switch">
+                    <input type="checkbox" name="spam_control_enabled" value="1" class="form-check-input" {{ spam_enabled ? 'checked' : '' }}>
+                    <span class="form-check-label">{{ lang('admin.spam_zombie.spam_enabled') }}</span>
+                </label>
+                <div class="mt-2">
+                    <label class="form-label">{{ lang('admin.spam_zombie.spam_min_length') }}</label>
+                    <input type="number" name="spam_min_post_length" class="form-control" value="{{ spam_min_length }}" min="0" max="500" style="max-width: 120px;">
+                </div>
+            </div>
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.spam_zombie.zombie_section') }}</h3>
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="zombie_control_enabled" value="0">
+                <label class="form-check form-switch">
+                    <input type="checkbox" name="zombie_control_enabled" value="1" class="form-check-input" {{ zombie_enabled ? 'checked' : '' }}>
+                    <span class="form-check-label">{{ lang('admin.spam_zombie.zombie_enabled') }}</span>
+                </label>
+                <div class="mt-2">
+                    <label class="form-label">{{ lang('admin.spam_zombie.zombie_months') }}</label>
+                    <input type="number" name="zombie_inactive_months" class="form-control" value="{{ zombie_months }}" min="1" max="24" style="max-width: 100px;">
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">{{ core_e(admin__('common.save')) }}</button>
+            </div>
+        </form>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.spam_zombie.suspended_section') }}</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th>{{ core_e(admin__('users.username')) }}</th>
+                            <th>{{ lang('admin.spam_zombie.email') }}</th>
+                            <th>{{ lang('admin.spam_zombie.role') }}</th>
+                            <th>{{ lang('admin.spam_zombie.last_activity') }}</th>
+                            <th>{{ lang('admin.spam_zombie.suspended_at') }}</th>
+                            <th class="w-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in suspended %}
+                        <tr>
+                            <td>{{ core_e(u.username) }}</td>
+                            <td>{{ core_e(u.email) }}</td>
+                            <td>{{ u.role ? core_e(u.role.name) : '-' }}</td>
+                            <td>{{ u.last_activity_at ? u.last_activity_at|date('Y-m-d H:i') : '-' }}</td>
+                            <td>{{ u.suspended_at ? u.suspended_at|date('Y-m-d H:i') : '-' }}</td>
+                            <td>
+                                {% if u.closed_at %}
+                                <span class="badge bg-secondary">{{ lang('admin.spam_zombie.account_closed') }}</span>
+                                {% else %}
+                                <form action="{{ core_url(adminPath ~ '/spam-zombie/unsuspend/' ~ u.id) }}" method="post" class="d-inline">
+                                    {{ core_csrf_field()|raw }}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">{{ lang('admin.spam_zombie.unsuspend') }}</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-muted">{{ lang('admin.spam_zombie.no_suspended') }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

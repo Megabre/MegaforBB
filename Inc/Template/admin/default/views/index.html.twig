@@ -1,0 +1,505 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set stats = stats ?? [] %}
+{% set recentUsers = recentUsers ?? [] %}
+{% set recentTopics = recentTopics ?? [] %}
+{% set recentArticles = recentArticles ?? [] %}
+{% set recentDocPages = recentDocPages ?? [] %}
+{% set recentPosts = recentPosts ?? [] %}
+{% set recentContactMessages = recentContactMessages ?? [] %}
+{% set recentReps = recentReps ?? [] %}
+{% set trafficLogEntries = trafficLogEntries ?? [] %}
+{% set trafficLogRetentionMinutes = trafficLogRetentionMinutes ?? 20 %}
+{% set securityLogEntries = securityLogEntries ?? [] %}
+{% set systemInfo = systemInfo ?? [] %}
+{% set unreadContactCount = (stats.unreadContactCount ?? 0)|round(0, 'floor') %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">{{ core_e(admin__('dashboard.overview')) }}</div>
+                <h2 class="page-title">{{ core_e(admin__('dashboard.welcome')) }}, {{ core_e(user.username ?? 'Admin') }}</h2>
+                {% if unreadContactCount > 0 %}
+                <div class="mt-2">
+                    <a href="{{ core_url(adminPath ~ '/contact') }}" class="btn btn-sm btn-primary">
+                        <i class="ti ti-mail me-1"></i>
+                        <span class="badge bg-danger ms-1">{{ unreadContactCount }}</span>
+                        {{ lang('admin.dashboard.contact_messages') }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-auto">
+                <span class="text-muted" style="font-size:13px">
+                    <i class="ti ti-calendar-event me-1"></i>{{ "now"|date("d.m.Y, l") }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+
+        <div class="row row-deck row-cards mb-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="card">
+                    <div class="card-body dash-stat-card">
+                        <div class="d-flex align-items-center">
+                            <div class="dash-stat-icon bg-blue-lt text-blue me-3"><i class="ti ti-users"></i></div>
+                            <div>
+                                <div class="dash-stat-label">{{ core_e(admin__('dashboard.total_users')) }}</div>
+                                <div class="dash-stat-value">{{ (stats.totalUsers ?? 0)|number_format(0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                        <div class="dash-stat-sub">
+                            {% if (stats.todayUsers ?? 0) > 0 %}
+                                <i class="ti ti-trending-up text-success me-1" style="font-size:14px"></i>
+                                <span class="text-success fw-medium">+{{ stats.todayUsers }}</span> {{ lang('admin.dashboard.today') }}
+                            {% else %}
+                                <i class="ti ti-minus text-muted me-1" style="font-size:14px"></i> {{ lang('admin.dashboard.no_new_users_today') }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card">
+                    <div class="card-body dash-stat-card">
+                        <div class="d-flex align-items-center">
+                            <div class="dash-stat-icon bg-green-lt text-green me-3"><i class="ti ti-messages"></i></div>
+                            <div>
+                                <div class="dash-stat-label">{{ core_e(admin__('dashboard.total_topics')) }}</div>
+                                <div class="dash-stat-value">{{ (stats.totalTopics ?? 0)|number_format(0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                        <div class="dash-stat-sub">
+                            {% if (stats.todayTopics ?? 0) > 0 %}
+                                <i class="ti ti-trending-up text-success me-1" style="font-size:14px"></i>
+                                <span class="text-success fw-medium">+{{ stats.todayTopics }}</span> {{ lang('admin.dashboard.today') }}
+                            {% else %}
+                                <i class="ti ti-minus text-muted me-1" style="font-size:14px"></i> {{ lang('admin.dashboard.no_new_topics_today') }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card">
+                    <div class="card-body dash-stat-card">
+                        <div class="d-flex align-items-center">
+                            <div class="dash-stat-icon bg-purple-lt text-purple me-3"><i class="ti ti-message-dots"></i></div>
+                            <div>
+                                <div class="dash-stat-label">{{ core_e(admin__('dashboard.total_posts')) }}</div>
+                                <div class="dash-stat-value">{{ (stats.totalPosts ?? 0)|number_format(0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                        <div class="dash-stat-sub">
+                            {% if (stats.todayPosts ?? 0) > 0 %}
+                                <i class="ti ti-trending-up text-success me-1" style="font-size:14px"></i>
+                                <span class="text-success fw-medium">+{{ stats.todayPosts }}</span> {{ lang('admin.dashboard.today') }}
+                            {% else %}
+                                <i class="ti ti-minus text-muted me-1" style="font-size:14px"></i> {{ lang('admin.dashboard.no_new_posts_today') }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card">
+                    <div class="card-body dash-stat-card">
+                        <div class="d-flex align-items-center">
+                            <div class="dash-stat-icon bg-yellow-lt text-yellow me-3"><i class="ti ti-alert-triangle"></i></div>
+                            <div>
+                                <div class="dash-stat-label">{{ core_e(admin__('dashboard.pending')) }}</div>
+                                <div class="dash-stat-value">{{ (stats.pendingReports ?? 0)|number_format(0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                        <div class="dash-stat-sub">
+                            <i class="ti ti-ban text-muted me-1" style="font-size:14px"></i>
+                            {{ lang('admin.dashboard.banned_users_count', {'count': stats.bannedUsers ?? 0}) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row row-deck row-cards">
+
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-messages me-2 text-muted"></i>{{ lang('admin.dashboard.recent_topics') }}</h3>
+                        <div class="card-actions">
+                            <a href="{{ core_url(adminPath ~ '/forums') }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.dashboard.view_all') }}</a>
+                        </div>
+                    </div>
+                    {% if recentTopics is not empty %}
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ lang('admin.dashboard.table_topic') }}</th>
+                                    <th>{{ lang('admin.dashboard.table_forum') }}</th>
+                                    <th>{{ lang('admin.dashboard.table_author') }}</th>
+                                    <th class="text-center">{{ lang('admin.dashboard.table_replies') }}</th>
+                                    <th class="text-end">{{ lang('admin.dashboard.table_date') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for topic in recentTopics %}
+                                <tr>
+                                    <td><div class="text-truncate" style="max-width:260px" title="{{ core_e(topic.title ?? '') }}">{{ core_e(topic.title ?? '—') }}</div></td>
+                                    <td><span class="badge bg-blue-lt">{{ core_e(topic.forum_name ?? '—') }}</span></td>
+                                    <td class="text-muted">{{ core_e(topic.username ?? '—') }}</td>
+                                    <td class="text-center text-muted">{{ topic.reply_count ?? 0 }}</td>
+                                    <td class="text-end text-muted" style="white-space:nowrap">{{ (topic.created_at ?? '')|date('d.m.Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-3">
+                            <i class="ti ti-mood-empty mb-2" style="font-size:24px;display:block"></i>
+                            {{ lang('admin.dashboard.no_topics') }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-mail me-2 text-muted"></i>{{ lang('admin.dashboard.recent_contact') }}</h3>
+                        <div class="card-actions">
+                            <a href="{{ core_url(adminPath ~ '/contact') }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.dashboard.view_all_short') }}</a>
+                        </div>
+                    </div>
+                    {% if recentContactMessages is not empty %}
+                    <div class="list-group list-group-flush list-group-hoverable">
+                        {% for msg in recentContactMessages %}
+                        <a href="{{ core_url(adminPath ~ '/contact/show/' ~ msg.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex align-items-center">
+                                {% if (msg.is_read ?? 0) == 0 %}<span class="badge bg-primary me-2">{{ lang('admin.dashboard.new') }}</span>{% endif %}
+                                <div class="flex-fill text-truncate">
+                                    <div class="fw-medium">{{ core_e(msg.subject) }}</div>
+                                    <div class="text-muted small">{{ core_e(msg.name) }} · {{ core_e(msg.email) }}</div>
+                                </div>
+                                <span class="text-muted small ms-2" style="white-space:nowrap">{{ (msg.created_at ?? '')|date('d.m H:i') }}</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-3">
+                            <i class="ti ti-mail-off mb-2" style="font-size:24px;display:block"></i>
+                            {{ lang('admin.dashboard.no_contact_messages') }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-news me-2 text-muted"></i>{{ lang('admin.dashboard.recent_articles') }}</h3>
+                        <div class="card-actions">
+                            <a href="{{ core_url(adminPath ~ '/portal-settings') }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.dashboard.view_all_short') }}</a>
+                        </div>
+                    </div>
+                    {% if recentArticles is not empty %}
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>{{ lang('admin.dashboard.table_topic') }}</th>
+                                    <th>{{ lang('admin.dashboard.table_author') }}</th>
+                                    <th class="text-end">{{ lang('admin.dashboard.table_date') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for art in recentArticles %}
+                                <tr>
+                                    <td><a href="{{ core_url('article/' ~ art.id) }}" class="text-reset text-truncate d-block" style="max-width:200px" title="{{ core_e(art.title ?? '') }}">{{ core_e(art.title ?? '—') }}</a></td>
+                                    <td class="text-muted">{{ core_e(art.username ?? '—') }}</td>
+                                    <td class="text-end text-muted" style="white-space:nowrap">{{ (art.created_at ?? '')|date('d.m.Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-3">
+                            <i class="ti ti-news-off mb-2" style="font-size:24px;display:block"></i>
+                            {{ lang('admin.dashboard.no_articles') }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-book-2 me-2 text-muted"></i>{{ lang('admin.dashboard.recent_documents') }}</h3>
+                        <div class="card-actions">
+                            <a href="{{ core_url(adminPath ~ '/documentation-settings') }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.dashboard.view_all_short') }}</a>
+                        </div>
+                    </div>
+                    {% if recentDocPages is not empty %}
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>{{ lang('admin.dashboard.table_topic') }}</th>
+                                    <th>{{ lang('admin.dashboard.table_section') }}</th>
+                                    <th class="text-end">{{ lang('admin.dashboard.table_date') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in recentDocPages %}
+                                <tr>
+                                    <td><a href="{{ core_url(adminPath ~ '/documentation-settings/pages/edit/' ~ doc.id) }}" class="text-reset text-truncate d-block" style="max-width:180px" title="{{ core_e(doc.title ?? '') }}">{{ core_e(doc.title ?? '—') }}</a></td>
+                                    <td><span class="badge bg-azure-lt">{{ core_e(doc.section_name ?? '—') }}</span></td>
+                                    <td class="text-end text-muted">—</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-3">
+                            <i class="ti ti-book-off mb-2" style="font-size:24px;display:block"></i>
+                            {{ lang('admin.dashboard.no_documents') }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-message-circle me-2 text-muted"></i>{{ lang('admin.dashboard.recent_posts') }}</h3>
+                        <div class="card-actions">
+                            <a href="{{ core_url(adminPath ~ '/forums') }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.dashboard.view_all_short') }}</a>
+                        </div>
+                    </div>
+                    {% if recentPosts is not empty %}
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>{{ lang('admin.dashboard.table_topic') }}</th>
+                                    <th>{{ lang('admin.dashboard.table_author') }}</th>
+                                    <th class="d-none d-md-table-cell">{{ lang('admin.dashboard.table_preview') }}</th>
+                                    <th class="text-end">{{ lang('admin.dashboard.table_date') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for post in recentPosts %}
+                                <tr>
+                                    <td><a href="{{ post.topic_url ?? '#' }}" class="text-reset text-truncate d-block" style="max-width:220px" title="{{ core_e(post.topic_title ?? '') }}">{{ core_e(post.topic_title ?? '—') }}</a></td>
+                                    <td class="text-muted">{{ core_e(post.username ?? '—') }}</td>
+                                    <td class="text-muted small d-none d-md-table-cell text-truncate" style="max-width:200px" title="{{ core_e(post.body_excerpt ?? '') }}">{{ core_e(post.body_excerpt ?? '') }}</td>
+                                    <td class="text-end text-muted" style="white-space:nowrap">{{ (post.created_at ?? '')|date('d.m.Y H:i') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-3">
+                            <i class="ti ti-message-circle-off mb-2" style="font-size:24px;display:block"></i>
+                            {{ lang('admin.dashboard.no_posts') }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-chart-line me-2 text-muted"></i>{{ lang('admin.dashboard.live_traffic') }}</h3>
+                        <div class="card-actions">
+                            <a href="{{ core_url(adminPath ~ '/analytics') }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.dashboard.full_page') }}</a>
+                        </div>
+                    </div>
+                    {% if logLines is defined and logLines is not empty %}
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table table-sm">
+                                <tbody>
+                                    {% for line in logLines %}
+                                    <tr>
+                                        <td class="text-muted small" style="white-space:nowrap; width:1%">{{ ('@' ~ line.ts)|date('H:i:s') }}</td>
+                                        <td class="small" style="font-size:12px">{{ core_e(line.msg) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-3">
+                            <i class="ti ti-chart-line-off mb-2" style="font-size:24px;display:block"></i>
+                            {{ lang('admin.dashboard.no_traffic_log', {'minutes': trafficLogRetentionMinutes}) }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-bolt me-2 text-muted"></i>{{ lang('admin.dashboard.quick_actions') }}</h3>
+                    </div>
+                    <div class="card-body p-2">
+                        <a href="{{ core_url(adminPath ~ '/users/create') }}" class="dash-quick-item"><i class="ti ti-user-plus"></i><span>{{ lang('admin.dashboard.add_user') }}</span></a>
+                        <a href="{{ core_url(adminPath ~ '/forums') }}" class="dash-quick-item"><i class="ti ti-folders"></i><span>{{ lang('admin.dashboard.forum_management') }}</span></a>
+                        <a href="{{ core_url(adminPath ~ '/system-settings') }}" class="dash-quick-item"><i class="ti ti-settings"></i><span>{{ lang('admin.dashboard.system_settings') }}</span></a>
+                        <a href="{{ core_url(adminPath ~ '/analytics') }}" class="dash-quick-item"><i class="ti ti-chart-line"></i><span>{{ lang('admin.dashboard.live_traffic_link') }}</span></a>
+                        <a href="{{ core_url(adminPath ~ '/security/log') }}" class="dash-quick-item"><i class="ti ti-shield-check"></i><span>{{ lang('admin.dashboard.security_log') }}</span></a>
+                        <a href="{{ core_url(adminPath ~ '/performance') }}" class="dash-quick-item"><i class="ti ti-rocket"></i><span>{{ lang('admin.dashboard.cache_performance') }}</span></a>
+                        <a href="{{ core_url(adminPath ~ '/roles') }}" class="dash-quick-item"><i class="ti ti-users-group"></i><span>{{ lang('admin.dashboard.groups_roles') }}</span></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-users me-2 text-muted"></i>{{ lang('admin.dashboard.recent_registered') }}</h3>
+                        <div class="card-actions">
+                            <a href="{{ core_url(adminPath ~ '/users') }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.dashboard.view_all') }}</a>
+                        </div>
+                    </div>
+                    {% if recentUsers is not empty %}
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ lang('admin.dashboard.table_user') }}</th>
+                                    <th>{{ lang('admin.dashboard.table_email') }}</th>
+                                    <th>{{ lang('admin.dashboard.table_role') }}</th>
+                                    <th>{{ lang('admin.dashboard.table_status') }}</th>
+                                    <th class="text-end">{{ lang('admin.dashboard.table_registered') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in recentUsers %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar avatar-sm me-2 rounded-circle" style="background-image: url({{ u.avatar_path ? asset_url(u.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ (avatar_display_name(u.username)|url_encode) ~ '&background=206bc4&color=fff&size=64' }})"></span>
+                                            <div class="fw-medium">{{ core_e(u.username ?? '—') }}</div>
+                                        </div>
+                                    </td>
+                                    <td class="text-muted">{{ core_e(u.email ?? '—') }}</td>
+                                    <td>
+                                        {% if u.role_name is not empty %}
+                                        <span class="badge" style="background:{{ u.role_color ?? '#e2e8f0' }};color:#1e293b">{{ core_e(u.role_name) }}</span>
+                                        {% else %}<span class="text-muted">—</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if u.is_banned %}<span class="badge bg-red-lt">{{ lang('admin.dashboard.status_banned') }}</span>
+                                        {% else %}<span class="badge bg-green-lt">{{ lang('admin.dashboard.status_active') }}</span>{% endif %}
+                                    </td>
+                                    <td class="text-end text-muted" style="white-space:nowrap">{{ (u.created_at ?? '')|date('d.m.Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-3">
+                            <i class="ti ti-mood-empty mb-2" style="font-size:24px;display:block"></i>
+                            {{ lang('admin.dashboard.no_users') }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% set totalDisk = (systemInfo.dbSize ?? 0) + (systemInfo.uploadSize ?? 0) %}
+
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-server me-2 text-muted"></i>{{ lang('admin.dashboard.system_info') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.sysinfo.php_version') }}</span><span class="dash-info-value">{{ systemInfo.php ?? constant('PHP_VERSION') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.sysinfo.database') }}</span><span class="dash-info-value">{{ systemInfo.db ?? 'MySQL' }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">MegaforBB</span><span class="dash-info-value">v{{ version_current|default('?') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label"><i class="ti ti-database me-1" style="font-size:14px"></i>{{ lang('admin.sysinfo.disk_usage') }}</span><span class="dash-info-value">{% apply spaceless %}{% if totalDisk >= 1073741824 %}{{ (totalDisk / 1073741824)|number_format(2, ',', '.') }} GB{% elseif totalDisk >= 1048576 %}{{ (totalDisk / 1048576)|number_format(1, ',', '.') }} MB{% elseif totalDisk >= 1024 %}{{ (totalDisk / 1024)|number_format(1, ',', '.') }} KB{% else %}{{ totalDisk }} B{% endif %}{% endapply %}</span></div>
+                        <div class="dash-info-row ps-3" style="font-size:12px"><span class="dash-info-label">{{ lang('admin.sysinfo.database') }}</span><span class="dash-info-value">{% if (systemInfo.dbSize ?? 0) >= 1048576 %}{{ ((systemInfo.dbSize ?? 0) / 1048576)|number_format(1, ',', '.') }} MB{% else %}{{ (systemInfo.dbSize ?? 0) }} B{% endif %}</span></div>
+                        <div class="dash-info-row ps-3" style="font-size:12px"><span class="dash-info-label">{{ lang('admin.sysinfo.uploads') }}</span><span class="dash-info-value">{% if (systemInfo.uploadSize ?? 0) >= 1048576 %}{{ ((systemInfo.uploadSize ?? 0) / 1048576)|number_format(1, ',', '.') }} MB{% else %}{{ (systemInfo.uploadSize ?? 0) }} B{% endif %}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.sysinfo.categories') }}</span><span class="dash-info-value">{{ (stats.totalCategories ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.sysinfo.forums') }}</span><span class="dash-info-value">{{ (stats.totalForums ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.sysinfo.articles') }}</span><span class="dash-info-value">{{ (stats.totalArticles ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.sysinfo.total_replies') }}</span><span class="dash-info-value">{{ (stats.totalReplies ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.sysinfo.online') }}</span><span class="dash-info-value"><span class="status-dot status-dot-animated bg-success me-1"></span>{{ lang('admin.sysinfo.online_users', {'count': stats.onlineUsers ?? 0}) }}</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-chart-bar me-2 text-muted"></i>{{ lang('admin.stats.title') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.stats.total_likes') }}</span><span class="dash-info-value">{{ (stats.totalLikes ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.stats.total_views') }}</span><span class="dash-info-value">{{ (stats.totalViews ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label"><i class="ti ti-thumb-up me-1" style="font-size:14px"></i>{{ lang('admin.stats.total_reputation') }}</span><span class="dash-info-value">{{ (stats.totalRep ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row ps-3" style="font-size:12px"><span class="dash-info-label"><span class="text-success">+</span> {{ lang('admin.stats.positive') }}</span><span class="dash-info-value text-success">{{ (stats.positiveRep ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row ps-3" style="font-size:12px"><span class="dash-info-label"><span class="text-danger">-</span> {{ lang('admin.stats.negative') }}</span><span class="dash-info-value text-danger">{{ (stats.negativeRep ?? 0)|number_format(0, ',', '.') }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.stats.banned_members') }}</span><span class="dash-info-value">{{ stats.bannedUsers ?? 0 }}</span></div>
+                        <div class="dash-info-row"><span class="dash-info-label">{{ lang('admin.stats.custom_fields') }}</span><span class="dash-info-value">{{ stats.totalCustomFields ?? 0 }}</span></div>
+                        {% if recentReps is not empty %}
+                        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--admin-border)">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="ti ti-arrow-right me-2 text-muted" style="font-size:16px"></i>
+                                <span class="fw-medium" style="font-size:13px">{{ lang('admin.stats.recent_reputation') }}</span>
+                            </div>
+                            {% for rep in recentReps %}
+                            <div class="d-flex align-items-center py-2{{ not loop.last ? ' border-bottom' : '' }}" style="font-size:12.5px; border-color: var(--admin-border) !important">
+                                <span class="badge {{ (rep.value ?? 0) > 0 ? 'bg-green-lt' : 'bg-red-lt' }} me-2" style="min-width:28px">{{ (rep.value ?? 0) > 0 ? '+1' : '-1' }}</span>
+                                <div class="flex-fill" style="min-width:0">
+                                    <span class="fw-medium">{{ core_e(rep.from_username ?? '?') }}</span>
+                                    <i class="ti ti-arrow-right mx-1" style="font-size:12px;color:var(--admin-muted)"></i>
+                                    <span class="fw-medium">{{ core_e(rep.to_username ?? '?') }}</span>
+                                    {% if rep.comment is not empty %}<div class="text-muted text-truncate" style="font-size:11.5px" title="{{ core_e(rep.comment) }}">{{ core_e(rep.comment) }}</div>{% endif %}
+                                </div>
+                                <span class="text-muted ms-2" style="white-space:nowrap;font-size:11px">{{ (rep.created_at ?? '')|date('d.m') }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--admin-border)">
+                            <div class="text-muted" style="font-size:12px"><i class="ti ti-info-circle me-1"></i>{{ lang('admin.dashboard.no_reputation') }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

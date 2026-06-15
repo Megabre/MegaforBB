@@ -1,0 +1,66 @@
+{# Yeni içerik modalı: içerik türü seçimi + forum listesi. "Yeni oluştur" butonu bu modalı açar. #}
+{% if user %}
+{% set modal_forums = modal_forums ?? [] %}
+{% set current_forum_slug = (newContentModalForum ?? null) ? (newContentModalForum.slug ?? '') : '' %}
+<div id="new-content-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="new-content-modal-title"{% if current_forum_slug != '' %} data-current-forum-slug="{{ current_forum_slug|e('html_attr') }}"{% endif %}>
+  <div class="new-content-modal-backdrop absolute inset-0" aria-hidden="true"></div>
+  <div class="new-content-modal-dialog relative bg-white rounded-xl shadow-xl max-w-lg w-full p-6" role="document">
+    <h2 id="new-content-modal-title" class="text-lg font-semibold text-[#1a252f] mb-2">{{ core__('common.new_create') }}</h2>
+    <p class="text-sm text-gray-600 mb-4">{{ core__('modal.new_content_intro') }}</p>
+
+    <div class="space-y-2 mb-4" role="radiogroup" aria-label="{{ core__('modal.new_content_type_label') }}">
+      <label class="new-content-type-option flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 has-[:checked]:border-[#1a252f] has-[:checked]:bg-[#1a252f]/5 transition-colors">
+        <input type="radio" name="new_content_type" value="topic" class="mt-1 text-[#1a252f] focus:ring-[#1a252f]">
+        <div>
+          <span class="font-medium text-[#1a252f]">{{ core__('modal.type_topic') }}</span>
+          <span class="block text-sm text-gray-500">{{ core__('modal.type_topic_desc') }}</span>
+        </div>
+      </label>
+      <label class="new-content-type-option flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 has-[:checked]:border-[#1a252f] has-[:checked]:bg-[#1a252f]/5 transition-colors">
+        <input type="radio" name="new_content_type" value="article" class="mt-1 text-[#1a252f] focus:ring-[#1a252f]">
+        <div>
+          <span class="font-medium text-[#1a252f]">{{ core__('modal.type_article') }}</span>
+          <span class="block text-sm text-gray-500">{{ core__('modal.type_article_desc') }}</span>
+        </div>
+      </label>
+      <label class="new-content-type-option flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 has-[:checked]:border-[#1a252f] has-[:checked]:bg-[#1a252f]/5 transition-colors">
+        <input type="radio" name="new_content_type" value="poll" class="mt-1 text-[#1a252f] focus:ring-[#1a252f]">
+        <div>
+          <span class="font-medium text-[#1a252f]">{{ core__('modal.type_poll') }}</span>
+          <span class="block text-sm text-gray-500">{{ core__('modal.type_poll_desc') }}</span>
+        </div>
+      </label>
+      <label class="new-content-type-option flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 has-[:checked]:border-[#1a252f] has-[:checked]:bg-[#1a252f]/5 transition-colors">
+        <input type="radio" name="new_content_type" value="question" class="mt-1 text-[#1a252f] focus:ring-[#1a252f]">
+        <div>
+          <span class="font-medium text-[#1a252f]">{{ core__('modal.type_question') }}</span>
+          <span class="block text-sm text-gray-500">{{ core__('modal.type_question_desc') }}</span>
+        </div>
+      </label>
+    </div>
+
+    <div id="new-content-modal-forum-wrap" class="mb-4">
+      <label for="new-content-modal-forum" class="block text-sm font-medium text-gray-700 mb-1">{{ core__('modal.forum_label') }}</label>
+      <select id="new-content-modal-forum" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1a252f]/20 focus:border-[#1a252f]">
+        <option value="">{{ core__('modal.forum_placeholder') }}</option>
+        {% for cat in modal_forums %}
+        <optgroup label="{{ core_e(cat.name) }}">
+          {% for f in cat.forums %}
+          <option value="{{ core_e(f.slug) }}">{{ core_e(f.name) }}</option>
+          {% endfor %}
+        </optgroup>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" class="new-content-modal-close px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">{{ core__('common.cancel') }}</button>
+      <button type="button" id="new-content-modal-submit" class="px-4 py-2 text-sm font-medium text-white bg-[#1a252f] rounded-lg hover:bg-[#172029]">{{ core__('modal.continue') }}</button>
+    </div>
+
+    <button type="button" class="new-content-modal-close absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100" aria-label="{{ core__('modal.close_aria') }}">
+      <i class="fa-solid fa-times"></i>
+    </button>
+  </div>
+</div>
+{% endif %}

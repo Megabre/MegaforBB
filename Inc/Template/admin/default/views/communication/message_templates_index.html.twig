@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+{% set templates = templates ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-file-text me-2"></i> {{ lang('admin.communication.message_templates_title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.communication.message_templates_desc') }}</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/communication/message-templates/create') }}" class="btn btn-primary"><i class="ti ti-plus me-1"></i> {{ lang('admin.communication.message_template_new') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if templates is empty %}
+        <div class="alert alert-info">{{ lang('admin.communication.template_not_found') }}</div>
+        {% else %}
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.communication.template_name') }}</th>
+                            <th>{{ lang('admin.communication.subject') }}</th>
+                            <th class="w-1">{{ lang('admin.common.action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in templates %}
+                        <tr>
+                            <td>{{ core_e(t.name) }}</td>
+                            <td class="text-muted">{{ core_e(t.subject) }}</td>
+                            <td>
+                                <div class="btn-list">
+                                    <a href="{{ core_url(adminPath ~ '/communication/message-templates/edit/' ~ t.id) }}" class="btn btn-sm btn-outline-primary">{{ lang('admin.common.edit') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/communication/message-templates/delete/' ~ t.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('{{ lang('admin.common.confirm_delete') }}');">
+                                        {{ core_csrf_field('admin_communication')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

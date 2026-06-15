@@ -1,0 +1,68 @@
+{# Üye istatistikleri grid #}
+{% set s = userStats ?? {} %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set idelistEnabled = idelistEnabled ?? (idelist_enabled ?? false) %}
+{% set portalEnabled = portal_enabled ?? false %}
+{% set isOwnProfile = isOwnProfile ?? false %}
+<div class="ips-stats-grid">
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.content_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('member.content_count') }}</span>
+  </div>
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.topic_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('profile.topics') }}</span>
+  </div>
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.forum_reply_count ?? s.post_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('profile.posts') }}</span>
+  </div>
+  {% if portalEnabled %}
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.article_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('article.articles') }}</span>
+  </div>
+  {% endif %}
+  {% if idelistEnabled %}
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.idea_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('member.contributions_ideas') }}</span>
+  </div>
+  {% endif %}
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.like_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('member.stats_likes_received') }}</span>
+  </div>
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.liked_posts_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('member.stats_liked_posts') }}</span>
+  </div>
+  {% if reputationEnabled %}
+  <div class="ips-stats-grid__item ips-stats-grid__item--rep">
+    <span class="ips-stats-grid__value"><span class="text-green-600">+{{ (s.reputation_positive ?? 0)|number_format(0) }}</span> <span class="text-red-500">/{{ (s.reputation_negative ?? 0)|number_format(0) }}</span></span>
+    <span class="ips-stats-grid__label">{{ core__('member.stats_rep_received') }}</span>
+  </div>
+  <div class="ips-stats-grid__item ips-stats-grid__item--rep">
+    <span class="ips-stats-grid__value"><span class="text-green-600">+{{ (s.rep_given_positive ?? 0)|number_format(0) }}</span> <span class="text-red-500">/{{ (s.rep_given_negative ?? 0)|number_format(0) }}</span></span>
+    <span class="ips-stats-grid__label">{{ core__('member.stats_rep_given') }}</span>
+  </div>
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.reputation_net ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('member.stats_rep_net') }}</span>
+  </div>
+  {% endif %}
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.reward_points ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('profile.reward_points_label') }}</span>
+  </div>
+  {% if isOwnProfile %}
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value">{{ (s.subscription_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-stats-grid__label">{{ core__('profile.subscriptions') }}</span>
+  </div>
+  {% endif %}
+  <div class="ips-stats-grid__item">
+    <span class="ips-stats-grid__value ips-stats-grid__value--sm">{{ s.joined_at ?? '—' }}</span>
+    <span class="ips-stats-grid__label">{{ core__('profile.joined') }}</span>
+  </div>
+</div>

@@ -1,0 +1,14 @@
+{# Ana profil sekmeleri #}
+{% set u = profileUser ?? null %}
+{% set activeTab = activeTab ?? 'activity' %}
+{% set isOwnProfile = isOwnProfile ?? false %}
+{% if u %}
+{% set baseUrl = core_url('member/' ~ member_url_path(u)) %}
+<nav class="ips-profile-tabs" aria-label="{{ core__('profile.section_activities') }}">
+  <a href="{{ baseUrl }}" class="ips-profile-tabs__item{% if activeTab == 'activity' %} is-active{% endif %}">{{ core__('member.tab_activity') }}</a>
+  <a href="{{ baseUrl }}/stats" class="ips-profile-tabs__item{% if activeTab == 'stats' %} is-active{% endif %}">{{ core__('member.tab_stats') }}</a>
+  {% if isOwnProfile %}
+  <a href="{{ baseUrl }}/subscriptions" class="ips-profile-tabs__item{% if activeTab == 'subscriptions' %} is-active{% endif %}">{{ core__('profile.subscriptions') }}</a>
+  {% endif %}
+</nav>
+{% endif %}

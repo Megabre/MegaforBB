@@ -1,0 +1,248 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set articles = articles ?? [] %}
+{% set page = page ?? 1 %}
+{% set totalPages = totalPages ?? 1 %}
+{% set total = total ?? 0 %}
+{% set viewMode = viewMode ?? 'list' %}
+{% set canCreate = canCreate ?? false %}
+{% set articleForumsSidebar = articleForumsSidebar ?? [] %}
+{% set currentForumSlug = currentForumSlug ?? null %}
+{% set articleSidebar = articleSidebar ?? { top_authors: [], stats: { total: 0, total_views: 0 }, most_read: [] } %}
+{% set viewGridUrl = 'articles?' ~ (currentForumSlug ? 'forum=' ~ (currentForumSlug|e('url')) ~ '&' : '') ~ 'view=grid' %}
+{% set viewListUrl = 'articles?' ~ (currentForumSlug ? 'forum=' ~ (currentForumSlug|e('url')) ~ '&' : '') ~ 'view=list' %}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+  <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+    {# Sol sidebar — forumlar (makale sayıları), istatistikler, yazarlar, en çok okunanlar #}
+    <aside class="lg:w-64 xl:w-72 shrink-0 space-y-6">
+      {# Forumlar + makale sayıları #}
+      {% if articleForumsSidebar is not empty %}
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-sm text-[#1a252f]">
+          <i class="fa-solid fa-comments mr-2 text-gray-500"></i>{{ core__('article.sidebar_forums') }}
+        </div>
+        <ul class="p-2">
+          <li>
+            <a href="{{ core_url(viewMode == 'grid' ? 'articles?view=grid' : 'articles?view=list') }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {{ currentForumSlug is null ? 'bg-[#1a252f] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+              <span>{{ core__('article.show_all') }}</span>
+              <span class="text-xs opacity-80">{{ articleSidebar.stats.total ?? 0 }}</span>
+            </a>
+          </li>
+          {% for f in articleForumsSidebar %}
+          <li>
+            <a href="{{ core_url('articles?forum=' ~ (f.slug|e('url')) ~ (viewMode == 'grid' ? '&view=grid' : '&view=list')) }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {{ currentForumSlug == f.slug ? 'bg-[#1a252f] text-white font-medium' : 'text-gray-700 hover:bg-gray-100' }}">
+              <span class="truncate">{{ core_e(f.name) }}</span>
+              <span class="text-xs opacity-80 shrink-0 ml-2">{{ f.article_count ?? 0 }}</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {# Makale istatistikleri #}
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-sm text-[#1a252f]">
+          <i class="fa-solid fa-chart-simple mr-2 text-gray-500"></i>{{ core__('article.sidebar_stats') }}
+        </div>
+        <div class="p-4 space-y-3 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ core__('article.sidebar_total_articles') }}</span>
+            <span class="font-semibold text-[#1a252f]">{{ articleSidebar.stats.total ?? 0 }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{{ core__('article.sidebar_total_views') }}</span>
+            <span class="font-semibold text-[#1a252f]">{{ (articleSidebar.stats.total_views ?? 0)|number_format(0, '', ' ') }}</span>
+          </div>
+        </div>
+      </div>
+      {# En çok makale yazan yazarlar #}
+      {% if (articleSidebar.top_authors ?? []) is not empty %}
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-sm text-[#1a252f]">
+          <i class="fa-solid fa-pen-fancy mr-2 text-gray-500"></i>{{ core__('article.sidebar_top_authors') }}
+        </div>
+        <ul class="p-2">
+          {% for author in articleSidebar.top_authors %}
+          <li>
+            <a href="{{ core_url('member/' ~ (author.username|e('url'))) }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
+              <span class="truncate">{{ core_e(author.username) }}</span>
+              <span class="text-xs text-gray-500 shrink-0 ml-2">{{ author.article_count }}</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {# En çok okunan makaleler #}
+      {% if (articleSidebar.most_read ?? []) is not empty %}
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-sm text-[#1a252f]">
+          <i class="fa-solid fa-fire mr-2 text-gray-500"></i>{{ core__('article.sidebar_most_read') }}
+        </div>
+        <ul class="p-2">
+          {% for t in articleSidebar.most_read %}
+          <li>
+            <a href="{{ core_url(article_url_path_by_id(t.id)) }}" class="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 line-clamp-2" title="{{ core_e(t.title) }}">{{ core_e(t.title) }}</a>
+            <span class="block px-3 pb-2 text-xs text-gray-400"><i class="fa-regular fa-eye mr-1"></i>{{ (t.view_count ?? 0)|number_format(0, '', ' ') }} {{ core__('article.views') }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </aside>
+
+    {# Ana içerik #}
+    <main class="flex-1 min-w-0">
+  {# Başlık + liste/grid toggle + Makale Ekle #}
+  <header class="mb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-[#1a252f] tracking-tight">{{ core__('article.articles') }}</h1>
+        {% if currentForumSlug %}
+        <p class="mt-1 text-sm text-gray-500">
+          <a href="{{ core_url(viewMode == 'grid' ? 'articles?view=grid' : 'articles?view=list') }}" class="text-[#206bc4] hover:underline">{{ core__('article.show_all') }}</a>
+        </p>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="{{ core_url(viewMode == 'list' ? viewGridUrl : viewListUrl) }}" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium" title="{{ viewMode == 'grid' ? core__('article.view_list') : core__('article.view_grid') }}">
+          <i class="fa-solid fa-{{ viewMode == 'grid' ? 'list' : 'th-large' }}"></i>
+          <span>{{ viewMode == 'grid' ? core__('article.view_list') : core__('article.view_grid') }}</span>
+        </a>
+        {% if canCreate %}
+        <a href="{{ core_url('articles/new') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#1a252f] hover:bg-[#172029] rounded-lg"><i class="fa-solid fa-plus"></i>{{ core__('article.add_article') }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="{{ viewMode == 'grid' ? 'p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'divide-y divide-gray-100' }}">
+      {% if articles is empty %}
+        <div class="p-8 text-center text-gray-500 col-span-full">{{ core__('article.no_articles') }}</div>
+      {% else %}
+        {% for a in articles %}
+        {% set articleUrl = core_url(article_url_path_by_id(a.id ?? 0)) %}
+        {% set coverImg = a.cover_image|default('') %}
+        {% set coverUrl = null %}
+        {% if coverImg != '' %}
+          {% if coverImg starts with 'http' or coverImg starts with '/' %}
+            {% set coverUrl = coverImg %}
+          {% else %}
+            {% set coverUrl = asset_url(coverImg) %}
+          {% endif %}
+        {% endif %}
+        {% set avatarUrl = (a.author_avatar_path|default('')) != '' ? asset_url(a.author_avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(a.username|default(''))|url_encode) ~ '&size=48') %}
+        {% if viewMode == 'grid' %}
+        <a href="{{ articleUrl }}" class="block border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white flex flex-col h-full">
+          <div class="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden shrink-0 relative">
+            {% if coverUrl %}
+            <img src="{{ core_e(coverUrl) }}" alt="" class="w-full h-full object-cover">
+            {% else %}
+            <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200"></div>
+            <img src="{{ core_e(avatarUrl) }}" alt="" class="w-16 h-16 rounded-full object-cover opacity-60 relative z-10 shadow-sm">
+            {% endif %}
+          </div>
+          <div class="p-4 flex flex-col flex-1">
+            <h2 class="font-bold text-[#1a252f] hover:text-blue-600 line-clamp-2 leading-snug mb-2">{{ core_e(a.title|default('')) }}</h2>
+            <div class="mt-auto pt-3 border-t border-gray-100">
+              <div class="flex items-center justify-between text-xs text-gray-500 font-medium">
+                <div class="flex items-center gap-2">
+                  <span class="text-[#1a252f] font-bold">{{ core_e(a.username|default('')) }}</span>
+                  <span class="opacity-50">•</span>
+                  <span>{{ (a.created_at|default('')) != '' ? (a.created_at|date('d.m.Y')) : '' }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="flex items-center gap-1" title="{{ core__('article.comments')|e('html_attr') }}"><i class="fa-regular fa-comment opacity-70"></i> {{ (a.reply_count ?? 0) }}</span>
+                  <span class="flex items-center gap-1" title="{{ core__('article.views_title')|default(core__('article.views'))|e('html_attr') }}"><i class="fa-regular fa-eye opacity-70"></i> {{ (a.view_count ?? 0)|number_format(0) }}</span>
+                </div>
+              </div>
+              <div class="mt-2 text-amber-400 text-xs article-list-rating" data-topic-id="{{ a.id|default('0') }}">
+                {# JS tarafından doldurulacak #}
+              </div>
+            </div>
+          </div>
+        </a>
+        {% else %}
+        <a href="{{ articleUrl }}" class="flex flex-col sm:flex-row gap-4 p-4 hover:bg-gray-50 transition-colors">
+          <div class="flex-shrink-0 w-full h-40 sm:w-32 sm:h-24 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center relative">
+            {% if coverUrl %}
+            <img src="{{ core_e(coverUrl) }}" alt="" class="w-full h-full object-cover">
+            {% else %}
+            <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200"></div>
+            <img src="{{ core_e(avatarUrl) }}" alt="" class="w-12 h-12 rounded-full object-cover relative z-10 shadow-sm opacity-80">
+            {% endif %}
+          </div>
+          <div class="flex-1 min-w-0 flex flex-col justify-center">
+            <h2 class="text-base sm:text-lg font-bold text-[#1a252f] hover:text-blue-600 line-clamp-2 mb-2 sm:mb-1">{{ core_e(a.title|default('')) }}</h2>
+            
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 font-medium">
+              <div class="flex items-center gap-2">
+                <span class="text-[#1a252f] font-bold">{{ core_e(a.username|default('')) }}</span>
+                <span class="opacity-50">•</span>
+                <span><i class="fa-regular fa-calendar-days opacity-70 mr-1.5"></i>{{ (a.created_at|default('')) != '' ? (a.created_at|date('d.m.Y')) : '' }}</span>
+              </div>
+              
+              <div class="hidden sm:block w-px h-3 bg-gray-300"></div>
+              
+              <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1.5" title="{{ core__('article.comments')|e('html_attr') }}"><i class="fa-regular fa-comment opacity-70"></i> {{ (a.reply_count ?? 0) }}</span>
+                <span class="flex items-center gap-1.5" title="{{ core__('article.views_title')|default(core__('article.views'))|e('html_attr') }}"><i class="fa-regular fa-eye opacity-70"></i> {{ (a.view_count ?? 0)|number_format(0) }}</span>
+              </div>
+              
+              <div class="hidden sm:block w-px h-3 bg-gray-300"></div>
+              
+              <div class="text-amber-400 text-xs flex items-center article-list-rating" data-topic-id="{{ a.id|default('0') }}">
+                {# JS tarafından doldurulacak #}
+              </div>
+            </div>
+          </div>
+        </a>
+        {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
+    {% if totalPages > 1 %}
+    {% set baseQuery = (currentForumSlug ? 'forum=' ~ (currentForumSlug|e('url')) ~ '&' : '') ~ (viewMode == 'grid' ? 'view=grid&' : 'view=list&') %}
+    <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between text-sm">
+      <span class="text-gray-600">{{ core__('article.total_articles')|replace({':count': total}) }}</span>
+      <nav class="flex gap-2">
+        {% if page > 1 %}<a href="{{ core_url('articles?' ~ baseQuery ~ 'page=' ~ (page - 1)) }}" class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">{{ core__('article.prev_page') }}</a>{% endif %}
+        <span class="px-3 py-1 text-gray-700">{{ page }} / {{ totalPages }}</span>
+        {% if page < totalPages %}<a href="{{ core_url('articles?' ~ baseQuery ~ 'page=' ~ (page + 1)) }}" class="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200">{{ core__('article.next_page') }}</a>{% endif %}
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+  </div>
+  </div>
+  </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const ratingContainers = document.querySelectorAll('.article-list-rating');
+  ratingContainers.forEach(container => {
+    const topicId = container.dataset.topicId;
+    if(!topicId || topicId === '0') return;
+    const storageKey = 'megafor_article_rating_' + topicId;
+    const rating = parseInt(localStorage.getItem(storageKey));
+    
+    if (rating && rating > 0 && rating <= 5) {
+      let starsHtml = '';
+      for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+          starsHtml += '<i class="fa-solid fa-star"></i>';
+        } else {
+          starsHtml += '<i class="fa-regular fa-star opacity-40"></i>';
+        }
+      }
+      container.innerHTML = starsHtml;
+    }
+  });
+});
+</script>
+{% endblock %}

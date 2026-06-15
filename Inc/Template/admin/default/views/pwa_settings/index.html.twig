@@ -1,0 +1,194 @@
+{% extends 'base.html.twig' %}
+{% set s = settings ?? {} %}
+{% set adminPath = adminPath ?? 'admin' %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-lg">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.pwa.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.pwa.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-lg">
+        {% if flashPwaOk %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            {{ flashPwaOk|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {# PWA durumu ve test #}
+        <div class="card mb-4 border-primary">
+            <div class="card-header bg-primary bg-opacity-10">
+                <h3 class="card-title mb-0"><i class="ti ti-device-mobile me-2"></i>{{ lang('admin.pwa.status_and_test') }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                    <span class="fw-semibold">{{ lang('admin.pwa.status') }}:</span>
+                    {% if s.pwa_enabled %}
+                    <span class="badge bg-success fs-6">{{ lang('admin.pwa.status_active') }}</span>
+                    <span class="text-muted small">{{ lang('admin.pwa.status_active_hint') }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary fs-6">{{ lang('admin.pwa.status_inactive') }}</span>
+                    <span class="text-muted small">{{ lang('admin.pwa.status_inactive_hint') }}</span>
+                    {% endif %}
+                </div>
+                <p class="mb-2 small text-muted">{{ lang('admin.pwa.test_manifest_intro') }}</p>
+                <p class="mb-2">
+                    <a href="{{ core_url('manifest.json') }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                        <i class="ti ti-link me-1"></i>{{ lang('admin.pwa.open_manifest') }}
+                    </a>
+                    {% if s.pwa_enabled %}
+                    <span class="text-muted small ms-2">{{ lang('admin.pwa.open_manifest_hint') }}</span>
+                    {% else %}
+                    <span class="text-muted small ms-2">{{ lang('admin.pwa.open_manifest_hint_off') }}</span>
+                    {% endif %}
+                </p>
+                <hr class="my-3">
+                <p class="mb-1 fw-semibold small">{{ lang('admin.pwa.test_chrome_title') }}</p>
+                <ol class="small text-muted mb-0 ps-3">
+                    <li>{{ lang('admin.pwa.test_chrome_1') }}</li>
+                    <li>{{ lang('admin.pwa.test_chrome_2') }}</li>
+                    <li>{{ lang('admin.pwa.test_chrome_3') }}</li>
+                </ol>
+            </div>
+        </div>
+
+        <form action="{{ core_url(adminPath ~ '/pwa-settings/update') }}" method="post">
+            {{ core_csrf_field('admin_pwa_settings')|raw }}
+
+            {# Gereksinimler #}
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">{{ lang('admin.pwa.requirements') }}</h3></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pwa.https_status') }}</label>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if s.https_status %}
+                            <span class="badge bg-success">{{ lang('admin.pwa.yes') }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ lang('admin.pwa.no') }}</span>
+                            {% endif %}
+                            <span class="text-muted small">{{ lang('admin.pwa.https_hint') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# PWA etkin #}
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">{{ lang('admin.pwa.options') }}</h3></div>
+                <div class="card-body">
+                    <input type="hidden" name="pwa_enabled" value="0">
+                    <label class="form-check form-switch mb-3">
+                        <input type="checkbox" name="pwa_enabled" value="1" class="form-check-input" {{ s.pwa_enabled ? 'checked' : '' }}>
+                        <span class="form-check-label">{{ lang('admin.pwa.enable_pwa') }}</span>
+                    </label>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pwa.forum_title') }}</label>
+                        <input type="text" name="pwa_forum_title" class="form-control" value="{{ (s.pwa_forum_title ?? '')|e }}" placeholder="{{ lang('admin.pwa.forum_title_placeholder') }}">
+                        <div class="form-text">{{ lang('admin.pwa.forum_title_hint') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pwa.forum_short_title') }}</label>
+                        <input type="text" name="pwa_forum_short_title" class="form-control" value="{{ (s.pwa_forum_short_title ?? '')|e }}" maxlength="12" placeholder="{{ lang('admin.pwa.forum_short_title_placeholder') }}">
+                        <div class="form-text">{{ lang('admin.pwa.forum_short_title_hint') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pwa.meta_description') }}</label>
+                        <textarea name="pwa_meta_description" class="form-control" rows="2" maxlength="160" placeholder="{{ lang('admin.pwa.meta_description_placeholder') }}">{{ (s.pwa_meta_description ?? '')|e }}</textarea>
+                        <div class="form-text">{{ lang('admin.pwa.meta_description_hint') }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        {% if not s.push_available %}
+                        <div class="alert alert-warning py-2 mb-2">
+                            {{ lang('admin.pwa.push_requirements') }}
+                            {% if not s.https_status %}{{ lang('admin.pwa.push_need_https') }}{% endif %}
+                            {% if not s.gmp_loaded %}{{ lang('admin.pwa.push_need_gmp') }}{% endif %}
+                        </div>
+                        {% endif %}
+                        <input type="hidden" name="pwa_push_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="pwa_push_enabled" value="1" class="form-check-input" {{ (s.pwa_push_enabled and s.push_available) ? 'checked' : '' }} {{ s.push_available ? '' : 'disabled' }}>
+                            <span class="form-check-label">{{ lang('admin.pwa.push_enable') }}</span>
+                        </label>
+                        <div class="form-text">{{ lang('admin.pwa.push_hint') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {# Dil ayarları #}
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">{{ lang('admin.pwa.language_settings') }}</h3></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.pwa.locale') }}</label>
+                            <input type="text" name="pwa_locale" class="form-control" value="{{ (s.pwa_locale ?? 'tr')|e }}" placeholder="tr">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.pwa.text_direction') }}</label>
+                            <select name="pwa_direction" class="form-select">
+                                <option value="ltr" {{ (s.pwa_direction ?? 'ltr') == 'ltr' ? 'selected' : '' }}>{{ lang('admin.pwa.direction_ltr') }}</option>
+                                <option value="rtl" {{ (s.pwa_direction ?? '') == 'rtl' ? 'selected' : '' }}>{{ lang('admin.pwa.direction_rtl') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Tema özellikleri #}
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">{{ lang('admin.pwa.theme_features') }}</h3></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.pwa.theme_color') }}</label>
+                            <div class="input-group">
+                                <input type="color" name="pwa_theme_color" class="form-control form-control-color w-auto" value="{{ (s.pwa_theme_color ?? '#1a252f')|e }}" title="{{ lang('admin.pwa.theme_color') }}">
+                                <input type="text" class="form-control font-monospace" value="{{ (s.pwa_theme_color ?? '#1a252f')|e }}" readonly style="max-width: 7rem;">
+                            </div>
+                            <div class="form-text">{{ lang('admin.pwa.theme_color_hint') }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.pwa.background_color') }}</label>
+                            <div class="input-group">
+                                <input type="color" name="pwa_background_color" class="form-control form-control-color w-auto" value="{{ (s.pwa_background_color ?? '#ececec')|e }}" title="{{ lang('admin.pwa.background_color') }}">
+                                <input type="text" class="form-control font-monospace" value="{{ (s.pwa_background_color ?? '#ececec')|e }}" readonly style="max-width: 7rem;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pwa.icon_192') }}</label>
+                        <input type="text" name="pwa_icon_192" class="form-control font-monospace" value="{{ (s.pwa_icon_192 ?? '')|e }}" placeholder="/uploads/pwa/icon-192.png">
+                        <div class="form-text">{{ lang('admin.pwa.icon_192_hint') }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pwa.icon_512') }}</label>
+                        <input type="text" name="pwa_icon_512" class="form-control font-monospace" value="{{ (s.pwa_icon_512 ?? '')|e }}" placeholder="/uploads/pwa/icon-512.png">
+                        <div class="form-text">{{ lang('admin.pwa.icon_512_hint') }}</div>
+                    </div>
+                    <input type="hidden" name="pwa_icons_maskable" value="0">
+                    <label class="form-check form-switch">
+                        <input type="checkbox" name="pwa_icons_maskable" value="1" class="form-check-input" {{ s.pwa_icons_maskable ? 'checked' : '' }}>
+                        <span class="form-check-label">{{ lang('admin.pwa.icons_maskable') }}</span>
+                    </label>
+                    <div class="form-text">{{ lang('admin.pwa.icons_maskable_hint') }}</div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                <a href="{{ core_url(adminPath) }}" class="btn btn-outline-secondary">{{ lang('admin.common.cancel') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

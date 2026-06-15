@@ -1,0 +1,390 @@
+{% extends 'base.html.twig' %}
+{% set s = settings ?? {} %}
+{% set activeTab = activeTab ?? 'cache' %}
+{% set currentCacheDriver = currentCacheDriver ?? 'file' %}
+{% set opcache = opcacheStatus ?? { 'enabled': false, 'message': '' } %}
+{% set cacheSummary = cacheSummary ?? { 'twig_cached_files': 0, 'app_cache_files': 0 } %}
+{% set cleared = cleared ?? false %}
+{% set pageTitles = {
+    'cache':  { 'title': lang('admin.performance.tab_cache_title'), 'desc': lang('admin.performance.tab_cache_desc'), 'icon': 'ti-database' },
+    'varnish': { 'title': lang('admin.performance.tab_varnish_title'), 'desc': lang('admin.performance.tab_varnish_desc'), 'icon': 'ti-rocket' },
+    'minify': { 'title': lang('admin.performance.tab_minify_title'), 'desc': lang('admin.performance.tab_minify_desc'), 'icon': 'ti-file-zip' },
+    'assets': { 'title': lang('admin.performance.tab_assets_title'), 'desc': lang('admin.performance.tab_assets_desc'), 'icon': 'ti-photo' }
+} %}
+{% set page = pageTitles[activeTab] ?? pageTitles['cache'] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col-auto">
+                <span class="page-pretitle-icon"><i class="ti {{ page.icon }} fs-2 text-primary"></i></span>
+            </div>
+            <div class="col">
+                <h2 class="page-title">{{ page.title }}</h2>
+                <div class="text-muted mt-1">{{ page.desc }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if cleared %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            {{ lang('admin.performance.cache_cleared') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if activeTab == 'cache' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-chart-dots me-2"></i>{{ lang('admin.performance.cache_status') }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="row row-cards">
+                    <div class="col-sm-6 col-lg-4">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <span class="bg-{{ opcache.enabled ? 'success' : 'secondary' }} text-white avatar me-3">
+                                        <i class="ti ti-{{ opcache.enabled ? 'bolt' : 'bolt-off' }}"></i>
+                                    </span>
+                                    <div>
+                                        <div class="font-weight-medium">OPcache (PHP bytecode)</div>
+                                        {% if opcache.enabled %}
+                                        {% set used = (opcache.used_memory ?? 0)|floatval %}
+                                        {% set free = (opcache.free_memory ?? 0)|floatval %}
+                                        {% set total = used + free %}
+                                        <div class="text-secondary small">{{ opcache.num_cached_scripts ?? 0 }} script · Hit: %{{ opcache.hit_rate ?? 0 }} · Bellek: {{ used }} / {{ total }} MB</div>
+                                        {% else %}
+                                        <div class="text-secondary small">{{ (opcache.message ?? lang('admin.performance.opcache_off'))|e }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-4">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <span class="bg-primary text-white avatar me-3"><i class="ti ti-file-code"></i></span>
+                                    <div>
+                                        <div class="font-weight-medium">{{ lang('admin.performance.twig_cache') }}</div>
+                                        <div class="text-secondary small">storage/views · {{ cacheSummary.twig_cached_files ?? 0 }} {{ lang('admin.performance.compiled_files') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-4">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <span class="bg-info text-white avatar me-3"><i class="ti ti-database"></i></span>
+                                    <div>
+                                        <div class="font-weight-medium">{{ lang('admin.performance.app_cache') }}</div>
+                                        <div class="text-secondary small">{{ lang('admin.performance.driver_label') }} {{ currentCacheDriver|e }}{{ currentCacheDriver == 'file' ? ' · ' ~ (cacheSummary.app_cache_files ?? 0) ~ ' ' ~ lang('admin.performance.files') : '' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if not opcache.enabled %}
+                <div class="alert alert-warning mt-3 mb-0">
+                    <strong>{{ lang('admin.performance.opcache_warn') }}</strong> {{ lang('admin.performance.opcache_hint') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-database me-2"></i>{{ lang('admin.performance.cache_driver_title') }}</h3>
+            </div>
+            <form action="{{ core_url(adminPath ~ '/performance/update') }}" method="post" id="form-cache">
+                {{ core_csrf_field('admin_performance')|raw }}
+                <input type="hidden" name="tab" value="cache">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.performance.cache_driver') }}</label>
+                        <select name="cache_driver" class="form-select" id="cache_driver">
+                            <option value="file" {{ (s.cache_driver ?? '') == 'file' ? 'selected' : '' }}>{{ lang('admin.performance.driver_file') }}</option>
+                            <option value="redis" {{ (s.cache_driver ?? '') == 'redis' ? 'selected' : '' }}>Redis</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-secondary">{{ lang('admin.performance.current_driver') }} {{ currentCacheDriver|e }}</span>
+                    </div>
+                    <div class="border rounded p-3 mb-3" id="redis-fields">
+                        <h4 class="mb-3">{{ lang('admin.performance.redis_title') }}</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Host</label>
+                                <input type="text" name="redis_host" id="redis_host" class="form-control" value="{{ s.redis_host ?? '127.0.0.1' }}" placeholder="127.0.0.1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Port</label>
+                                <input type="number" name="redis_port" id="redis_port" class="form-control" value="{{ s.redis_port ?? '6379' }}" placeholder="6379">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ lang('admin.performance.redis_user') }}</label>
+                                <input type="text" name="redis_username" id="redis_username" class="form-control" value="{{ s.redis_username ?? '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ lang('admin.performance.redis_pass') }}</label>
+                                <input type="password" name="redis_password" id="redis_password" class="form-control" value="{{ s.redis_password ?? '' }}" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-3 pt-3 border-top">
+                            <label class="form-label">{{ lang('admin.performance.cache_key_prefix') }}</label>
+                            <input type="text" name="cache_key_prefix" id="cache_key_prefix" class="form-control" value="{{ s.cache_key_prefix ?? '' }}" placeholder="site1" maxlength="64">
+                            <small class="form-text text-muted">{{ lang('admin.performance.cache_key_prefix_hint') }}</small>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary" id="redis-test-btn">{{ lang('admin.performance.redis_test') }}</button>
+                        <span id="redis-test-result" class="ms-2"></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                </div>
+            </form>
+            <div class="card-footer border-top">
+                <form action="{{ core_url(adminPath ~ '/performance/clear-cache') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.performance.clear_confirm') }}');">
+                    {{ core_csrf_field('admin_clear_cache')|raw }}
+                    <button type="submit" class="btn btn-ghost-danger">{{ lang('admin.performance.clear_btn') }}</button>
+                </form>
+                <small class="text-muted ms-2">{{ lang('admin.performance.clear_hint') }}</small>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if activeTab == 'varnish' %}
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger-lt">
+                <h3 class="card-title text-danger"><i class="ti ti-rocket me-2"></i>{{ lang('admin.performance.varnish_card_title') }}</h3>
+            </div>
+            <form action="{{ core_url(adminPath ~ '/performance/update') }}" method="post">
+                {{ core_csrf_field('admin_performance')|raw }}
+                <input type="hidden" name="tab" value="varnish">
+                <div class="card-body">
+                    <div class="alert alert-danger mb-4">
+                        <i class="ti ti-alert-triangle me-2"></i><strong>{{ lang('admin.performance.varnish_critical_title') }}</strong> {{ lang('admin.performance.varnish_critical_text') }}
+                    </div>
+
+                    <div class="mb-4">
+                        <input type="hidden" name="varnish_enabled" value="0">
+                        <label class="form-check form-switch form-switch-lg">
+                            <input type="checkbox" name="varnish_enabled" value="1" class="form-check-input" {{ s.varnish_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label fw-bold">{{ lang('admin.performance.varnish_enabled_label') }}</span>
+                        </label>
+                        <small class="form-hint mt-2">{{ lang('admin.performance.varnish_enabled_hint') }}</small>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.performance.varnish_servers_label') }}</label>
+                            <input type="text" name="varnish_servers" class="form-control" value="{{ (s.varnish_servers ?? '127.0.0.1:6081')|e }}" placeholder="127.0.0.1:6081">
+                            <small class="form-hint mt-1">{{ lang('admin.performance.varnish_servers_hint') }}</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.performance.varnish_secret_label') }}</label>
+                            <input type="text" name="varnish_secret" class="form-control" value="{{ (s.varnish_secret ?? '')|e }}" placeholder="X-Ban-Token">
+                            <small class="form-hint mt-1">{{ lang('admin.performance.varnish_secret_hint') }}</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <button type="submit" class="btn btn-danger"><i class="ti ti-device-floppy me-1"></i>{{ lang('admin.common.save') }}</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if activeTab == 'minify' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-file-zip me-2"></i>{{ lang('admin.performance.minify_title') }}</h3>
+            </div>
+            <form action="{{ core_url(adminPath ~ '/performance/update') }}" method="post">
+                {{ core_csrf_field('admin_performance')|raw }}
+                <input type="hidden" name="tab" value="minify">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Minify</label>
+                        <div class="form-check">
+                            <input type="hidden" name="minify_html" value="0">
+                            <input type="checkbox" name="minify_html" value="1" class="form-check-input" id="minify_html" {{ s.minify_html ? 'checked' : '' }}>
+                            <label class="form-check-label" for="minify_html">{{ lang('admin.performance.minify_html') }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="hidden" name="minify_css" value="0">
+                            <input type="checkbox" name="minify_css" value="1" class="form-check-input" id="minify_css" {{ s.minify_css ? 'checked' : '' }}>
+                            <label class="form-check-label" for="minify_css">{{ lang('admin.performance.minify_css') }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="hidden" name="minify_js" value="0">
+                            <input type="checkbox" name="minify_js" value="1" class="form-check-input" id="minify_js" {{ s.minify_js ? 'checked' : '' }}>
+                            <label class="form-check-label" for="minify_js">{{ lang('admin.performance.minify_js') }}</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.performance.cdn_url') }}</label>
+                        <input type="url" name="cdn_url" class="form-control" value="{{ s.cdn_url ?? '' }}" placeholder="https://cdn.example.com">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                </div>
+            </form>
+
+            <div class="card mb-4 mt-4">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="ti ti-file-output me-2"></i>{{ lang('admin.performance.output_scripts_title') }}</h3>
+                </div>
+                <form action="{{ core_url(adminPath ~ '/performance/update') }}" method="post">
+                    {{ core_csrf_field('admin_performance')|raw }}
+                    <input type="hidden" name="tab" value="minify">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="hidden" name="gzip_enabled" value="0">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="gzip_enabled" value="1" class="form-check-input" id="gzip_enabled" {{ s.gzip_enabled|default(false) ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.performance.gzip_enabled') }}</span>
+                            </label>
+                            <small class="form-hint text-muted d-block mt-1">{{ lang('admin.performance.gzip_hint') }}</small>
+                        </div>
+                        <div class="mb-3">
+                            <input type="hidden" name="consolidate_assets" value="0">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="consolidate_assets" value="1" class="form-check-input" id="consolidate_assets" {{ s.consolidate_assets|default(false) ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.performance.consolidate_assets') }}</span>
+                            </label>
+                            <small class="form-hint text-muted d-block mt-1">{{ lang('admin.performance.consolidate_hint') }}</small>
+                        </div>
+                        <div class="mb-3">
+                            <input type="hidden" name="minify_consolidated" value="0">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="minify_consolidated" value="1" class="form-check-input" id="minify_consolidated" {{ s.minify_consolidated|default(false) ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.performance.minify_consolidated') }}</span>
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ lang('admin.performance.jquery_cdn_url') }}</label>
+                            <input type="url" name="jquery_cdn_url" class="form-control" value="{{ s.jquery_cdn_url ?? '' }}" placeholder="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js">
+                            <small class="form-hint text-muted">{{ lang('admin.performance.jquery_cdn_hint') }}</small>
+                        </div>
+                        <div class="mb-3">
+                            <input type="hidden" name="jquery_enabled" value="0">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="jquery_enabled" value="1" class="form-check-input" id="jquery_enabled" {{ s.jquery_enabled|default(true) ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.performance.jquery_enabled') }}</span>
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <input type="hidden" name="ajax_enabled" value="0">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="ajax_enabled" value="1" class="form-check-input" id="ajax_enabled" {{ s.ajax_enabled|default(true) ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.performance.ajax_enabled') }}</span>
+                            </label>
+                            <small class="form-hint text-muted d-block mt-1">{{ lang('admin.performance.ajax_hint') }}</small>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+
+        {% if activeTab == 'assets' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-photo me-2"></i>{{ lang('admin.performance.assets_title') }}</h3>
+            </div>
+            <form action="{{ core_url(adminPath ~ '/performance/update') }}" method="post">
+                {{ core_csrf_field('admin_performance')|raw }}
+                <input type="hidden" name="tab" value="assets">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="hidden" name="lazy_load_images" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="lazy_load_images" value="1" class="form-check-input" id="lazy_load_images" {{ s.lazy_load_images ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.performance.lazy_load') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="image_optimize" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="image_optimize" value="1" class="form-check-input" id="image_optimize" {{ s.image_optimize ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.performance.image_optimize') }}</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if activeTab == 'cache' %}
+<script>
+(function() {
+    var driver = document.getElementById('cache_driver');
+    var redisFields = document.getElementById('redis-fields');
+    function toggleRedis() {
+        redisFields.style.display = driver && driver.value === 'redis' ? 'block' : 'none';
+    }
+    if (driver) driver.addEventListener('change', toggleRedis);
+    toggleRedis();
+
+    var redisTestBtn = document.getElementById('redis-test-btn');
+    if (redisTestBtn) {
+        redisTestBtn.addEventListener('click', function() {
+            var resultEl = document.getElementById('redis-test-result');
+            resultEl.textContent = 'Test ediliyor...';
+            resultEl.className = 'ms-2';
+            var host = (document.getElementById('redis_host') || {}).value || '127.0.0.1';
+            var port = (document.getElementById('redis_port') || {}).value || '6379';
+            var username = (document.getElementById('redis_username') || {}).value || '';
+            var password = (document.getElementById('redis_password') || {}).value || '';
+            var formData = new FormData();
+            formData.append('redis_host', host);
+            formData.append('redis_port', port);
+            formData.append('redis_username', username);
+            formData.append('redis_password', password);
+            var tokenInput = document.querySelector('#form-cache input[name="_token"]');
+            if (tokenInput) formData.append('_token', tokenInput.value);
+            var redisTestUrl = {{ core_url(adminPath ~ '/performance/redis-test')|json_encode|raw }};
+            fetch(redisTestUrl, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                if (data.ok) {
+                    resultEl.textContent = data.message || {{ lang('admin.performance.js_success')|json_encode|raw }};
+                    resultEl.classList.add('text-success');
+                } else {
+                    resultEl.textContent = data.message || {{ lang('admin.performance.js_failed')|json_encode|raw }};
+                    resultEl.classList.add('text-danger');
+                }
+            }).catch(function() {
+                resultEl.textContent = {{ lang('admin.performance.js_request_error')|json_encode|raw }};
+                resultEl.classList.add('text-danger');
+            });
+        });
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

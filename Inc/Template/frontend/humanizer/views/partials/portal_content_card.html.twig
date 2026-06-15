@@ -1,0 +1,23 @@
+{# Tek kart – portal_content_block içinde kullanılır #}
+{% set itemType = item.item_type ?? 'topic' %}
+{% set itemUrl = itemType == 'article' ? core_url(article_url_path_by_id(item.id ?? 0)) : topic_url(item) %}
+{% set rawSnippet = (item.first_body_html|default(''))|striptags %}
+{% set snippet = rawSnippet|length > 120 ? (rawSnippet|slice(0, 120) ~ '…') : rawSnippet %}
+<article class="mfbb-card mfbb-card--text mfbb-card--{{ layout }}">
+  <div class="mfbb-card__content">
+    <div class="mfbb-card__meta">
+      <span class="mfbb-card__type" style="background-color: {{ catColor|e('css') }}">{{ itemType == 'article' ? core__('portal.type_article') : core__('portal.type_topic') }}</span>
+      <time class="mfbb-card__date">{{ core_e((item.created_at|default(''))|date('d M Y')) }}</time>
+    </div>
+    <h3 class="mfbb-card__title">
+      <a href="{{ itemUrl }}" style="--card-accent: {{ catColor|e('css') }}">{{ core_e(item.title|default('')) }}</a>
+    </h3>
+    {% if snippet %}
+    <p class="mfbb-card__snippet">{{ core_e(snippet) }}</p>
+    {% endif %}
+    <div class="mfbb-card__footer">
+      <span class="mfbb-card__author"><i class="fa-solid fa-user" aria-hidden="true"></i> {{ core_e(item.username|default('Anonim')) }}</span>
+      <span class="mfbb-card__replies"><i class="fa-solid fa-comment" aria-hidden="true"></i> {{ (item.reply_count ?? 0) }}</span>
+    </div>
+  </div>
+</article>

@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+{% set fi = forumIstatistik ?? null %}
+{% set fic = forumIstatistikIcerik ?? null %}
+{% set options = fi.options ?? {} %}
+{% set excluded = options.excluded_forum_ids ?? [] %}
+{% set limit = options.limit ?? 5 %}
+{% set isNew = not (fi.veri_id) %}
+{% block content %}
+{% if fi and fic %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <h2 class="page-title">{{ isNew ? lang('admin.forum_istatistik.form_new') : lang('admin.forum_istatistik.form_edit') }}</h2>
+        <div class="text-muted mt-1">{{ (fic.title ?? fic.icerik_id)|e }}</div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <form method="post" action="{{ core_url(adminPath ~ '/forum-istatistik/kaydet' ~ (fi.veri_id ? '/' ~ fi.veri_id : '')) }}">
+            {{ core_csrf_field('forum_istatistik_save')|raw }}
+            {% if fi.veri_id %}
+            <input type="hidden" name="id" value="{{ fi.veri_id }}">
+            {% endif %}
+            <input type="hidden" name="icerik_id" value="{{ fi.icerik_id|e('html_attr') }}">
+
+            <div class="card mb-4">
+                <div class="card-header">{{ lang('admin.forum_istatistik.section_general') }}</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.forum_istatistik.custom_title') }}</label>
+                        <input type="text" name="custom_title" class="form-control" value="{{ (fi.custom_title ?? '')|e('html_attr') }}" maxlength="50">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.forum_istatistik.icon_label') }}</label>
+                        <input type="text" name="veri_ikonu" class="form-control" value="{{ (fi.veri_ikonu ?? '')|e('html_attr') }}" maxlength="50" placeholder="fa-solid fa-chart-line">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ lang('admin.forum_istatistik.position') }}</label>
+                            <select name="pozisyon" class="form-select">
+                                <option value="anaveri" {{ (fi.pozisyon ?? '') == 'anaveri' ? 'selected' : '' }}>{{ lang('admin.forum_istatistik.position_anaveri') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ lang('admin.forum_istatistik.order') }}</label>
+                            <input type="number" name="display_order" class="form-control" value="{{ fi.display_order ?? 5 }}" min="0">
+                        </div>
+                        <div class="col-md-4 mb-3 d-flex align-items-end">
+                            <label class="form-check form-switch">
+                                <input type="checkbox" name="active" class="form-check-input" value="1" {{ (fi.active ?? true) ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.forum_istatistik.active') }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">{{ lang('admin.forum_istatistik.section_options') }}</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.forum_istatistik.limit_label') }}</label>
+                        <input type="number" name="options[limit]" class="form-control" value="{{ limit }}" min="1" max="20" style="max-width: 100px;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.forum_istatistik.excluded_forums') }}</label>
+                        <select name="options[excluded_forum_ids][]" class="form-select" multiple size="8">
+                            {% for f in forums %}
+                            <option value="{{ f.id }}" {{ f.id in excluded ? 'selected' : '' }}>{{ f.name|e }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-hint">{{ lang('admin.forum_istatistik.multiselect_hint') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                <a href="{{ core_url(adminPath ~ '/forum-istatistik') }}" class="btn btn-ghost-secondary">{{ lang('admin.common.cancel') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="page-body"><div class="container-xl"><p class="text-muted">{{ lang('admin.forum_istatistik.invalid_data') }}</p></div></div>
+{% endif %}
+{% endblock %}

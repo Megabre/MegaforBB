@@ -1,0 +1,143 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set activities = activities ?? [] %}
+{% set page = page ?? 1 %}
+{% set hasMore = (activities|length >= 20) and (activities|length > 0) %}
+{% set timelineTitle = timelineTitle ?? core__('timeline.title') %}
+{% set timelineDescription = timelineDescription ?? '' %}
+{% set timelineStartIndex = (page - 1) * 20 %}
+{% set filters = timelineFilters ?? {'user': '', 'action': 'all'} %}
+{% set selectedUser = filters.user|default('') %}
+{% set selectedAction = filters.action|default('all') %}
+{% set hasFilter = selectedUser != '' or selectedAction != 'all' %}
+{% set actionOptions = timelineActionOptions ?? ['all'] %}
+
+<link rel="stylesheet" href="{{ theme_asset_url('css/timeline.css') }}">
+
+<div class="mfbb-timeline-page">
+  <div class="mfbb-timeline-shell">
+    <header class="mfbb-timeline-header">
+      <div>
+        <h1>{{ core_e(timelineTitle) }}</h1>
+        {% if timelineDescription != '' %}
+        <p>{{ core_e(timelineDescription) }}</p>
+        {% endif %}
+      </div>
+    </header>
+
+    <form method="get" action="{{ core_url('timeline') }}" class="mfbb-timeline-filters" id="timeline-filter-form">
+      <div class="mfbb-filter-field">
+        <label for="timeline-filter-user">{{ core__('timeline.filter_user_label') }}</label>
+        <input id="timeline-filter-user" type="text" name="user" value="{{ core_e(selectedUser) }}" placeholder="{{ core__('timeline.filter_user_placeholder') }}" maxlength="64">
+      </div>
+      <div class="mfbb-filter-field">
+        <label for="timeline-filter-action">{{ core__('timeline.filter_action_label') }}</label>
+        <select id="timeline-filter-action" name="action">
+          {% for actionKey in actionOptions %}
+          <option value="{{ actionKey|e('html_attr') }}" {{ actionKey == selectedAction ? 'selected' : '' }}>{{ core__('timeline.filter_action_' ~ actionKey) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mfbb-filter-actions">
+        <button type="submit" class="mfbb-btn mfbb-btn--primary">{{ core__('timeline.filter_apply') }}</button>
+        {% if hasFilter %}
+        <a href="{{ core_url('timeline') }}" class="mfbb-btn mfbb-btn--ghost">{{ core__('timeline.filter_clear') }}</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <section class="mfbb-timeline-scroll" id="timeline-scroll" aria-labelledby="timeline-title">
+      <h2 id="timeline-title" class="sr-only">{{ core__('timeline.aria_activities') }}</h2>
+
+      <ol class="mfbb-timeline-list" id="timeline-container">
+        {% include 'timeline/items.html.twig' with { activities: activities, timelineStartIndex: timelineStartIndex } only %}
+      </ol>
+
+      {% if activities is empty %}
+      <div class="mfbb-timeline-empty" id="timeline-empty-state">
+        <i class="fa-solid fa-wave-square" aria-hidden="true"></i>
+        <p>{{ hasFilter ? core__('timeline.no_filtered_activities') : core__('timeline.no_activities') }}</p>
+        <small>{{ hasFilter ? core__('timeline.no_filtered_activities_hint') : core__('timeline.no_activities_hint') }}</small>
+      </div>
+      {% endif %}
+
+      <div id="timeline-loader" class="mfbb-timeline-loader hidden" aria-hidden="true">
+        <svg class="animate-spin h-7 w-7 text-[#1a252f]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        <span>{{ core__('timeline.loading') }}</span>
+      </div>
+
+      {% if hasMore %}
+      <div id="timeline-bottom-trigger" class="mfbb-timeline-trigger" aria-hidden="true"></div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<script>
+window.MEGAFORBB_TIMELINE_URL = {{ core_url('timeline')|json_encode|raw }};
+window.MEGAFORBB_TIMELINE_FILTERS = {
+  user: {{ selectedUser|json_encode|raw }},
+  action: {{ selectedAction|json_encode|raw }}
+};
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var page = {{ page }};
+  var loading = false;
+  var hasMore = {{ hasMore ? 'true' : 'false' }};
+  var container = document.getElementById('timeline-container');
+  var loader = document.getElementById('timeline-loader');
+  var trigger = document.getElementById('timeline-bottom-trigger');
+  var scroller = document.getElementById('timeline-scroll');
+  var baseUrl = typeof window.MEGAFORBB_TIMELINE_URL !== 'undefined' ? window.MEGAFORBB_TIMELINE_URL : '';
+  var filters = typeof window.MEGAFORBB_TIMELINE_FILTERS !== 'undefined' ? window.MEGAFORBB_TIMELINE_FILTERS : { user: '', action: 'all' };
+
+  if (!trigger || !container || !scroller) return;
+
+  var observer = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting && !loading && hasMore) {
+      loadMore();
+    }
+  }, { root: scroller, rootMargin: '180px', threshold: 0 });
+
+  observer.observe(trigger);
+
+  function buildNextUrl(nextPage) {
+    var params = new URLSearchParams();
+    params.set('page', String(nextPage));
+    if (filters.user) {
+      params.set('user', filters.user);
+    }
+    if (filters.action && filters.action !== 'all') {
+      params.set('action', filters.action);
+    }
+    return baseUrl + '?' + params.toString();
+  }
+
+  function loadMore() {
+    loading = true;
+    if (loader) loader.classList.remove('hidden');
+    page++;
+    fetch(buildNextUrl(page), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        if (html.trim() === '') {
+          hasMore = false;
+          if (trigger) trigger.remove();
+          return;
+        }
+        container.insertAdjacentHTML('beforeend', html);
+      })
+      .catch(function() {
+        hasMore = false;
+        if (trigger) trigger.remove();
+      })
+      .finally(function() {
+        loading = false;
+        if (loader) loader.classList.add('hidden');
+      });
+  }
+});
+</script>
+{% endblock %}

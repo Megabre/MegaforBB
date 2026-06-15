@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+{% set rep = rep ?? null %}
+{% block content %}
+{% if not rep %}
+<div class="page-body"><div class="container-xl"><p class="text-muted">{{ lang('admin.reputations.not_found') }}</p></div></div>
+{% else %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.reputations.edit_title') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/reputations') }}" class="btn">{{ lang('admin.common.back') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted">
+                    {{ rep.value == 1 ? '+ Rep' : '− Rep' }} —
+                    <strong>{{ rep.from_username|e }}</strong> → <strong>{{ rep.to_username|e }}</strong>
+                    ({{ rep.created_at|e }})
+                </p>
+                <form action="{{ core_url(adminPath ~ '/reputations/update/' ~ rep.id) }}" method="post">
+                    {{ core_csrf_field('admin_rep_edit')|raw }}
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.reputations.comment') }}</label>
+                        <textarea name="comment" class="form-control" rows="3" maxlength="500">{{ (rep.comment ?? '')|e }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/reputations') }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,1389 @@
+/* ── Idelist Design System ── */
+:root {
+  --il-primary: #2563eb;
+  --il-primary-hover: #1d4ed8;
+  --il-danger: #dc2626;
+  --il-success: #059669;
+  --il-warning: #d97706;
+  --il-purple: #7c3aed;
+  --il-border: #e2e8f0;
+  --il-border-light: #f1f5f9;
+  --il-muted: #64748b;
+  --il-soft-bg: #f8fafc;
+  --il-card-bg: #ffffff;
+  --il-radius: 14px;
+  --il-radius-sm: 10px;
+  --il-shadow-card: 0 1px 3px rgba(15, 23, 42, .04), 0 4px 12px rgba(15, 23, 42, .03);
+  --il-shadow-hover: 0 8px 24px rgba(15, 23, 42, .08);
+  --il-transition: .2s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ── Layout ── */
+.idelist-wrap {
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ── Hero ── */
+.idelist-hero {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 50%, #faf5ff 100%);
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius);
+  padding: 1.75rem 1.5rem;
+  box-shadow: var(--il-shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.idelist-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(37, 99, 235, .06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.idelist-hero h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.3;
+}
+
+.idelist-hero p {
+  margin: .5rem 0 0;
+  color: var(--il-muted);
+  font-size: .925rem;
+  line-height: 1.5;
+}
+
+.idelist-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--il-primary);
+  text-decoration: none;
+  transition: var(--il-transition);
+}
+
+.idelist-back-link:hover {
+  color: var(--il-primary-hover);
+  text-decoration: none;
+}
+
+.idelist-back-link i {
+  font-size: .72rem;
+  transition: transform var(--il-transition);
+}
+
+.idelist-back-link:hover i {
+  transform: translateX(-3px);
+}
+
+.idelist-hero-plain {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.idelist-hero-plain__cta {
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .65rem 1.25rem;
+  background: var(--il-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: .9rem;
+  border-radius: var(--il-radius-sm);
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, .25);
+  transition: var(--il-transition);
+}
+
+.idelist-hero-plain__cta:hover {
+  background: var(--il-primary-hover);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, .35);
+  transform: translateY(-1px);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* ── Listing Container ── */
+.idelist-listing {
+  background: var(--il-card-bg);
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius);
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  box-shadow: var(--il-shadow-card);
+}
+
+/* ── Filter Bar ── */
+.idelist-filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: .75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--il-border-light);
+}
+
+.idelist-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  min-width: 160px;
+  flex: 1 1 160px;
+}
+
+.idelist-filter-label {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--il-muted);
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.idelist-filter-select {
+  display: block;
+  width: 100%;
+  padding: .5rem .75rem;
+  font-size: .875rem;
+  font-weight: 500;
+  color: #1e293b;
+  background: var(--il-soft-bg);
+  border: 1px solid var(--il-border);
+  border-radius: 8px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .65rem center;
+  background-size: 12px;
+  padding-right: 2rem;
+  transition: var(--il-transition);
+  line-height: 1.4;
+}
+
+.idelist-filter-select:focus {
+  outline: none;
+  border-color: var(--il-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+  background-color: #fff;
+}
+
+.idelist-filter-actions {
+  display: flex;
+  gap: .5rem;
+  flex-shrink: 0;
+  align-items: flex-end;
+}
+
+.idelist-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .5rem 1rem;
+  font-size: .85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: var(--il-transition);
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.idelist-filter-btn--primary {
+  background: var(--il-primary);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, .2);
+}
+
+.idelist-filter-btn--primary:hover {
+  background: var(--il-primary-hover);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, .3);
+}
+
+.idelist-filter-btn--ghost {
+  background: transparent;
+  color: var(--il-muted);
+  border: 1px solid var(--il-border);
+}
+
+.idelist-filter-btn--ghost:hover {
+  background: var(--il-soft-bg);
+  color: #334155;
+  border-color: #cbd5e1;
+  text-decoration: none;
+}
+
+/* ── Table ── */
+.idelist-table-wrap {
+  border: 1px solid var(--il-border-light);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.idelist-table {
+  margin-bottom: 0;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.idelist-table colgroup {
+  display: table-column-group;
+}
+
+.idelist-table th,
+.idelist-table td {
+  vertical-align: middle;
+  padding: .7rem .65rem;
+  font-size: .875rem;
+}
+
+.idelist-table th:first-child,
+.idelist-table td:first-child {
+  padding-left: 1rem;
+}
+
+.idelist-table th:last-child,
+.idelist-table td:last-child {
+  padding-right: 1rem;
+}
+
+.idelist-table thead th {
+  background: var(--il-soft-bg);
+  color: #475569;
+  font-size: .78rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--il-border);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.idelist-table tbody tr {
+  border-bottom: 1px solid var(--il-border-light);
+  transition: background var(--il-transition);
+}
+
+.idelist-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.idelist-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Title column */
+.idelist-table__title {
+  min-width: 0;
+  max-width: 0;
+  overflow: hidden;
+}
+
+.idelist-title--truncate {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Vote columns */
+.idelist-col-vote {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  text-align: center;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  white-space: nowrap;
+}
+
+.idelist-vote-badge {
+  display: inline-flex;
+  min-width: 32px;
+  justify-content: center;
+  padding: .2rem .4rem;
+  font-size: .78rem;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+.idelist-vote-badge-up {
+  background: rgba(5, 150, 105, .1);
+  color: #059669;
+}
+
+.idelist-vote-badge-down {
+  background: rgba(220, 38, 38, .1);
+  color: #dc2626;
+}
+
+/* Messages & Last message columns */
+.idelist-col-messages,
+.idelist-col-last-message {
+  text-align: center;
+}
+
+.idelist-col-messages {
+  font-weight: 600;
+  color: #475569;
+}
+
+.idelist-col-last-message {
+  width: 56px;
+  min-width: 56px;
+}
+
+/* Author avatar in table */
+.idelist-table__author {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.idelist-table__author img {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--il-border);
+}
+
+/* Category cell */
+.idelist-category-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-weight: 600;
+  font-size: .84rem;
+}
+
+.idelist-category-cell i {
+  opacity: .85;
+  font-size: .8rem;
+}
+
+/* ── Title Link ── */
+.idelist-title {
+  color: #1e293b;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-block;
+  transition: color var(--il-transition);
+}
+
+.idelist-title:hover {
+  color: var(--il-primary);
+  text-decoration: none;
+}
+
+.idelist-title[style*="color"] {
+  font-weight: 800;
+}
+
+.idelist-title[style*="color"]:hover {
+  filter: brightness(.85);
+}
+
+/* ── Status Badge ── */
+.idelist-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: .25rem .65rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.idelist-badge--open {
+  background: rgba(37, 99, 235, .1);
+  color: #2563eb;
+}
+
+.idelist-badge--planned {
+  background: rgba(124, 58, 237, .1);
+  color: #7c3aed;
+}
+
+.idelist-badge--in_progress {
+  background: rgba(217, 119, 6, .1);
+  color: #b45309;
+}
+
+.idelist-badge--completed {
+  background: rgba(5, 150, 105, .1);
+  color: #059669;
+}
+
+.idelist-badge--rejected {
+  background: rgba(100, 116, 139, .1);
+  color: #64748b;
+}
+
+.idelist-badge--pending {
+  background: rgba(217, 119, 6, .08);
+  color: #92400e;
+}
+
+/* ── Card View (idea_card partial) ── */
+.idelist-list {
+  display: grid;
+  gap: .8rem;
+}
+
+.idelist-card {
+  background: var(--il-card-bg);
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius);
+  padding: 1rem 1.15rem;
+  transition: var(--il-transition);
+}
+
+.idelist-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--il-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.idelist-meta {
+  color: var(--il-muted);
+  font-size: .82rem;
+  margin-top: .25rem;
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── Vote Widget ── */
+.idelist-vote {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .25rem .35rem;
+  background: var(--il-soft-bg);
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius-sm);
+}
+
+.idelist-vote form {
+  margin: 0;
+}
+
+.idelist-vote-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 32px;
+  border: 1px solid var(--il-border);
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: var(--il-transition);
+  padding: 0;
+  line-height: 1;
+}
+
+.idelist-vote-btn:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.idelist-vote-btn--up:hover {
+  color: var(--il-success);
+  border-color: rgba(5, 150, 105, .3);
+}
+
+.idelist-vote-btn--down:hover {
+  color: var(--il-danger);
+  border-color: rgba(220, 38, 38, .3);
+}
+
+.idelist-vote-btn--active.idelist-vote-btn--up {
+  background: rgba(5, 150, 105, .1);
+  color: var(--il-success);
+  border-color: rgba(5, 150, 105, .3);
+}
+
+.idelist-vote-btn--active.idelist-vote-btn--down {
+  background: rgba(220, 38, 38, .1);
+  color: var(--il-danger);
+  border-color: rgba(220, 38, 38, .3);
+}
+
+.idelist-vote__count {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: .9rem;
+  color: #1e293b;
+}
+
+/* ── Idea Frame ── */
+.idelist-idea-frame {
+  --idea-color: #cbd5e1;
+  border: 1px solid color-mix(in srgb, var(--idea-color) 30%, transparent);
+  border-left: 4px solid var(--idea-color);
+  border-radius: var(--il-radius-sm);
+  padding: .5rem .75rem;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.idelist-idea-frame--content {
+  display: block;
+  min-height: 85px;
+  padding: .75rem 1rem;
+}
+
+/* ── Detail Page ── */
+.idelist-detail {
+  position: relative;
+  background: var(--il-card-bg);
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius);
+  padding: 1.25rem;
+  box-shadow: var(--il-shadow-card);
+}
+
+.idelist-detail-toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  width: 100%;
+  border-bottom: 1px solid var(--il-border-light);
+  margin-bottom: 1.25rem;
+  padding-bottom: .85rem;
+}
+
+.idelist-detail-toolbar__votes {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.idelist-detail-toolbar__author {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: min(100%, 340px);
+}
+
+.idelist-detail-toolbar__actions {
+  position: relative;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.idelist-detail-toolbar__actions .btn--idelist-menu {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  min-height: 36px;
+  padding: .4rem .85rem !important;
+  font-weight: 600 !important;
+  font-size: .85rem;
+  line-height: 1.2 !important;
+  border: 1px solid var(--il-border) !important;
+  background: var(--il-soft-bg) !important;
+  color: #334155 !important;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+  transition: var(--il-transition);
+}
+
+.idelist-detail-toolbar__actions .btn--idelist-menu:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+.idelist-dropdown-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  padding: .5rem;
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius-sm);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+}
+
+.idelist-dropdown-panel a.btn,
+.idelist-dropdown-panel button.btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.idelist-dropdown-panel form {
+  margin: 0;
+}
+
+/* Detail Grid — tek sütun (yan sütun kaldırıldı; yazar özeti üst araç çubuğunda) */
+.idelist-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.idelist-detail-grid--full {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.idelist-detail-main {
+  min-width: 0;
+}
+
+/* Content */
+.idelist-content {
+  color: #1f2937;
+  line-height: 1.8;
+  font-size: .95rem;
+  min-height: 85px;
+}
+
+.idelist-content p {
+  margin: 0 0 .85rem;
+}
+
+.idelist-content h1,
+.idelist-content h2,
+.idelist-content h3 {
+  margin: 1.25rem 0 .6rem;
+  color: #0f172a;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.idelist-content ul,
+.idelist-content ol {
+  padding-left: 1.25rem;
+  margin: .65rem 0;
+}
+
+.idelist-content blockquote {
+  border-left: 3px solid #cbd5e1;
+  margin: .85rem 0;
+  padding: .5rem .85rem;
+  color: #475569;
+  background: var(--il-soft-bg);
+  border-radius: 6px;
+}
+
+.idelist-content code {
+  background: #f1f5f9;
+  border: 1px solid var(--il-border);
+  border-radius: 6px;
+  padding: .15rem .4rem;
+  font-size: .88em;
+}
+
+.idelist-content pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: var(--il-radius-sm);
+  padding: .9rem;
+  overflow: auto;
+}
+
+.idelist-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* ── Author Card (Sidebar veya üst araç çubuğu) ── */
+.idelist-author-card {
+  position: sticky;
+  top: 12px;
+  border: 1px solid var(--il-border);
+  border-radius: 12px;
+  background: var(--il-soft-bg);
+  padding: 0;
+  box-shadow: var(--il-shadow-card);
+  overflow: hidden;
+}
+
+.idelist-author-card--toolbar {
+  position: relative;
+  top: auto;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+}
+
+.idelist-author-card--toolbar .idelist-author-toggle {
+  padding: .55rem .75rem;
+}
+
+.idelist-author-card--toolbar .idelist-author-head img {
+  width: 40px;
+  height: 40px;
+}
+
+.idelist-author-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: .85rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  gap: .5rem;
+  transition: background var(--il-transition);
+}
+.idelist-author-toggle:hover { background: rgba(0,0,0,.02); }
+.idelist-author-chevron {
+  font-size: .7rem;
+  color: var(--il-muted);
+  transition: transform .25s ease;
+  flex-shrink: 0;
+}
+.idelist-author-chevron--open { transform: rotate(180deg); }
+.idelist-author-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .3s ease;
+  overflow: hidden;
+}
+.idelist-author-body[data-open] {
+  grid-template-rows: 1fr;
+}
+.idelist-author-body__inner {
+  min-height: 0;
+  padding: 0 1rem;
+  overflow: hidden;
+}
+.idelist-author-body[data-open] .idelist-author-body__inner {
+  padding-bottom: 1rem;
+}
+
+.idelist-author-head {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.idelist-author-head img {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--il-border);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.idelist-author-head strong {
+  display: block;
+  font-size: .93rem;
+  color: #0f172a;
+}
+
+.idelist-author-head .text-muted {
+  font-size: .78rem;
+  color: var(--il-muted);
+}
+
+.idelist-author-stats {
+  display: grid;
+  gap: .35rem;
+  margin-top: 0;
+  padding-top: .75rem;
+  border-top: 1px solid var(--il-border-light);
+}
+
+.idelist-author-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: .5rem;
+  font-size: .82rem;
+  padding: .2rem 0;
+}
+
+.idelist-author-stats span {
+  color: var(--il-muted);
+}
+
+.idelist-author-stats strong {
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.idelist-author-list {
+  margin-top: .9rem;
+}
+
+.idelist-author-list__title {
+  font-size: .8rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: .4rem;
+}
+
+.idelist-author-list__item {
+  display: flex;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .4rem .45rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1e293b;
+  transition: background var(--il-transition);
+}
+
+.idelist-author-list__item:hover {
+  background: #f1f5f9;
+}
+
+.idelist-author-list__item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.idelist-author-list__item em {
+  font-style: normal;
+  color: var(--il-muted);
+  font-size: .78rem;
+  white-space: nowrap;
+}
+
+.idelist-author-list__more {
+  display: inline-block;
+  margin-top: .5rem;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--il-primary);
+  text-decoration: none;
+  transition: color var(--il-transition);
+}
+
+.idelist-author-list__more:hover {
+  text-decoration: underline;
+  color: var(--il-primary-hover);
+}
+
+/* ── Completion Box ── */
+.idelist-completion {
+  border: 1px solid #a7f3d0;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+/* ── CTA Bar (Vote + Reply) ── */
+.idelist-cta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  margin-top: 1.5rem;
+  padding: 1rem 0;
+}
+
+.idelist-cta-bar__vote {
+  flex-shrink: 0;
+}
+
+.idelist-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .6rem 1.5rem;
+  font-size: .9rem;
+  font-weight: 700;
+  border-radius: var(--il-radius-sm);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--il-transition);
+  line-height: 1.4;
+}
+
+.idelist-cta-btn--reply {
+  background: var(--il-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, .25);
+}
+
+.idelist-cta-chevron {
+  font-size: .65rem;
+  opacity: .7;
+  transition: transform .25s ease;
+}
+
+.idelist-cta-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* ── Collapsible Reply Panel ── */
+.idelist-reply-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .3s ease, margin .3s ease, opacity .3s ease;
+  opacity: 0;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.idelist-reply-panel[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 1rem;
+}
+
+.idelist-reply-panel>.idelist-comment-form {
+  min-height: 0;
+  margin-top: 0;
+}
+
+/* ── Comment Form ── */
+.idelist-comment-form {
+  border: 1px solid var(--il-border);
+  border-radius: 12px;
+  padding: 1rem;
+  background: var(--il-soft-bg);
+}
+
+/* ── Comment List ── */
+.idelist-comment-list {
+  margin-top: 1rem;
+  display: grid;
+  gap: .7rem;
+}
+
+.idelist-comment {
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius-sm);
+  padding: .85rem;
+  background: #fff;
+  transition: border-color var(--il-transition);
+}
+
+.idelist-comment:hover {
+  border-color: #cbd5e1;
+}
+
+.idelist-comment__meta {
+  color: var(--il-muted);
+  font-size: .78rem;
+  margin-bottom: .35rem;
+  font-weight: 600;
+}
+
+.idelist-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+/* ── Buttons ── */
+.idelist-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 86px;
+  text-decoration: none !important;
+}
+
+/* ── Empty State ── */
+.idelist-empty {
+  border: 2px dashed var(--il-border);
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  color: var(--il-muted);
+  text-align: center;
+  background: var(--il-soft-bg);
+  font-size: .9rem;
+}
+
+/* ── Create/Edit Form ── */
+.idelist-form {
+  background: var(--il-card-bg);
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius);
+  overflow: hidden;
+  box-shadow: var(--il-shadow-card);
+}
+
+.idelist-form__head {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--il-border);
+  background: var(--il-soft-bg);
+}
+
+.idelist-form__body {
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.idelist-form__row {
+  display: grid;
+  gap: .45rem;
+}
+
+.idelist-form__label {
+  font-size: .84rem;
+  color: #334155;
+  font-weight: 700;
+}
+
+.idelist-form__help {
+  color: var(--il-muted);
+  font-size: .78rem;
+  margin-top: .2rem;
+}
+
+.idelist-editor-wrap {
+  border: 1px solid var(--il-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.idelist-editor-wrap textarea {
+  border: 0 !important;
+  min-height: 260px;
+  padding: .75rem;
+  font-size: .9rem;
+}
+
+.idelist-editor-wrap .tox .tox-toolbar__primary {
+  flex-wrap: wrap !important;
+}
+
+.idelist-editor-wrap .tox .tox-editor-header {
+  overflow-x: auto;
+}
+
+.idelist-editor-wrap .toastui-editor-defaultUI,
+.idelist-editor-wrap .toastui-editor-toolbar {
+  flex-wrap: wrap !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Minimal Editor Overrides */
+.idelist-editor-wrap .tox-tinymce {
+  height: 180px !important;
+  min-height: 140px !important;
+}
+.idelist-editor-wrap .tox-menubar,
+.idelist-editor-wrap .tox-statusbar {
+  display: none !important;
+}
+.idelist-editor-wrap .ck-editor__editable {
+  min-height: 120px !important;
+}
+
+/* ── Admin ── */
+.idelist-admin-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1.1fr 1.9fr;
+}
+
+.idelist-admin-panel {
+  border: 1px solid var(--il-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.idelist-admin-panel__head {
+  border-bottom: 1px solid var(--il-border);
+  padding: .85rem 1rem;
+  font-weight: 700;
+  color: #1a252f;
+}
+
+.idelist-admin-panel__body {
+  padding: .9rem 1rem;
+}
+
+.idelist-admin-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.idelist-admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  background: #fff;
+  border: 1px solid var(--il-border);
+  border-radius: 12px;
+  padding: .55rem;
+}
+
+.idelist-admin-table th {
+  white-space: nowrap;
+}
+
+.idelist-admin-table .btn {
+  white-space: nowrap;
+}
+
+.idelist-color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-top: .35rem;
+}
+
+.idelist-color-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #cbd5e1 inset;
+  cursor: pointer;
+}
+
+.idelist-category-row {
+  display: grid;
+  grid-template-columns: 220px 165px 1fr 95px 82px 88px;
+  gap: .55rem;
+  align-items: center;
+  padding: .65rem 0;
+  border-bottom: 1px solid var(--il-border-light);
+}
+
+.idelist-status-row.idelist-category-row {
+  grid-template-columns: minmax(140px, 1.35fr) minmax(120px, 1fr) 64px minmax(168px, 1fr) 88px 88px;
+  align-items: start;
+}
+
+.idelist-badge--custom {
+  color: #fff !important;
+  border: 1px solid transparent;
+}
+
+/* ── Mobile Cards (replaces table) ── */
+.idelist-mobile-cards {
+  display: none;
+}
+
+.idelist-mobile-card {
+  padding: .9rem;
+  border: 1px solid var(--il-border);
+  border-radius: var(--il-radius-sm);
+  background: #fff;
+  transition: var(--il-transition);
+}
+
+.idelist-mobile-card:hover {
+  border-color: #cbd5e1;
+}
+
+.idelist-mobile-card__title {
+  font-weight: 700;
+  color: #1e293b;
+  text-decoration: none;
+  font-size: .9rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: .55rem;
+}
+
+.idelist-mobile-card__title:hover {
+  color: var(--il-primary);
+}
+
+.idelist-mobile-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+}
+
+.idelist-mobile-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  font-size: .78rem;
+  color: var(--il-muted);
+}
+
+.idelist-mobile-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: .55rem;
+  padding-top: .55rem;
+  border-top: 1px solid var(--il-border-light);
+}
+
+.idelist-mobile-card__votes {
+  display: flex;
+  gap: .4rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .idelist-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .idelist-category-row {
+    grid-template-columns: 1fr;
+  }
+
+  .idelist-status-row.idelist-category-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .idelist-hero-plain {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .idelist-hero-plain__cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .idelist-detail-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .idelist-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .idelist-author-card {
+    position: static;
+    top: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .idelist-wrap {
+    gap: .85rem;
+  }
+
+  .idelist-hero {
+    padding: 1.25rem 1rem;
+  }
+
+  .idelist-hero h1 {
+    font-size: 1.25rem;
+  }
+
+  .idelist-listing {
+    padding: .85rem;
+  }
+
+  /* Hide desktop table, show mobile cards */
+  .idelist-table-wrap {
+    display: none !important;
+  }
+
+  .idelist-mobile-cards {
+    display: grid !important;
+    gap: .65rem;
+  }
+
+  .idelist-filter-form {
+    gap: .6rem;
+  }
+
+  .idelist-filter-group {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .idelist-filter-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .idelist-filter-btn {
+    flex: 1;
+  }
+
+  .idelist-detail {
+    padding: .9rem;
+  }
+
+  .idelist-detail-grid {
+    grid-template-columns: 1fr;
+    gap: .85rem;
+  }
+
+  .idelist-author-card {
+    position: static;
+  }
+}
+
+@media (max-width: 480px) {
+  .idelist-hero {
+    padding: 1rem .85rem;
+  }
+
+  .idelist-hero h1 {
+    font-size: 1.1rem;
+  }
+
+  .idelist-hero p {
+    font-size: .85rem;
+  }
+
+  .idelist-listing {
+    padding: .65rem;
+  }
+
+  .idelist-detail {
+    padding: .75rem;
+  }
+}

@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set settings = settings ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-lg">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.communication.title') }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-lg">
+        <form action="{{ core_url(adminPath ~ '/communication-settings/update') }}" method="post">
+            {{ core_csrf_field('admin_communication_settings')|raw }}
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-vcenter table-sm table-hover card-table mb-0">
+                            <thead>
+                                <tr><th style="width: 40%;">{{ lang('admin.communication.setting') }}</th><th>{{ lang('admin.communication.value') }}</th><th>{{ lang('admin.communication.desc') }}</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted small">{{ lang('admin.communication.dm_system') }}</td>
+                                    <td>
+                                        <input type="hidden" name="messages_enabled" value="0">
+                                        <label class="form-check form-switch mb-0"><input type="checkbox" name="messages_enabled" value="1" class="form-check-input" {{ settings.messages_enabled ? 'checked' : '' }}></label>
+                                    </td>
+                                    <td class="text-muted small">{{ lang('admin.communication.dm_hint') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">{{ lang('admin.communication.notif_system') }}</td>
+                                    <td>
+                                        <input type="hidden" name="notifications_enabled" value="0">
+                                        <label class="form-check form-switch mb-0"><input type="checkbox" name="notifications_enabled" value="1" class="form-check-input" {{ settings.notifications_enabled ? 'checked' : '' }}></label>
+                                    </td>
+                                    <td class="text-muted small">{{ lang('admin.communication.notif_hint') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">{{ lang('admin.communication.toast') }}</td>
+                                    <td>
+                                        <input type="hidden" name="notification_toast_enabled" value="0">
+                                        <label class="form-check form-switch mb-0"><input type="checkbox" name="notification_toast_enabled" value="1" class="form-check-input" {{ settings.notification_toast_enabled ? 'checked' : '' }}></label>
+                                    </td>
+                                    <td class="text-muted small">{{ lang('admin.communication.toast_hint') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                    <a href="{{ core_url(adminPath) }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

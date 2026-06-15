@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{% block body_class %}mfbb-portal-body{% endblock %}
+
+{% block content %}
+{% set portalCards = portalCards ?? [] %}
+{% set p = portalPage ?? {} %}
+
+<div class="mfbb-portal-page">
+  {# ----- HERO (vitrin – ay ışığı, yıldız efektleri) ----- #}
+  <header class="mfbb-portal-hero">
+    <div class="mfbb-portal-hero__bg">
+      <span class="mfbb-portal-hero__moon" aria-hidden="true"></span>
+      <span class="mfbb-portal-hero__glow" aria-hidden="true"></span>
+      <div class="mfbb-portal-hero__stars" aria-hidden="true"></div>
+      <div class="mfbb-portal-hero__reflection" aria-hidden="true"></div>
+    </div>
+    <div class="mfbb-portal-hero__inner">
+      <p class="mfbb-portal-hero__badge">
+        <span class="mfbb-portal-hero__badge-dot"></span>
+        {{ core_e(p.badge|default(core__('portal.hero_badge', {site_name: site_name|default('MegaforBB')}))) }}
+      </p>
+      <h1 class="mfbb-portal-hero__title">{{ core_e(p.title|default(core__('portal.default_hero_title'))) }}</h1>
+      <p class="mfbb-portal-hero__desc">{{ core_e(p.description|default(core__('portal.default_hero_desc'))) }}</p>
+      <div class="mfbb-portal-hero__actions">
+        <a href="{{ p.btn_primary_url|default(core_url('register')) }}" class="mfbb-portal-hero__btn mfbb-portal-hero__btn--primary">
+          {{ core_e(p.btn_primary_label|default(core__('portal.btn_join'))) }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </a>
+        <a href="{{ p.btn_secondary_url|default(core_url('forum')) }}" class="mfbb-portal-hero__btn mfbb-portal-hero__btn--secondary">
+          {{ core_e(p.btn_secondary_label|default(core__('portal.btn_explore'))) }}
+        </a>
+      </div>
+    </div>
+  </header>
+
+  {# ----- FEATURES – Controller’dan portalFeatures (Admin > Hero > Portal Özellik Kartları) ----- #}
+  <section class="mfbb-portal-features">
+    <p class="mfbb-portal-features__intro">{{ core_e(p.features_intro|default(core__('portal.features_intro', {site_name: site_name|default('MegaforBB')}))) }}</p>
+    <div class="mfbb-portal-features__grid">
+      {% for f in portalFeatures|default([]) %}
+      <article class="mfbb-portal-feature">
+        <div class="mfbb-portal-feature__icon mfbb-portal-feature__icon--{{ f.color|default('indigo') }}">
+          <i class="{{ f.icon|default('fa-solid fa-gem')|e('html_attr') }}" aria-hidden="true"></i>
+        </div>
+        <h3 class="mfbb-portal-feature__title">{{ core_e(f.title|default('')) }}</h3>
+        <p class="mfbb-portal-feature__text">{{ core_e(f.desc|default('')) }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ----- Son Olaylar (sekmeli tablo) – eski portal ile aynı partial ----- #}
+  <div class="mb-10">
+    {% include 'partials/son_olaylar.html.twig' %}
+  </div>
+
+  {# ----- İçerik kartları – eski portal gibi inline (portal_content_block yok, filter/listPair yok) ----- #}
+  <div class="mfbb-portal-page-blocks space-y-12">
+  {% for card in portalCards %}
+    {% set items = card.items ?? [] %}
+    {% set layout = (card.layout ?? 'grid') == 'list' ? 'list' : 'grid' %}
+    {% set perSlide = card.per_slide ?? 4 %}
+    {% set perRow = layout == 'list' ? 1 : (perSlide < 2 ? 2 : (perSlide > 6 ? 6 : perSlide)) %}
+    {% set title = card.title ?? core__('portal.default_card_title') %}
+    {% set catColor = card.color ?? '#1c8b42' %}
+    {% set borderColorRaw = card.border_color|default('')|trim|lower %}
+    {% set useBorderStyle = borderColorRaw is not empty and borderColorRaw != 'fff' and borderColorRaw != '#fff' and borderColorRaw != '#ffffff' and borderColorRaw != 'ffffff' %}
+    {% set gridCols = perRow == 2 ? 'mfbb-cards--cols-2' : (perRow == 3 ? 'mfbb-cards--cols-3' : (perRow == 4 ? 'mfbb-cards--cols-4' : (perRow == 5 ? 'mfbb-cards--cols-5' : 'mfbb-cards--cols-6'))) %}
+    {% if layout == 'list' %}{% set gridCols = 'mfbb-cards--list-only' %}{% endif %}
+    <section class="mfbb-block" style="--block-accent: {{ catColor|e('css') }}{% if useBorderStyle and borderColorRaw %}; --block-border: {{ borderColorRaw|e('css') }}{% endif %}">
+      <header class="mfbb-block__head">
+        <div class="mfbb-block__title-row">
+          <span class="mfbb-block__accent" style="background-color: {{ catColor|e('css') }}"></span>
+          <h2 class="mfbb-block__title" style="color: {{ catColor|e('css') }}">{{ core_e(title) }}</h2>
+        </div>
+        {% if card.description is defined and card.description is not empty %}
+        <p class="mfbb-block__desc">{{ core_e(card.description) }}</p>
+        {% endif %}
+        <a href="{{ core_url('forum') }}" class="mfbb-block__link">{{ core_e(p.card_view_all|default(core__('portal.card_view_all'))) }} <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></a>
+      </header>
+      <div class="mfbb-block__body">
+        {% if items is empty %}
+        <div class="mfbb-block-empty">
+          <div class="mfbb-block-empty__icon"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i></div>
+          <p class="mfbb-block-empty__text">{{ core_e(p.block_empty|default(core__('portal.block_empty'))) }}</p>
+        </div>
+        {% else %}
+        <div class="mfbb-cards mfbb-cards--{{ layout }} mfbb-cards--text {{ gridCols }}">
+          {% for item in items %}
+            {% include 'partials/portal_content_card.html.twig' with { item: item, catColor: catColor, borderColor: (card.border_color|default('')), layout: layout } %}
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  {% endfor %}
+  </div>
+
+  {# ----- CTA (vitrin – konu olmayan varsayılanda sayfa tamamlanır) ----- #}
+  <section class="mfbb-portal-cta">
+    <div class="mfbb-portal-cta__inner">
+      <h2 class="mfbb-portal-cta__title">{{ core_e(p.cta_title|default(core__('portal.cta_title'))) }}</h2>
+      <p class="mfbb-portal-cta__text">{{ core_e(p.cta_text|default(core__('portal.cta_text'))) }}</p>
+      <a href="{{ p.cta_btn_url|default(core_url('forum')) }}" class="mfbb-portal-cta__btn">
+        {{ core_e(p.cta_btn_label|default(core__('portal.cta_btn'))) }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </a>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% set error = error ?? '' %}
+{% set success = success ?? '' %}
+{% set close_confirm_phrase = close_confirm_phrase ?? 'KAPAT' %}
+<div class="ips-profile-page">
+{% include 'partials/profile_breadcrumb.html.twig' with { crumbs: [{ label: core__('profile.edit_link'), href: core_url('profile/edit') }, { label: lang('profile.account_page_title') }] } %}
+{% include 'partials/profile_settings_shell.html.twig' with { user: user, active: 'account' } %}
+<div class="ips-profile-settings-body space-y-4">
+  {% if success %}<div class="ips-profile-alert ips-profile-alert--success">{{ core_e(success) }}</div>{% endif %}
+  {% if error %}<div class="ips-profile-alert ips-profile-alert--error">{{ core_e(error) }}</div>{% endif %}
+  <div class="ips-profile-content-card"><div class="ips-profile-content-card__head" style="background:#fffbeb;"><h2 class="ips-profile-content-card__title" style="padding:0;border:0;background:transparent;color:#92400e;"><i class="fa-solid fa-pause-circle"></i> {{ lang('profile.suspend_title') }}</h2></div>
+    <div class="ips-profile-content-card__body"><p class="text-sm text-gray-600 mb-4">{{ lang('profile.suspend_description') }}</p>
+      <form action="{{ core_url('profile/suspend-account') }}" method="post" id="form-suspend">{{ core_csrf_field('profile_account')|raw }}
+        <div class="ips-form-field" style="max-width:20rem;"><label for="password">{{ lang('profile.current_password') }}</label><input type="password" name="password" id="password" required></div>
+        <button type="submit" class="ips-profile__action-btn" style="background:#d97706;color:#fff;border-color:#d97706;">{{ lang('profile.suspend_button') }}</button>
+      </form>
+    </div>
+  </div>
+  <div class="ips-profile-content-card"><div class="ips-profile-content-card__head" style="background:#fef2f2;"><h2 class="ips-profile-content-card__title" style="padding:0;border:0;background:transparent;color:#991b1b;"><i class="fa-solid fa-times-circle"></i> {{ lang('profile.close_title') }}</h2></div>
+    <div class="ips-profile-content-card__body"><p class="text-sm text-gray-600 mb-4">{{ lang('profile.close_description') }}</p>
+      <form action="{{ core_url('profile/close-account') }}" method="post" id="form-close-account">{{ core_csrf_field('profile_account')|raw }}
+        <div class="ips-form-field" style="max-width:20rem;"><label for="password_close">{{ lang('profile.current_password') }}</label><input type="password" name="password_close" id="password_close" required></div>
+        <div class="ips-form-field" style="max-width:20rem;"><label for="close_confirm">{{ lang('profile.close_confirm_label', {'phrase': close_confirm_phrase}) }}</label><input type="text" name="close_confirm" id="close_confirm" placeholder="{{ core_e(close_confirm_phrase) }}" required></div>
+        <button type="submit" class="ips-profile__action-btn ips-profile__action-btn--danger">{{ lang('profile.close_button') }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+document.getElementById('form-suspend')?.addEventListener('submit', function(e) { if (!confirm({{ lang('profile.suspend_confirm_question')|json_encode }})) e.preventDefault(); });
+document.getElementById('form-close-account')?.addEventListener('submit', function(e) { if (!confirm({{ lang('profile.close_confirm_question')|json_encode }})) e.preventDefault(); });
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ACME / sertifika doğrulama
+    RewriteRule ^\.well-known/ - [L]
+
+    # Do not expose /public/*.php to direct client requests
+    RewriteCond %{THE_REQUEST} \s/+[^\s]*public/(index|cron|migrate)\.php(?:[?\s]|$) [NC]
+    RewriteRule ^(index|cron|migrate)\.php$ - [F,L,NC]
+
+    # Hidden files (.well-known hariç)
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+    # CLI-only migration runner should never be web-accessible
+    RewriteRule ^migrate\.php$ - [F,L,NC]
+
+    # Build/tool config files should not be web accessible
+    RewriteRule ^(tailwind|postcss|vite|webpack|rollup)\.config\.(js|cjs|mjs|ts)$ - [F,L,NC]
+    RewriteRule ^(tsconfig|jsconfig)\.json$ - [F,L,NC]
+
+    # Backward compatibility for old /Content static URLs
+    RewriteRule ^Content/(css|js|img|smileys)/(.*)$ $1/$2 [L,QSA,NC]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L,QSA]
+</IfModule>

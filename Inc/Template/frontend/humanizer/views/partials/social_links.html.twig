@@ -1,0 +1,19 @@
+{% set zone = social_zone ?? 'header' %}
+{% set show = (zone == 'header' and social_show_header) or (zone == 'footer' and social_show_footer) or (zone == 'sidebar' and social_show_sidebar) or (zone == 'menu' and social_show_header) %}
+{% if show %}
+{% set links = [] %}
+{% if social_facebook %}{% set links = links|merge([{ url: social_facebook, icon: 'fa-brands fa-facebook-f', label: 'Facebook' }]) %}{% endif %}
+{% if social_twitter %}{% set links = links|merge([{ url: social_twitter, icon: 'fa-brands fa-x-twitter', label: 'X' }]) %}{% endif %}
+{% if social_instagram %}{% set links = links|merge([{ url: social_instagram, icon: 'fa-brands fa-instagram', label: 'Instagram' }]) %}{% endif %}
+{% if social_youtube %}{% set links = links|merge([{ url: social_youtube, icon: 'fa-brands fa-youtube', label: 'YouTube' }]) %}{% endif %}
+{% if social_linkedin %}{% set links = links|merge([{ url: social_linkedin, icon: 'fa-brands fa-linkedin-in', label: 'LinkedIn' }]) %}{% endif %}
+{% if links is not empty %}
+{% set linkClass = (zone == 'sidebar') ? 'h-8 w-8 inline-flex items-center justify-center rounded-md bg-[#105289] text-white hover:bg-[#243447]' : ((zone == 'menu') ? 'h-8 w-8 inline-flex items-center justify-center rounded-md border border-white/60 hover:bg-white hover:text-[#105289] text-white transition-colors' : ((zone == 'hero') ? 'h-8 w-8 inline-flex items-center justify-center rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200' : 'h-8 w-8 inline-flex items-center justify-center rounded-md border border-white hover:bg-white hover:text-[#105289]')) %}
+{% set class = (zone == 'sidebar' or zone == 'hero') ? 'flex flex-wrap gap-2' : 'flex items-center gap-2' %}
+<div class="{{ class }}">
+  {% for l in links %}
+  <a href="{{ core_e(l.url) }}" target="_blank" rel="noopener noreferrer" class="{{ linkClass }}" title="{{ core_e(l.label) }}"><i class="fa {{ l.icon }}"></i></a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}

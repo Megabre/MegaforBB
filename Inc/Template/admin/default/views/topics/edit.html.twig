@@ -1,0 +1,182 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set topic = topic ?? null %}
+{% set firstPost = firstPost ?? null %}
+{% set categories = categories ?? [] %}
+{% set forums = forums ?? [] %}
+{% set prefixes = prefixes ?? [] %}
+{% set tags = tags ?? [] %}
+{% set topicTagIds = topicTagIds ?? [] %}
+{% set topicTypes = topicTypes ?? ['topic','article','question','poll'] %}
+{% set topicStatuses = topicStatuses ?? [] %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.topic_settings.edit_title') }} #{{ topic.id }}</h2>
+                <div class="text-muted mt-1">{{ core_e(topic.title ?? '') }}</div>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/topic-settings') }}" class="btn btn-outline-secondary">{{ admin__('common.cancel')|default('İptal') }}</a>
+                {% if topic and topic.id %}
+                <a href="{{ topicPublicUrl|default(core_url('topic/' ~ topic.id)) }}" target="_blank" class="btn btn-outline-primary">{{ lang('admin.topic_settings.btn_view') }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <form action="{{ core_url(adminPath ~ '/topic-settings/update/' ~ topic.id) }}" method="post">
+            {{ core_csrf_field('admin_topic_settings_update')|raw }}
+            <div class="row row-cards">
+                <div class="col-lg-8">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">{{ lang('admin.topic_settings.col_title') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label required">Başlık</label>
+                                <input type="text" class="form-control" name="title" value="{{ core_e(topic.title ?? '') }}" required maxlength="255">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Slug</label>
+                                <input type="text" class="form-control bg-light" value="{{ core_e(topic.slug ?? '') }}" readonly>
+                                <small class="form-hint">Başlık kaydedilince otomatik güncellenir.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.topic_settings.forum') }}</label>
+                                <select name="forum_id" class="form-select" required>
+                                    {% for f in forums %}
+                                    <option value="{{ f.id }}" {{ (topic.forum_id ?? 0) == f.id ? 'selected' : '' }}>{{ core_e(f.name) }} {% if f.category %}({{ core_e(f.category.name) }}){% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ön ek</label>
+                                <select name="prefix_id" class="form-select">
+                                    <option value="">— Ön ek yok —</option>
+                                    {% for p in prefixes %}
+                                    <option value="{{ p.id }}" {{ (topic.prefix_id ?? 0) == p.id ? 'selected' : '' }}>{{ core_e(p.name) }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.topic_settings.type') }}</label>
+                                <select name="type" class="form-select">
+                                    {% for tt in topicTypes %}
+                                    <option value="{{ tt }}" {{ (topic.type ?? 'topic') == tt ? 'selected' : '' }}>{{ lang('admin.topic_settings.type_' ~ tt) }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.topic_settings.status') }}</label>
+                                <select name="status" class="form-select">
+                                    {% for ts in topicStatuses %}
+                                    <option value="{{ ts }}" {{ (topic.status ?? 'published') == ts ? 'selected' : '' }}>{{ lang('admin.topic_settings.status_' ~ ts) }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Planlanmış yayın tarihi</label>
+                                <input type="datetime-local" class="form-control" name="scheduled_publish_at" value="{{ topic.scheduled_publish_at ? topic.scheduled_publish_at|date('Y-m-d\\TH:i') : '' }}">
+                            </div>
+                            {% if firstPost %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.topic_settings.first_post_body') }}</label>
+                                <textarea id="topic-first-post-editor" name="first_post_body" class="form-control">{{ firstPost.body ?? '' }}</textarea>
+                                <small class="form-hint">Mesaj içeriği (zengin metin editörü).</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Seçenekler</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="is_sticky" value="1" id="is_sticky" {{ topic.is_sticky ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_sticky">Sabit (öne sabitle)</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="is_locked" value="1" id="is_locked" {{ topic.is_locked ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_locked">Kilitli</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="is_private" value="1" id="is_private" {{ topic.is_private ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_private">Gizli konu</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="is_solved" value="1" id="is_solved" {{ topic.is_solved ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_solved">Çözüldü (soru-cevap)</label>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Kabul edilen yanıt (post ID)</label>
+                                <input type="number" class="form-control" name="accepted_post_id" value="{{ topic.accepted_post_id ?? '' }}" min="0" placeholder="Boş bırakılabilir">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">{{ lang('admin.topic_settings.tags') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <select name="tag_ids[]" class="form-select mb-2" multiple size="6">
+                                {% for tag in tags %}
+                                <option value="{{ tag.id }}" {{ tag.id in topicTagIds ? 'selected' : '' }}>{{ core_e(tag.name) }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-hint d-block mb-2">Ctrl/Cmd ile çoklu seçim. En fazla 5 etiket önerilir.</small>
+                            <label class="form-label small text-muted">{{ lang('admin.topic_settings.new_tag_hint') }}</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="new_tag_names" class="form-control" placeholder="{{ lang('admin.topic_settings.new_tag_placeholder') }}" value="">
+                                <span class="input-group-text bg-transparent border-0 px-1"></span>
+                            </div>
+                            <small class="form-hint">Virgül veya noktalı virgülle ayırarak birden fazla yeni etiket ekleyebilirsiniz. Kaydet'e basınca oluşturulur.</small>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <button type="submit" class="btn btn-primary w-100">{{ lang('admin.topic_settings.save') }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if firstPost %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-tr-TR.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var $ = window.jQuery;
+    if (!$ || !$.fn.summernote) return;
+    $('#topic-first-post-editor').summernote({
+        height: 320,
+        placeholder: 'Mesaj içeriğini yazın...',
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture']],
+            ['view', ['fullscreen', 'codeview']]
+        ],
+        lang: 'tr-TR'
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

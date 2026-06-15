@@ -1,0 +1,140 @@
+{% extends 'base.html.twig' %}
+{% set a = announcement ?? null %}
+{% set badgeTypes = badgeTypes ?? [] %}
+{% set displayLocations = displayLocations ?? [] %}
+{% set isEdit = a is not null %}
+{% set showFrom = a and a.show_from ? (a.show_from|date('Y-m-d\\TH:i')) : '' %}
+{% set showUntil = a and a.show_until ? (a.show_until|date('Y-m-d\\TH:i')) : '' %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ isEdit ? lang('admin.announcements.edit') : lang('admin.announcements.new') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/announcements') }}" class="btn">{{ lang('admin.common.back_to_list') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <form action="{{ isEdit ? core_url(adminPath ~ '/announcements/update/' ~ a.id) : core_url(adminPath ~ '/announcements/store') }}" method="post">
+                {{ core_csrf_field(isEdit ? 'admin_announcements_update' : 'admin_announcements_store')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.common.title') }}</label>
+                        <input type="text" name="title" class="form-control" value="{{ a ? core_e(a.title) : '' }}" required placeholder="{{ lang('admin.announcements.title_ph') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.announcements.content') }}</label>
+                        <textarea id="announcement-body-editor" name="body" class="form-control" required>{{ a ? core_e(a.body ?? '') : '' }}</textarea>
+                        <small class="form-hint">{{ lang('admin.announcements.content_hint') }}</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.announcements.badge_type') }}</label>
+                            <select name="badge_type" class="form-select">
+                                {% for k, v in badgeTypes %}
+                                <option value="{{ core_e(k) }}" {{ (a and (a.badge_type ?? '') == k) ? 'selected' : '' }}>{{ core_e(v) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.announcements.display_location') }}</label>
+                            <select name="display_location" class="form-select">
+                                {% for k, v in displayLocations %}
+                                <option value="{{ core_e(k) }}" {{ (a and (a.display_location ?? '') == k) ? 'selected' : '' }}>{{ core_e(v) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.announcements.show_from') }}</label>
+                            <input type="datetime-local" name="show_from" class="form-control" value="{{ core_e(showFrom) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.announcements.show_until') }}</label>
+                            <input type="datetime-local" name="show_until" class="form-control" value="{{ core_e(showUntil) }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.common.sort_order') }}</label>
+                        <input type="number" name="sort_order" class="form-control" value="{{ a ? (a.sort_order ?? 0) : 0 }}">
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="send_as_notification" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="send_as_notification" value="1" class="form-check-input" {{ (a and a.send_as_notification) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.announcements.send_notification') }}</span>
+                        </label>
+                        <small class="form-hint text-warning">{{ lang('admin.announcements.send_notif_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="is_dismissible" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_dismissible" value="1" class="form-check-input" {{ (not a or a.is_dismissible) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.announcements.dismissible') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="is_active" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ (not a or a.is_active) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.common.active') }}</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ isEdit ? lang('admin.common.update') : lang('admin.common.create') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/announcements') }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-tr-TR.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var $ = window.jQuery;
+    if (!$ || !$.fn.summernote) return;
+    var uploadUrl = {{ core_url('upload/image')|json_encode|raw }};
+    $('#announcement-body-editor').summernote({
+        height: 280,
+        placeholder: {{ lang('admin.announcements.content_ph')|json_encode|raw }},
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture']],
+            ['view', ['fullscreen', 'codeview']]
+        ],
+        lang: 'tr-TR',
+        callbacks: uploadUrl ? {
+            onImageUpload: function(files) {
+                var data = new FormData();
+                data.append('upload', files[0]);
+                fetch(uploadUrl, { method: 'POST', body: data, credentials: 'same-origin' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res.url) $('#announcement-body-editor').summernote('insertImage', res.url);
+                        else alert(res.error && res.error.message ? res.error.message : {{ lang('admin.announcements.upload_failed')|json_encode|raw }});
+                    })
+                    .catch(function() { alert({{ lang('admin.announcements.image_failed')|json_encode|raw }}); });
+            }
+        } : {}
+    });
+});
+</script>
+{% endblock %}

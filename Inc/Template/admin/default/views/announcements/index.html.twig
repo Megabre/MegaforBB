@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+{% set announcements = announcements ?? [] %}
+{% set badgeTypes = badgeTypes ?? [] %}
+{% set displayLocations = displayLocations ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.announcements.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.announcements.description') }}</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/announcements/create') }}" class="btn btn-primary">{{ lang('admin.announcements.new') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter table-sm card-table">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.common.title') }}</th>
+                            <th>{{ lang('admin.announcements.badge_type') }}</th>
+                            <th>{{ lang('admin.announcements.display_location') }}</th>
+                            <th>{{ lang('admin.announcements.notification') }}</th>
+                            <th>{{ lang('admin.announcements.duration') }}</th>
+                            <th>{{ lang('admin.dashboard.table_status') }}</th>
+                            <th class="w-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in announcements %}
+                        <tr>
+                            <td>{{ core_e((a.title ?? '')|slice(0, 50)) }}{{ (a.title ?? '')|length > 50 ? '…' : '' }}</td>
+                            <td><span class="badge bg-{{ a.badge_type ?? 'info' }}">{{ core_e(badgeTypes[a.badge_type ?? 'info'] ?? a.badge_type) }}</span></td>
+                            <td class="text-muted small">{{ core_e(displayLocations[a.display_location ?? 'both'] ?? a.display_location) }}</td>
+                            <td>{% if a.send_as_notification %}<span class="badge bg-info">{{ lang('admin.common.yes') }}</span>{% else %}—{% endif %}</td>
+                            <td class="text-muted small">
+                                {% if a.show_from or a.show_until %}
+                                    {{ a.show_from ? (a.show_from|date('d.m.Y')) : '—' }} – {{ a.show_until ? (a.show_until|date('d.m.Y')) : '∞' }}
+                                {% else %}{{ lang('admin.common.unlimited') }}{% endif %}
+                            </td>
+                            <td>{% if a.is_active %}<span class="badge bg-success">{{ lang('admin.common.enabled') }}</span>{% else %}<span class="badge bg-secondary">{{ lang('admin.common.disabled') }}</span>{% endif %}</td>
+                            <td>
+                                <a href="{{ core_url(adminPath ~ '/announcements/edit/' ~ a.id) }}" class="btn btn-sm btn-ghost-secondary">{{ lang('admin.common.edit') }}</a>
+                                <form action="{{ core_url(adminPath ~ '/announcements/delete/' ~ a.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.announcements.delete_confirm') }}');">
+                                    {{ core_csrf_field('admin_announcements_delete')|raw }}
+                                    <button type="submit" class="btn btn-sm btn-ghost-secondary text-danger">{{ lang('admin.common.delete') }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if announcements is empty %}
+                        <tr><td colspan="7" class="text-center text-muted py-4">{{ lang('admin.announcements.no_announcements') }} <a href="{{ core_url(adminPath ~ '/announcements/create') }}">{{ lang('admin.announcements.add_new') }}</a>.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

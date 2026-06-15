@@ -1,0 +1,114 @@
+{# Kişisel profil bilgileri — sidebar kartında kullanılır #}
+{% set u = profileUser ?? null %}
+{% set rewardLevel = rewardLevel ?? null %}
+{% set isOwnProfile = isOwnProfile ?? false %}
+{% set variant = variant ?? 'card' %}
+{% if u %}
+{% set displayName = '' %}
+{% if u.show_name and ((u.first_name ?? '')|trim != '' or (u.last_name ?? '')|trim != '') %}
+  {% set displayName = ((u.first_name ?? '') ~ ' ' ~ (u.last_name ?? ''))|trim %}
+{% endif %}
+{% set userStats = userStats ?? {} %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set baseUrl = core_url('member/' ~ member_url_path(u)) %}
+
+{% if variant == 'card' %}
+<dl class="ips-profile-card__facts">
+  {% if u.role_name is not empty %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.role') }}</dt>
+    <dd><span class="ips-profile-group-badge" style="{% if u.role and (u.role.color|default('')) != '' %}background-color: {{ core_e(u.role.color) }};{% else %}background-color:#64748b;{% endif %}">{{ core_e(u.role_name) }}</span></dd>
+  </div>
+  {% endif %}
+  {% if u.custom_title is not empty %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.custom_title') }}</dt>
+    <dd>{{ core_e(u.custom_title) }}</dd>
+  </div>
+  {% endif %}
+  {% if displayName != '' %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.full_name') }}</dt>
+    <dd>{{ core_e(displayName) }}</dd>
+  </div>
+  {% endif %}
+  {% if u.location is not empty %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.location') }}</dt>
+    <dd>{{ core_e(u.location) }}</dd>
+  </div>
+  {% endif %}
+  {% if u.website is not empty %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.website') }}</dt>
+    <dd><a href="{{ core_e(u.website) }}" target="_blank" rel="noopener" class="ips-profile-card__link-inline">{{ core_e(u.website) }}</a></dd>
+  </div>
+  {% endif %}
+  {% if u.birthday is not empty %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.birthday') }}</dt>
+    <dd>{{ u.birthday|date('d.m.Y') }}</dd>
+  </div>
+  {% endif %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.joined') }}</dt>
+    <dd>{{ u.created_at is not empty ? u.created_at|date('d.m.Y') : '—' }}</dd>
+  </div>
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.verified') }}</dt>
+    <dd>{% if u.is_verified %}<span class="text-green-600">{{ core__('profile.verified_yes') }}</span>{% else %}{{ core__('profile.verified_no') }}{% endif %}</dd>
+  </div>
+  {% if rewardLevel %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.level') }}</dt>
+    <dd><span class="ips-profile-level-badge {{ core_e(rewardLevel.badge_css ?? '') }}">{% if rewardLevel.badge_icon %}<i class="fa {{ core_e(rewardLevel.badge_icon) }}"></i>{% endif %}{{ core_e(rewardLevel.badge_label ?? rewardLevel.name ?? '') }}</span></dd>
+  </div>
+  {% endif %}
+  {% if reputationEnabled %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.reputation') }}</dt>
+    <dd>
+      <span class="text-green-600">+{{ (userStats.reputation_positive ?? u.reputation_positive ?? 0)|number_format(0) }}</span>
+      <span class="text-red-500">/{{ (userStats.reputation_negative ?? u.reputation_negative ?? 0)|number_format(0) }}</span>
+      <a href="{{ baseUrl }}/reputation" class="ips-profile-card__link-inline">{{ core__('member.view_rep_history') }}</a>
+    </dd>
+  </div>
+  {% endif %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.reward_points_label') }}</dt>
+    <dd>{{ (u.reward_points ?? userStats.reward_points ?? 0)|number_format(0) }}</dd>
+  </div>
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.warnings_punishments') }}</dt>
+    <dd>
+      {% set warningPoints = u.warning_points ?? 0 %}
+      {% if warningPoints <= 0 %}
+        <span class="text-green-600">{{ core__('profile.no_warnings') }}</span>
+      {% else %}
+        <span class="text-amber-600">{{ warningPoints }} {{ core__('member.puan') }}</span>
+      {% endif %}
+    </dd>
+  </div>
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.invited_by') }}</dt>
+    <dd>
+      {% if u.inviter_user is defined and u.inviter_user %}
+        <a href="{{ core_url('member/' ~ member_url_path(u.inviter_user)) }}" class="ips-profile-card__link-inline">{{ core_e(u.inviter_user.username) }}</a>
+      {% else %}
+        {{ core__('profile.invited_by_tbd') }}
+      {% endif %}
+    </dd>
+  </div>
+  {% if u.show_invite_stats|default(false) and isOwnProfile %}
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.available_invites') }}</dt>
+    <dd>{{ (u.available_invites ?? 0)|number_format(0) }}</dd>
+  </div>
+  <div class="ips-profile-card__fact">
+    <dt>{{ core__('profile.invitations_sent') }}</dt>
+    <dd>{{ (u.invitations_sent_count ?? 0)|number_format(0) }}</dd>
+  </div>
+  {% endif %}
+</dl>
+{% endif %}
+{% endif %}

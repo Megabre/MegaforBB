@@ -1,0 +1,85 @@
+{% set activities = activities ?? [] %}
+{% for activity in activities %}
+{% set details = activity.details ?? [] %}
+{% set titleFull = details.title|default('') %}
+{% set shortTitle = titleFull|length > 56 ? (titleFull|slice(0, 56) ~ '…') : titleFull %}
+{% set userLink = '<a href="' ~ core_e(core_url('member/' ~ (activity.username|e('url')))) ~ '"' ~ (activity.role_color|default('') != '' ? (' style="color:' ~ (activity.role_color|e('css')) ~ '"') : '') ~ '>' ~ core_e(activity.username) ~ '</a>' %}
+{% set timeHi = activity.created_at|date('H:i') %}
+{% set fullDate = activity.created_at|date('d.m.Y H:i') %}
+
+{% if activity.action_type == 'topic_created' %}
+  {% set icon = 'fa-comment-dots' %}
+  {% set badgeClass = 'mfbb-timeline-item__badge--topic' %}
+  {% set actionText = core__('timeline.filter_action_topic_created') %}
+  {% set url = core_url('topic/' ~ activity.item_id) %}
+  {% set description = userLink ~ ', <a href="' ~ core_e(url) ~ '">' ~ core_e(shortTitle) ~ '</a>' ~ core__('timeline.suffix_opened_topic') %}
+{% elseif activity.action_type == 'post_created' %}
+  {% set icon = 'fa-reply' %}
+  {% set badgeClass = 'mfbb-timeline-item__badge--post' %}
+  {% set actionText = core__('timeline.filter_action_post_created') %}
+  {% set topicId = details.topic_id|default(0) %}
+  {% set topicTitleShort = (details.topic_title|default(''))|length > 56 ? ((details.topic_title|default(''))|slice(0, 56) ~ '…') : (details.topic_title|default('')) %}
+  {% set bodySnippet = details.body_snippet|default('') %}
+  {% set url = core_url('topic/' ~ topicId) ~ '#post-' ~ activity.item_id %}
+  {% set topicLink = '<a href="' ~ core_e(url) ~ '">' ~ core_e(topicTitleShort) ~ '</a>' %}
+  {% if bodySnippet != '' %}
+    {% set description = userLink ~ ', ' ~ topicLink ~ core__('timeline.suffix_in_topic') ~ core__('timeline.suffix_in_topic_quote_start') ~ core_e(bodySnippet) ~ core__('timeline.suffix_in_topic_quote_end') %}
+  {% else %}
+    {% set description = userLink ~ ', ' ~ topicLink ~ core__('timeline.suffix_replied') %}
+  {% endif %}
+{% elseif activity.action_type == 'like_given' %}
+  {% set icon = 'fa-heart' %}
+  {% set badgeClass = 'mfbb-timeline-item__badge--like' %}
+  {% set actionText = core__('timeline.filter_action_like_given') %}
+  {% set topicId = details.topic_id|default(0) %}
+  {% set topicTitleShort = (details.topic_title|default(''))|length > 56 ? ((details.topic_title|default(''))|slice(0, 56) ~ '…') : (details.topic_title|default('')) %}
+  {% set url = core_url('topic/' ~ topicId) ~ '#post-' ~ activity.item_id %}
+  {% if topicTitleShort != '' %}
+    {% set linkHtml = '<a href="' ~ core_e(url) ~ '">' ~ core_e(topicTitleShort) ~ '</a>' %}
+    {% set description = userLink ~ ' ' ~ linkHtml ~ core__('timeline.suffix_liked_in_topic') %}
+  {% else %}
+    {% set description = userLink ~ ' <a href="' ~ core_e(url) ~ '">' ~ core__('timeline.link_text_liked_message') ~ '</a>' ~ core__('timeline.suffix_liked') %}
+  {% endif %}
+{% elseif activity.action_type == 'rep_given' %}
+  {% set icon = 'fa-star' %}
+  {% set badgeClass = 'mfbb-timeline-item__badge--rep' %}
+  {% set actionText = core__('timeline.filter_action_rep_given') %}
+  {% set val = (details.value|default(0)) > 0 ? '+1' : '-1' %}
+  {% set targetName = core_e(details.target_username|default(core__('timeline.user_fallback'))) %}
+  {% set topicId = details.topic_id|default(null) %}
+  {% set postId = details.post_id|default(null) %}
+  {% set topicTitleShort = details.topic_title|default('') %}
+  {% if topicId and postId and topicTitleShort != '' %}
+    {% set url = core_url('topic/' ~ topicId) ~ '#post-' ~ postId %}
+    {% set description = userLink ~ ', ' ~ targetName ~ core__('timeline.rep_user_infix') ~ '<a href="' ~ core_e(url) ~ '">' ~ core_e(topicTitleShort) ~ '</a>' ~ core__('timeline.rep_post_to_msg') ~ val ~ core__('timeline.rep_suffix') %}
+  {% else %}
+    {% set description = userLink ~ ', ' ~ targetName ~ core__('timeline.rep_user_to') ~ val ~ core__('timeline.rep_suffix') %}
+  {% endif %}
+{% elseif activity.action_type == 'user_registered' %}
+  {% set icon = 'fa-user-plus' %}
+  {% set badgeClass = 'mfbb-timeline-item__badge--register' %}
+  {% set actionText = core__('timeline.filter_action_user_registered') %}
+  {% set description = userLink ~ core__('timeline.registered') %}
+{% else %}
+  {% set icon = 'fa-circle-question' %}
+  {% set badgeClass = 'mfbb-timeline-item__badge--other' %}
+  {% set actionText = core__('timeline.filter_action_all') %}
+  {% set description = userLink %}
+{% endif %}
+
+{% set avatarUrl = activity.avatar_path|default('') != '' ? asset_url(activity.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(activity.username|default(''))|url_encode) ~ '&size=56') %}
+
+<li class="mfbb-timeline-item">
+  <div class="mfbb-timeline-item__icon" aria-hidden="true"><i class="fa-solid {{ icon }}"></i></div>
+  <div class="mfbb-timeline-item__body">
+    <div class="mfbb-timeline-item__meta">
+      <span class="mfbb-timeline-item__badge {{ badgeClass }}">{{ actionText }}</span>
+      <time datetime="{{ activity.created_at|e }}" title="{{ core_e(fullDate) }}">{{ core_e(fullDate) }}</time>
+    </div>
+    <div class="mfbb-timeline-item__content">
+      <img src="{{ core_e(avatarUrl) }}" alt="" loading="lazy" width="28" height="28">
+      <p>{{ description|raw }}</p>
+    </div>
+  </div>
+</li>
+{% endfor %}

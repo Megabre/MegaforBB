@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set permission = permission ?? null %}
+{% set isEdit = permission and permission.id %}
+{% set actionUrl = isEdit ? core_url(adminPath ~ '/permissions/update/' ~ permission.id) : core_url(adminPath ~ '/permissions/store') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle"><a href="{{ core_url(adminPath ~ '/permissions') }}">{{ core_e(admin__('permissions.title')) }}</a></div>
+                <h2 class="page-title">{{ core_e(pageTitle ?? '') }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row row-cards">
+            <div class="col-12">
+                <form action="{{ actionUrl }}" method="post" class="card">
+                    {{ core_csrf_field()|raw }}
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-sm-6 col-md-6">
+                                <label class="form-label required">{{ core_e(admin__('permissions.key')) }}</label>
+                                <input type="text" name="key" class="form-control" placeholder="{{ core_e(admin__('permissions.key_ph')) }}" value="{{ core_e(permission.key ?? '') }}" required>
+                                <small class="text-muted">{{ core_e(admin__('permissions.key_hint')) }}</small>
+                            </div>
+                            <div class="col-sm-6 col-md-6">
+                                <label class="form-label required">{{ core_e(admin__('permissions.group')) }}</label>
+                                <input type="text" name="group" class="form-control" placeholder="{{ core_e(admin__('permissions.group_ph')) }}" value="{{ core_e(permission.group ?? '') }}" required>
+                                <small class="text-muted">{{ core_e(admin__('permissions.group_hint')) }}</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">{{ core_e(admin__('permissions.description')) }}</label>
+                                <input type="text" name="description" class="form-control" placeholder="{{ core_e(admin__('permissions.desc_ph')) }}" value="{{ core_e(permission.description ?? '') }}">
+                            </div>
+                            <div class="col-sm-12">
+                                <label class="form-label">{{ core_e(admin__('permissions.default_value')) }}</label>
+                                <div>
+                                    <label class="form-check">
+                                        <input class="form-check-input text-success bg-success" type="checkbox" name="default_value" value="1" {{ (permission.default_value ?? false) ? 'checked' : '' }}>
+                                        <span class="form-check-label">{{ core_e(admin__('permissions.default_yes_hint')) }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="{{ core_url(adminPath ~ '/permissions') }}" class="btn btn-link link-secondary">{{ core_e(admin__('common.cancel')) }}</a>
+                        <button type="submit" class="btn btn-primary">{{ core_e(admin__('common.save')) }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

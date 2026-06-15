@@ -1,0 +1,21 @@
+{# IPS profil kabuğu #}
+{% include 'partials/profile_header.html.twig' with {
+  profileUser: profileUser,
+  isOwnProfile: isOwnProfile,
+  coverUrl: coverUrl,
+  avatarUrl: avatarUrl,
+  rewardLevel: rewardLevel,
+  userStats: userStats|default({}),
+  profileViewStats: profileViewStats|default({ unique_viewers: 0, total_views: 0 }),
+  showWatcher: showWatcher|default(false),
+  showCoverUpload: showCoverUpload|default(false),
+  compact: compact|default(false),
+  showActions: showActions|default(true),
+  reputationEnabled: reputationEnabled|default(true),
+  showFullProfile: showFullProfile|default(true)
+} %}
+{% include 'partials/profile_activity_nav.html.twig' with {
+  profileUser: profileUser,
+  activeTab: activeTab|default('activity'),
+  isOwnProfile: isOwnProfile|default(false)
+} %}

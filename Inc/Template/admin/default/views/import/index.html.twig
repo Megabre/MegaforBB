@@ -1,0 +1,350 @@
+{% extends 'base.html.twig' %}
+{% set xfDataLoaded = xfDataLoaded ?? false %}
+{% set sourceLabel = sourceLabel ?? null %}
+{% set sourceConfig = sourceConfig ?? [] %}
+{% set sourceType = sourceType ?? 'xenforo' %}
+{% set sourceDataCounts = sourceDataCounts ?? null %}
+{% set pageTitle = pageTitle ?? lang('admin.import.page_title') %}
+{% set steps = steps ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-lg">
+        <div class="row g-2 align-items-center">
+            <div class="col-auto"><i class="ti ti-database-import fs-2 text-primary"></i></div>
+            <div class="col">
+                <h2 class="page-title">{{ pageTitle|e }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.import.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-lg">
+        {% set flashSuccess = flash('success') %}
+        {% set flashError = flash('error') %}
+        {% if flashSuccess %}
+        <div class="alert alert-success alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button>{{ flashSuccess|e }}</div>
+        {% endif %}
+        {% if flashError %}
+        <div class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Hata:</strong> {{ flashError|e }}</div>
+        {% endif %}
+
+        <div class="alert alert-info mb-4">
+            <strong><i class="ti ti-info-circle me-2"></i>{{ lang('admin.import.supported') }}</strong>
+            <p class="mb-0 mt-1 small">XenForo v2.2.13, MyBB 1.8.39, MegaforBB (aynı sistem / SQL dump)</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-plug-connected me-2"></i>{{ lang('admin.import.source_db') }}</h3>
+            </div>
+            <div class="card-body">
+                {% if not xfDataLoaded %}
+                <p class="text-muted mb-3">{{ lang('admin.import.source_desc') }}</p>
+                <form action="{{ core_url(adminPath ~ '/import/test-connection') }}" method="post">
+                    {{ core_csrf_field('admin_import_connection')|raw }}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.import.source_type') }}</label>
+                            <select name="source_type" class="form-select" required>
+                                <option value="xenforo" {{ sourceType == 'xenforo' ? 'selected' : '' }}>XenForo</option>
+                                <option value="mybb" {{ sourceType == 'mybb' ? 'selected' : '' }}>MyBB</option>
+                                <option value="megaforbb" {{ sourceType == 'megaforbb' ? 'selected' : '' }}>MegaforBB</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.import.host') }}</label>
+                            <input type="text" name="db_host" class="form-control" value="{{ (sourceConfig.host ?? 'localhost')|e }}" placeholder="localhost" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">{{ lang('admin.import.port') }}</label>
+                            <input type="number" name="db_port" class="form-control" value="{{ sourceConfig.port ?? 3306 }}" placeholder="3306">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.import.db_name') }}</label>
+                            <input type="text" name="db_name" class="form-control" value="{{ (sourceConfig.dbname ?? '')|e }}" placeholder="{{ sourceType == 'mybb' ? 'mybb' : 'xenforo_db' }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.import.username') }}</label>
+                            <input type="text" name="db_user" class="form-control" value="{{ (sourceConfig.username ?? '')|e }}" placeholder="root" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.import.password') }}</label>
+                            <input type="password" name="db_password" class="form-control" value="" placeholder="••••••••" autocomplete="off">
+                            <small class="form-hint">{{ lang('admin.import.password_hint') }}</small>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">{{ lang('admin.import.charset') }}</label>
+                            <input type="text" name="db_charset" class="form-control" value="{{ (sourceConfig.charset ?? 'utf8mb4')|e }}" placeholder="utf8mb4">
+                        </div>
+                        {% if sourceType == 'xenforo' %}
+                        <div class="col-12">
+                            <label class="form-label">{{ lang('admin.import.xenforo_internal_data_path') }}</label>
+                            <input type="text" name="xenforo_internal_data_path" class="form-control" value="{{ (sourceConfig.xenforo_internal_data_path ?? '')|e }}" placeholder="/var/www/xenforo/internal_data veya C:\laragon\www\MegaforBB\xenforo\internal_data">
+                            <small class="form-hint text-muted">{{ lang('admin.import.xenforo_internal_data_path_hint') }}</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ lang('admin.import.xenforo_data_path') }}</label>
+                            <input type="text" name="xenforo_data_path" class="form-control" value="{{ (sourceConfig.xenforo_data_path ?? '')|e }}" placeholder="/var/www/xenforo/data veya C:\laragon\www\MegaforBB\xenforo\data">
+                            <small class="form-hint text-muted">{{ lang('admin.import.xenforo_data_path_hint') }}</small>
+                        </div>
+                        {% endif %}
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary"><i class="ti ti-plug me-1"></i> {{ lang('admin.import.test_save') }}</button>
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <span class="badge bg-success me-2"><i class="ti ti-check me-1"></i> {{ lang('admin.import.connected') }}</span>
+                        <span class="badge bg-secondary me-2">{{ sourceType == 'mybb' ? 'MyBB' : (sourceType == 'megaforbb' ? 'MegaforBB' : 'XenForo') }}</span>
+                        <strong>{{ sourceLabel|e }}</strong>
+                    </div>
+                    <form action="{{ core_url(adminPath ~ '/import/clear-connection') }}" method="post" class="d-inline">
+                        {{ core_csrf_field('admin_import_clear')|raw }}
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">{{ lang('admin.import.change_conn') }}</button>
+                    </form>
+                </div>
+                {% if sourceDataCounts is not empty %}
+                <div class="mt-3 pt-3 border-top">
+                    <strong class="text-muted small">{{ lang('admin.import.source_data_preview') }}</strong>
+                    <div class="mt-1 small">
+                        {% if sourceType == 'xenforo' %}
+                            {{ lang('admin.import.count_users') }}: {{ sourceDataCounts.users ?? 0 }},
+                            {{ lang('admin.import.count_categories') }}: {{ sourceDataCounts.categories ?? 0 }},
+                            {{ lang('admin.import.count_forums') }}: {{ sourceDataCounts.forums ?? 0 }},
+                            {{ lang('admin.import.count_topics') }}: {{ sourceDataCounts.topics ?? 0 }},
+                            {{ lang('admin.import.count_posts') }}: {{ sourceDataCounts.posts ?? 0 }}
+                        {% elseif sourceType == 'mybb' %}
+                            {{ lang('admin.import.count_users') }}: {{ sourceDataCounts.users ?? 0 }},
+                            {{ lang('admin.import.count_topics') }}: {{ sourceDataCounts.topics ?? 0 }},
+                            {{ lang('admin.import.count_posts') }}: {{ sourceDataCounts.posts ?? 0 }}
+                        {% else %}
+                            {{ lang('admin.import.count_users') }}: {{ sourceDataCounts.users ?? 0 }},
+                            {{ lang('admin.import.count_categories') }}: {{ sourceDataCounts.categories ?? 0 }},
+                            {{ lang('admin.import.count_forums') }}: {{ sourceDataCounts.forums ?? 0 }},
+                            {{ lang('admin.import.count_topics') }}: {{ sourceDataCounts.topics ?? 0 }},
+                            {{ lang('admin.import.count_posts') }}: {{ sourceDataCounts.posts ?? 0 }}
+                        {% endif %}
+                    </div>
+                    {% if sourceType == 'xenforo' and (sourceDataCounts.categories ?? 0) == 0 and (sourceDataCounts.forums ?? 0) == 0 %}
+                    <div class="alert alert-warning mt-2 mb-0 small">{{ lang('admin.import.source_empty_hint') }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not xfDataLoaded %}
+        <div class="alert alert-info">
+            <i class="ti ti-info-circle me-2"></i>
+            {{ lang('admin.import.connection_info') }}
+        </div>
+        {% else %}
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-settings me-2"></i>{{ lang('admin.import.settings') }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">{{ lang('admin.import.mode') }}</label>
+                        <select id="import-mode" class="form-select">
+                            <option value="clean">{{ lang('admin.import.mode_clean') }}</option>
+                            <option value="merge" selected>{{ lang('admin.import.mode_merge') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" id="btn-start-all" class="btn btn-primary"><i class="ti ti-player-play me-1"></i> {{ lang('admin.import.start_all') }}</button>
+                        <form action="{{ core_url(adminPath ~ '/import/reset') }}" method="post" class="d-inline ms-2" onsubmit="return confirm('{{ lang('admin.import.reset_confirm') }}');">
+                            {{ core_csrf_field('admin_import_reset')|raw }}
+                            <button type="submit" class="btn btn-outline-secondary"><i class="ti ti-refresh me-1"></i> {{ lang('admin.import.reset_btn') }}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title"><i class="ti ti-list-check me-2"></i>{{ lang('admin.import.steps_title') }}</h3></div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px">#</th>
+                            <th>{{ lang('admin.import.step') }}</th>
+                            <th style="width:120px">{{ lang('admin.common.status') }}</th>
+                            <th style="width:200px">{{ lang('admin.import.progress') }}</th>
+                            <th style="width:80px">{{ lang('admin.import.error') }}</th>
+                            <th style="width:100px">{{ lang('admin.import.action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i, step in steps %}
+                        <tr id="step-row-{{ step.key|e('html_attr') }}" data-step="{{ step.key|e('html_attr') }}">
+                            <td class="text-muted">{{ i + 1 }}</td>
+                            <td><strong>{{ step.name|e }}</strong></td>
+                            <td>
+                                <span class="step-status badge
+                                    {% if step.status == 'completed' %}bg-success
+                                    {% elseif step.status == 'running' %}bg-azure
+                                    {% elseif step.status == 'failed' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}
+                                ">{{ step.status|e }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-fill" style="height:6px">
+                                        {% set pct = step.total > 0 ? ((step.processed / step.total) * 100)|round : 0 %}
+                                        <div class="progress-bar step-progress-bar" style="width:{{ pct }}%"></div>
+                                    </div>
+                                    <small class="step-progress-text text-muted">{{ step.processed }}/{{ step.total }}</small>
+                                </div>
+                            </td>
+                            <td><span class="step-errors text-danger">{{ step.errors > 0 ? step.errors : '-' }}</span></td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-run-step" data-step="{{ step.key|e('html_attr') }}"><i class="ti ti-player-play"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="import-log" class="card mb-4 d-none">
+            <div class="card-header"><h3 class="card-title"><i class="ti ti-terminal me-2"></i>{{ lang('admin.import.log_title') }}</h3></div>
+            <div class="card-body">
+                <pre id="import-log-content" class="mb-0 p-3 bg-dark text-light rounded" style="max-height:400px;overflow-y:auto;font-size:13px;"></pre>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mb-4">
+            <a href="{{ core_url(adminPath) }}" class="btn">{{ lang('admin.import.back_panel') }}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if xfDataLoaded and steps is not empty %}
+<script>
+(function() {
+    var csrfToken = document.querySelector('form[action*="import"] input[name="_token"]')?.value || document.querySelector('input[name="_token"]')?.value || '';
+    var runStepUrl = {{ core_url(adminPath ~ '/import/run-step')|json_encode|raw }};
+    var logEl = document.getElementById('import-log');
+    var logContent = document.getElementById('import-log-content');
+    var steps = [{% for step in steps %}"{{ step.key|e('js') }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    var running = false;
+
+    function log(msg) {
+        if (logEl) logEl.classList.remove('d-none');
+        var time = new Date().toLocaleTimeString();
+        if (logContent) { logContent.textContent += '[' + time + '] ' + msg + '\n'; logContent.scrollTop = logContent.scrollHeight; }
+    }
+
+    function updateRow(stepKey, data) {
+        var row = document.getElementById('step-row-' + stepKey);
+        if (!row) return;
+        var badge = row.querySelector('.step-status');
+        var progBar = row.querySelector('.step-progress-bar');
+        var progText = row.querySelector('.step-progress-text');
+        var errEl = row.querySelector('.step-errors');
+        if (data.status && badge) {
+            badge.textContent = data.status;
+            badge.className = 'step-status badge ' + (data.status === 'completed' ? 'bg-success' : data.status === 'running' ? 'bg-azure' : data.status === 'failed' ? 'bg-danger' : 'bg-secondary');
+        }
+        if (data.total !== undefined && progBar && progText) {
+            var pct = data.total > 0 ? Math.round((data.processed / data.total) * 100) : (data.status === 'completed' ? 100 : 0);
+            progBar.style.width = pct + '%';
+            progText.textContent = data.processed + '/' + data.total;
+        }
+        if (data.errors !== undefined && errEl) errEl.textContent = data.errors > 0 ? data.errors : '-';
+    }
+
+    function runStep(stepKey, callback) {
+        var modeEl = document.getElementById('import-mode');
+        var mode = modeEl ? modeEl.value : 'merge';
+        updateRow(stepKey, {status: 'running'});
+        log('Adım başlatılıyor: ' + stepKey + ' (mod: ' + mode + ')');
+        var fd = new FormData();
+        fd.append('step', stepKey);
+        fd.append('mode', mode);
+        fd.append('_token', csrfToken);
+        fetch(runStepUrl, {method: 'POST', body: fd, headers: {'X-Requested-With': 'XMLHttpRequest'}})
+            .then(function(r) {
+                if (!r.ok) {
+                    return r.text().then(function(t) {
+                        var msg = (t && t.length > 0) ? (t.length > 2000 ? t.substring(0, 2000) + '...' : t) : (r.status + ' ' + r.statusText);
+                        throw new Error(msg);
+                    });
+                }
+                return r.json().catch(function() { return { success: false, error: 'Sunucu JSON dönmedi.' }; });
+            })
+            .then(function(data) {
+                if (data.success !== undefined) {
+                    var r = data.result || {};
+                    updateRow(stepKey, { status: data.success ? 'completed' : 'failed', total: r.total || 0, processed: r.imported || 0, errors: r.errors || 0 });
+                    log(stepKey + ': ' + (r.imported || 0) + ' aktarıldı, ' + (r.errors || 0) + ' hata');
+                    if (r.errorMessages && r.errorMessages.length > 0) {
+                        log('Hata detayları:');
+                        r.errorMessages.forEach(function(msg) { log('  • ' + msg); });
+                    }
+                    if (data.error) log('Hata: ' + data.error);
+                } else {
+                    updateRow(stepKey, {status: 'failed'});
+                    log(stepKey + ': HATA - ' + (data.error || 'Bilinmeyen hata'));
+                    if (data.result && data.result.errorMessages && data.result.errorMessages.length > 0) {
+                        data.result.errorMessages.forEach(function(msg) { log('  • ' + msg); });
+                    }
+                }
+                if (callback) callback(data.success !== false);
+            })
+            .catch(function(err) {
+                updateRow(stepKey, {status: 'failed'});
+                log(stepKey + ': HATA - ' + (err && err.message ? err.message : 'Bağlantı veya sunucu hatası'));
+                if (callback) callback(false);
+            });
+    }
+
+    function runAllSequentially(index) {
+        if (index >= steps.length) {
+            log('=== TÜM ADIMLAR TAMAMLANDI ===');
+            running = false;
+            var btn = document.getElementById('btn-start-all');
+            if (btn) btn.disabled = false;
+            return;
+        }
+        runStep(steps[index], function(ok) { runAllSequentially(index + 1); });
+    }
+
+    var btnAll = document.getElementById('btn-start-all');
+    if (btnAll) {
+        btnAll.addEventListener('click', function() {
+            if (running) return;
+            var modeEl = document.getElementById('import-mode');
+            var mode = modeEl ? modeEl.value : 'merge';
+            if (mode === 'clean' && !confirm('Temiz Import modu. Mevcut TÜM içerik silinecek! Devam?')) return;
+            running = true;
+            this.disabled = true;
+            if (logContent) logContent.textContent = '';
+            log('=== IMPORT BAŞLATILDI (' + mode.toUpperCase() + ' mod) ===');
+            runAllSequentially(0);
+        });
+    }
+
+    document.querySelectorAll('.btn-run-step').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (running) return;
+            var stepKey = this.getAttribute('data-step');
+            if (stepKey) runStep(stepKey);
+        });
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

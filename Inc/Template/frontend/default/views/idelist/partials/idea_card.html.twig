@@ -1,0 +1,18 @@
+<article class="idelist-card" tabindex="0" role="article">
+  <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div class="d-flex align-items-center gap-3 flex-grow-1">
+      {% include 'idelist/partials/vote_button.html.twig' with { idea: idea, userVotes: userVotes, showVoteCounts: showVoteCounts|default(true), allowDownvotes: allowDownvotes|default(true) } %}
+      <div class="flex-grow-1">
+        <a class="idelist-title" href="{{ core_url('idelist/' ~ idea.slug) }}">{{ core_e(idea.title) }}</a>
+        <div class="idelist-meta">
+          <span>{{ core_e(idea.user.username ?? '') }}</span>
+          <span>•</span>
+          <span>{{ idea.created_at ? idea.created_at.diffForHumans() : '' }}</span>
+          <span>•</span>
+          <span>{{ (idea.comments_count ?? 0) }} {{ core_e(core__('common.messages')) }}</span>
+        </div>
+      </div>
+    </div>
+    {% include 'idelist/partials/status_badge.html.twig' with { status: idea.status, statusDefinition: idea.statusDefinition|default(null) } %}
+  </div>
+</article>

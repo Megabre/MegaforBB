@@ -1,0 +1,403 @@
+/**
+ * MegaforBB Portal – Premium landing theme
+ * Tam genişlik landing page, sidebar yok, forum hero yok.
+ */
+
+/* -------------------------------------------------------------------------
+   LANDING PAGE LAYOUT (full width, no sidebar)
+   ------------------------------------------------------------------------- */
+.mfbb-portal-body {
+  background-color: #f8fafc;
+  overflow-x: hidden;
+}
+
+.mfbb-portal-body .mfbb-page-container {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0;
+}
+
+.mfbb-portal-body main {
+  padding: 0;
+  max-width: 100%;
+}
+
+.mfbb-portal-page {
+  --portal-primary: var(--primary-color, #206bc4);
+  --portal-header-bg: #1a252f;
+  --portal-surface: #ffffff;
+  --portal-border: #e2e8f0;
+  --portal-muted: #64748b;
+  --portal-text: #0f172a;
+  --portal-radius: 16px;
+  --portal-radius-sm: 12px;
+  --portal-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --portal-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1.5rem 3rem;
+}
+
+/* -------------------------------------------------------------------------
+   HERO (full-bleed, ay ışığı, yıldız, yansıma)
+   ------------------------------------------------------------------------- */
+.mfbb-portal-hero {
+  position: relative;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  color: #fff;
+  padding: 4rem 1.5rem;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-bottom: 3rem;
+  width: 100vw;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mfbb-portal-hero__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Ay ışığı – büyük yumuşak glow */
+.mfbb-portal-hero__moon {
+  position: absolute;
+  top: -15%;
+  right: 10%;
+  width: 28rem;
+  height: 28rem;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 30%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+/* Merkez yansıma */
+.mfbb-portal-hero__glow {
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90vw, 40rem);
+  height: 20rem;
+  background: radial-gradient(ellipse at center, rgba(99,102,241,0.15) 0%, rgba(59,130,246,0.06) 40%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(40px);
+}
+
+/* Yıldızlar */
+.mfbb-portal-hero__stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.9), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 90px 40px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 160px 120px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 200px 50px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.5px 1.5px at 250px 90px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 300px 140px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 350px 60px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 80px 150px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.5px 1.5px at 180px 20px, rgba(255,255,255,0.6), transparent);
+  background-size: 400px 200px;
+  animation: mfbb-stars-twinkle 8s ease-in-out infinite;
+  opacity: 0.9;
+}
+
+@keyframes mfbb-stars-twinkle {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Alt yansıma – su/ay ışığı efekti */
+.mfbb-portal-hero__reflection {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, rgba(255,255,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.mfbb-portal-hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 42rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.mfbb-portal-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+.mfbb-portal-hero__badge-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #34d399;
+  flex-shrink: 0;
+}
+
+.mfbb-portal-hero__title {
+  font-size: clamp(1.875rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+  color: #fff;
+}
+
+.mfbb-portal-hero__desc {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 1.75rem;
+}
+
+.mfbb-portal-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.mfbb-portal-hero__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  border-radius: var(--portal-radius-sm);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  min-width: 10rem;
+  justify-content: center;
+}
+
+.mfbb-portal-hero__btn--primary {
+  background: #fff;
+  color: #0f172a;
+}
+
+.mfbb-portal-hero__btn--primary:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.mfbb-portal-hero__btn--secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mfbb-portal-hero__btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .mfbb-portal-hero {
+    padding: 4rem 2rem;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   FEATURES (vitrin – forum yazılımı tanıtımı)
+   ------------------------------------------------------------------------- */
+.mfbb-portal-features {
+  margin-bottom: 3rem;
+}
+
+.mfbb-portal-features__intro {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--portal-muted);
+  text-align: center;
+  margin: 0 0 2rem;
+  letter-spacing: -0.01em;
+}
+
+.mfbb-portal-features__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mfbb-portal-features__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mfbb-portal-features__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+.mfbb-portal-feature {
+  background: var(--portal-surface);
+  border: none;
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  box-shadow: 0 4px 24px -4px rgb(0 0 0 / 0.08), 0 2px 8px -2px rgb(0 0 0 / 0.04);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.mfbb-portal-feature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 20px 20px 0 0;
+}
+
+.mfbb-portal-feature:nth-child(1)::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+.mfbb-portal-feature:nth-child(2)::before { background: linear-gradient(90deg, #10b981, #34d399); }
+.mfbb-portal-feature:nth-child(3)::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.mfbb-portal-feature:nth-child(4)::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+.mfbb-portal-feature__icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto 1.25rem;
+  border: none;
+}
+
+.mfbb-portal-feature__icon--indigo {
+  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+  color: #4f46e5;
+}
+
+.mfbb-portal-feature__icon--emerald {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  color: #059669;
+}
+
+.mfbb-portal-feature__icon--blue {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #2563eb;
+}
+
+.mfbb-portal-feature__icon--amber {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  color: #d97706;
+}
+
+.mfbb-portal-feature__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--portal-text);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.mfbb-portal-feature__text {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--portal-muted);
+  margin: 0;
+}
+
+/* -------------------------------------------------------------------------
+   CTA (vitrin – konu olmayan varsayılan durumda sayfa tamamlanır)
+   ------------------------------------------------------------------------- */
+.mfbb-portal-cta {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-radius: var(--portal-radius);
+  padding: 3rem 2rem;
+  margin-bottom: 3rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.mfbb-portal-cta::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 20rem;
+  height: 20rem;
+  background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mfbb-portal-cta__inner {
+  position: relative;
+  z-index: 1;
+}
+
+.mfbb-portal-cta__title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.mfbb-portal-cta__text {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.mfbb-portal-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  background: #fff;
+  color: #0f172a;
+  border-radius: var(--portal-radius-sm);
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.mfbb-portal-cta__btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .mfbb-portal-hero__btn {
+    transition: none;
+  }
+  .mfbb-portal-hero__stars {
+    animation: none;
+  }
+}

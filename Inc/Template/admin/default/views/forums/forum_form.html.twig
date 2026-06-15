@@ -1,0 +1,154 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set forum = forum ?? null %}
+{% set categories = categories ?? [] %}
+{% set forums = forums ?? [] %}
+{% set allPrefixes = allPrefixes ?? [] %}
+{% set forumPrefixIds = forumPrefixIds ?? [] %}
+{% set isEdit = forum and forum.id %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle) }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/forums') }}" class="btn btn-outline-secondary">{{ core_e(admin__('common.cancel')) }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row row-cards">
+            <div class="col-12">
+                <div class="card">
+                    <form action="{{ isEdit ? core_url(adminPath ~ '/forums/update/' ~ forum.id) : core_url(adminPath ~ '/forums/store') }}" method="post">
+                        {{ core_csrf_field()|raw }}
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label required">{{ lang('admin.forums.category_label') }}</label>
+                                <select name="category_id" class="form-select" required>
+                                    <option value="">{{ core_e(admin__('common.select')) }}</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.id }}" {{ (forum.category_id ?? 0) == cat.id ? 'selected' : '' }}>{{ core_e(cat.name) }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ core_e(admin__('forums.parent_forum')) }}</label>
+                                <select name="parent_id" class="form-select">
+                                    <option value="">{{ lang('admin.forums.no_parent') }}</option>
+                                    {% for f in forums %}
+                                    {% if not (isEdit and forum.id == f.id) %}
+                                    <option value="{{ f.id }}" {{ (forum.parent_id ?? 0) == f.id ? 'selected' : '' }}>{{ core_e(f.name) }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">{{ core_e(admin__('forums.name')) }}</label>
+                                <input type="text" class="form-control" name="name" value="{{ core_e(forum.name ?? '') }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ core_e(admin__('forums.description')) }}</label>
+                                <textarea class="form-control" name="description" rows="3">{{ core_e(forum.description ?? '') }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ core_e(admin__('forums.icon')) }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text w-5 text-center d-flex justify-content-center"><i id="forum-icon-preview" class="{{ (forum.icon ?? '') != '' ? ((' ' in (forum.icon ?? '')) ? forum.icon : 'fa-solid fa-' ~ forum.icon) : 'fa-solid fa-comments' }}"></i></span>
+                                    <input type="text" class="form-control" name="icon" id="forum-icon-input" value="{{ core_e(forum.icon ?? '') }}" placeholder="{{ core_e(admin__('forums.icon_forum_ph')) }}">
+                                    <button class="btn btn-outline-secondary icon-selector-btn" type="button" data-target="forum-icon-input" data-preview="forum-icon-preview">{{ lang('admin.forums.select') }}</button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.forums.image_url') }}</label>
+                                <input type="url" class="form-control" name="image_url" value="{{ core_e(forum.image_url ?? '') }}" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ core_e(admin__('forums.sort_order')) }}</label>
+                                <input type="number" class="form-control" name="sort_order" value="{{ forum.sort_order ?? 0 }}">
+                                <small class="form-hint">{{ core_e(admin__('forums.sort_order_hint')) }}</small>
+                            </div>
+
+                            <hr class="my-4" id="forum-prefixes">
+                            <h3 class="card-title"><i class="ti ti-tags me-1"></i>{{ core_e(admin__('prefixes.forum_assign_title')) }}</h3>
+                            <p class="text-muted small mb-3">{{ core_e(admin__('prefixes.forum_assign_hint')) }}</p>
+                            {% if allPrefixes is empty %}
+                            <p class="text-muted small">{{ core_e(admin__('prefixes.no_prefixes_assign')) }}</p>
+                            {% else %}
+                            <div class="row g-2 border rounded p-3 bg-light" style="max-height:280px;overflow-y:auto;">
+                                {% for p in allPrefixes %}
+                                <div class="col-md-4 col-lg-3">
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="forum_prefix_ids[]" value="{{ p.id }}" {{ p.id in forumPrefixIds ? 'checked' : '' }}>
+                                        <span class="form-check-label">{{ core_e(p.name) }}</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <hr class="my-4">
+                            <h3 class="card-title">{{ core_e(admin__('forums.advanced_options')) }}</h3>
+                            <div class="row g-3">
+                                <div class="col-sm-6 col-md-4">
+                                    <label class="form-label">{{ core_e(admin__('forums.forum_type')) }}</label>
+                                    <select name="forum_type" class="form-select">
+                                        <option value="discussion" {{ (forum.forum_type ?? '') == 'discussion' ? 'selected' : '' }}>{{ core_e(admin__('forums.type_discussion')) }}</option>
+                                        <option value="article" {{ (forum.forum_type ?? '') == 'article' ? 'selected' : '' }}>{{ lang('admin.forums.type_article') }}</option>
+                                        <option value="question" {{ (forum.forum_type ?? '') == 'question' ? 'selected' : '' }}>{{ lang('admin.forums.type_question') }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <label class="form-label">{{ core_e(admin__('forums.default_sort_order')) }}</label>
+                                    <select name="default_sort_order" class="form-select">
+                                        <option value="last_post_desc" {{ (forum.default_sort_order ?? '') == 'last_post_desc' ? 'selected' : '' }}>{{ core_e(admin__('forums.sort_last_post_desc')) }}</option>
+                                        <option value="created_desc" {{ (forum.default_sort_order ?? '') == 'created_desc' ? 'selected' : '' }}>{{ core_e(admin__('forums.sort_created_desc')) }}</option>
+                                        <option value="title_asc" {{ (forum.default_sort_order ?? '') == 'title_asc' ? 'selected' : '' }}>{{ core_e(admin__('forums.sort_title_asc')) }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <label class="form-label">{{ lang('admin.forums.topic_date_limit') }}</label>
+                                    <select name="topic_date_limit" class="form-select">
+                                        <option value="0" {{ (forum.topic_date_limit ?? 0) == 0 ? 'selected' : '' }}>{{ core_e(admin__('forums.limit_all_time')) }}</option>
+                                        <option value="7" {{ (forum.topic_date_limit ?? 0) == 7 ? 'selected' : '' }}>{{ core_e(admin__('forums.limit_7_days')) }}</option>
+                                        <option value="30" {{ (forum.topic_date_limit ?? 0) == 30 ? 'selected' : '' }}>{{ core_e(admin__('forums.limit_30_days')) }}</option>
+                                        <option value="365" {{ (forum.topic_date_limit ?? 0) == 365 ? 'selected' : '' }}>{{ core_e(admin__('forums.limit_1_year')) }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <label class="form-label">{{ core_e(admin__('forums.indexing_mode')) }}</label>
+                                    <select name="indexing_mode" class="form-select">
+                                        <option value="1" {{ (forum.indexing_mode ?? 1) == 1 ? 'selected' : '' }}>{{ core_e(admin__('forums.indexing_all')) }}</option>
+                                        <option value="0" {{ (forum.indexing_mode ?? 1) == 0 ? 'selected' : '' }}>{{ core_e(admin__('forums.indexing_none')) }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <label class="form-label">{{ core_e(admin__('forums.min_tags')) }}</label>
+                                    <input type="number" name="min_tags" class="form-control" value="{{ forum.min_tags ?? 0 }}" min="0">
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <label class="form-label">{{ core_e(admin__('forums.behavior_rules')) }}</label>
+                                    <label class="form-check"><input class="form-check-input" type="checkbox" name="allow_posting" value="1" {{ (forum.allow_posting ?? true) ? 'checked' : '' }}><span class="form-check-label">{{ core_e(admin__('forums.allow_new_messages')) }}</span></label>
+                                    <label class="form-check"><input class="form-check-input" type="checkbox" name="require_moderate_topics" value="1" {{ (forum.require_moderate_topics ?? false) ? 'checked' : '' }}><span class="form-check-label">{{ core_e(admin__('forums.moderate_new_topics')) }}</span></label>
+                                    <label class="form-check"><input class="form-check-input" type="checkbox" name="require_moderate_messages" value="1" {{ (forum.require_moderate_messages ?? false) ? 'checked' : '' }}><span class="form-check-label">{{ core_e(admin__('forums.moderate_new_messages')) }}</span></label>
+                                    <label class="form-check"><input class="form-check-input" type="checkbox" name="count_messages" value="1" {{ (forum.count_messages ?? true) ? 'checked' : '' }}><span class="form-check-label">{{ core_e(admin__('forums.count_user_messages')) }}</span></label>
+                                    <label class="form-check"><input class="form-check-input" type="checkbox" name="find_new" value="1" {{ (forum.find_new ?? true) ? 'checked' : '' }}><span class="form-check-label">{{ core_e(admin__('forums.include_in_new_messages')) }}</span></label>
+                                </div>
+                                {{ admin_forum_form_extra|default('')|raw }}
+                            </div>
+                        </div>
+                        <div class="card-footer text-end">
+                            <button type="submit" class="btn btn-primary">{{ core_e(admin__('common.save')) }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

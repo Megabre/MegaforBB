@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set post = post ?? null %}
+{% set edits = edits ?? [] %}
+{% if not post %}
+  <p class="p-4 text-gray-500">Mesaj bulunamadı.</p>
+{% else %}
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#105289] hover:text-[#105289] hover:underline">{{ core__('common.home') }}</a></li>
+      <li>›</li>
+      <li><a href="{{ core_url('topic/' ~ (post.topic_id ?? 0)) }}" class="text-[#105289] hover:text-[#105289] hover:underline">{{ core_e(post.topic_title ?? '') }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">{{ core__('post.edit_history_title', { id: post.id ?? 0 }) }}</li>
+    </ol>
+  </nav>
+</div>
+
+<div class="mt-6 space-y-6">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="border-b border-gray-200 bg-[#105289] text-white px-6 py-4">
+      <h1 class="text-xl font-semibold">{{ core__('post.edit_history_title', { id: post.id ?? 0 }) }}</h1>
+      <p class="text-sm text-white/80 mt-1">
+        <a href="{{ core_url('topic/' ~ (post.topic_id ?? 0)) }}" class="text-blue-300 hover:underline">{{ core_e(post.topic_title ?? '') }}</a> {{ core__('post.back_to_topic') }}
+      </p>
+    </div>
+    <div class="p-6">
+      <h2 class="text-base font-semibold text-[#105289] mb-3">{{ core__('post.current_version') }}</h2>
+      <div class="p-4 rounded-lg border-2 border-[#105289] bg-blue-50/30 text-[#105289] prose max-w-none">
+        {{ (post.body ?? '')|smileys|raw }}
+      </div>
+    </div>
+  </div>
+
+  {% if edits is not empty %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="border-b border-gray-200 bg-gray-50 px-6 py-3">
+      <h2 class="text-base font-semibold text-[#105289]">{{ core__('post.previous_edits') }}</h2>
+    </div>
+    <div class="divide-y divide-gray-100">
+      {% for edit in edits %}
+      <div class="p-6">
+        <div class="flex flex-wrap items-center gap-2 mb-2 text-sm">
+          <span class="font-medium text-[#105289]">{{ core_e(edit.username ?? 'Bilinmeyen') }}</span>
+          <span class="text-gray-500">·</span>
+          <span class="text-gray-600">{{ (edit.created_at ?? '')|date('d.m.Y H:i') }}</span>
+          {% if edit.edit_reason ?? '' %}<span class="text-gray-500">·</span><span class="text-[#105289] italic">{{ core_e(edit.edit_reason) }}</span>{% endif %}
+        </div>
+        <div class="p-3 rounded border border-gray-100 bg-gray-50 prose max-w-none text-sm">{{ (edit.body ?? '')|raw }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

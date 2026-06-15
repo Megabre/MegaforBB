@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set profileUser = profileUser ?? null %}
+{% if not profileUser %}
+  <p class="p-4 text-gray-500">Kullanıcı bulunamadı.</p>
+{% else %}
+{% set baseUrl = core_url('member/' ~ (profileUser.username|e('url'))) %}
+{% set items = items ?? [] %}
+
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">Ana Sayfa</a></li>
+      <li>›</li>
+      <li><a href="{{ baseUrl }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(profileUser.username) }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">Beğenilen mesajlar</li>
+    </ol>
+  </nav>
+</div>
+<div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+    <h1 class="text-xl font-semibold text-[#1a252f]">{{ core_e(profileUser.username) }} — Beğenilen mesajlar</h1>
+  </div>
+  {% if items is empty %}
+  <div class="p-8 text-center text-gray-500">Henüz beğenilen mesaj yok.</div>
+  {% else %}
+  <ul class="divide-y divide-gray-200">
+    {% for p in items %}
+    <li class="px-6 py-4 hover:bg-gray-50">
+      <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-2">
+        <a href="{{ core_url('topic/' ~ (p.topic_id ?? '')) }}" class="font-medium text-[#1a252f] hover:underline">{{ core_e(p.topic_title ?? '') }}</a>
+        <span>·</span>
+        <span><i class="fa-solid fa-thumbs-up text-green-500 mr-1"></i>{{ p.like_count ?? 0 }} beğeni</span>
+        <span>·</span>
+        <span>{{ core_e(p.created_at ?? '') }}</span>
+      </div>
+      <div class="text-gray-700 text-sm line-clamp-3">{{ (p.body_html ?? p.body ?? '')|striptags|slice(0, 200) }}…</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

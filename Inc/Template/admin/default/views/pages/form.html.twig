@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+{% set page = page ?? null %}
+{% set isEdit = page is not null %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ isEdit ? lang('admin.pages.edit_page') : lang('admin.pages.new_page') }}</h2>
+                <div class="text-muted mt-1">{{ isEdit ? '' : lang('admin.pages.slug_hint_new') }}</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/pages') }}" class="btn">{{ lang('admin.common.back_to_list') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <form action="{{ isEdit ? core_url(adminPath ~ '/pages/update/' ~ page.id) : core_url(adminPath ~ '/pages/store') }}" method="post">
+                {{ core_csrf_field(isEdit ? 'admin_page_update' : 'admin_page_store')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pages.title_label') }} <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" value="{{ page ? core_e(page.title) : '' }}" placeholder="{{ lang('admin.pages.title_ph') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pages.slug_label') }}</label>
+                        <input type="text" name="slug" class="form-control" value="{{ page ? core_e(page.slug) : '' }}" placeholder="{{ lang('admin.pages.slug_ph') }}">
+                        <small class="form-hint">{{ lang('admin.pages.slug_hint') }} Sayfa adresi: <code>page/<strong>slug</strong></code></small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.pages.content') }}</label>
+                        <textarea id="page-body-editor" name="body" class="form-control">{{ page ? core_e(page.body ?? '') : '' }}</textarea>
+                        <small class="form-hint">{{ lang('admin.pages.content_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="is_active" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ (not page or page.is_active) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.pages.is_active') }}</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ isEdit ? lang('admin.common.update') : lang('admin.common.create') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/pages') }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-tr-TR.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var $ = window.jQuery;
+    if (!$ || !$.fn.summernote) return;
+    $('#page-body-editor').summernote({
+        height: 320,
+        placeholder: {{ lang('admin.pages.content_ph')|json_encode|raw }},
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link']],
+            ['view', ['fullscreen', 'codeview']]
+        ],
+        lang: 'tr-TR'
+    });
+});
+</script>
+{% endblock %}

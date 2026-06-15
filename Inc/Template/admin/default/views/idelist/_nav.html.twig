@@ -1,0 +1,6 @@
+<div class="mb-3 idelist-admin-nav">
+  <a class="btn {{ tab == 'ideas' ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ core_url(adminPath ~ '/idelist') }}">{{ core_e(core__('idelist.admin_tab_ideas')) }}</a>
+  <a class="btn {{ tab == 'statuses' ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ core_url(adminPath ~ '/idelist/statuses') }}">{{ core_e(core__('idelist.admin_tab_statuses')) }}</a>
+  <a class="btn {{ tab == 'categories' ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ core_url(adminPath ~ '/idelist/categories') }}">{{ core_e(core__('idelist.admin_tab_categories')) }}</a>
+  <a class="btn {{ tab == 'settings' ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ core_url(adminPath ~ '/idelist/settings') }}">{{ core_e(core__('idelist.admin_tab_settings')) }}</a>
+</div>

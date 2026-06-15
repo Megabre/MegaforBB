@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+{% set template = template ?? null %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.communication.mail_template_edit') }}: {{ core_e(template.name) }}</h2>
+                <div class="text-muted mt-1"><code>{{ core_e(template.template_key) }}</code></div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/communication/mail-templates') }}" class="btn btn-secondary">{{ lang('admin.common.back_to_list') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flashError is defined and flashError %}
+        <div class="alert alert-danger alert-dismissible mb-3">
+            {{ (flashError is iterable ? flashError[0] : flashError)|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        {% if flashSuccess is defined and flashSuccess %}
+        <div class="alert alert-success alert-dismissible mb-3">
+            {{ (flashSuccess is iterable ? flashSuccess[0] : flashSuccess)|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <form action="{{ core_url(adminPath ~ '/communication/mail-templates/update/' ~ template.id) }}" method="post">
+                {{ core_csrf_field('admin_communication')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.subject') }}</label>
+                        <input type="text" name="subject" class="form-control" value="{{ template.subject|e('html_attr') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.body') }}</label>
+                        <textarea id="mail-tpl-body" name="body_html" class="form-control" rows="12">{{ template.body_html ?? '' }}</textarea>
+                        {% if placeholders is defined and placeholders is not empty %}
+                        <div class="mt-2 p-3 bg-light rounded small">
+                            <strong>{{ lang('admin.communication.available_tags') }}</strong>
+                            <p class="text-muted mb-1 mt-1">{{ lang('admin.communication.available_tags_hint') }}</p>
+                            <code class="d-inline-flex flex-wrap gap-1">{% for key, desc in placeholders %}<span title="{{ desc|e('html_attr') }}">{{ '{' ~ key ~ '}' }}</span>{% if not loop.last %} · {% endif %}{% endfor %}</code>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.body_text') }}</label>
+                        <textarea name="body_text" class="form-control" rows="4">{{ template.body_text ?? '' }}</textarea>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script>document.addEventListener('DOMContentLoaded', function() { if (typeof jQuery !== 'undefined' && jQuery().summernote) jQuery('#mail-tpl-body').summernote({ height: 320 }); });</script>
+{% endblock %}

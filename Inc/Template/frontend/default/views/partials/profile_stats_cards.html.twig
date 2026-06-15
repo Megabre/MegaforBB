@@ -1,0 +1,51 @@
+{# Profil girişi — özet istatistik kartları #}
+{% set s = userStats ?? {} %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set idelistEnabled = idelistEnabled ?? (idelist_enabled ?? false) %}
+{% set portalEnabled = portal_enabled ?? false %}
+<div class="ips-profile-stat-cards">
+  <a href="{{ core_url('member/' ~ member_url_path(profileUser ?? null)) }}" class="ips-profile-stat-card ips-profile-stat-card--content">
+    <span class="ips-profile-stat-card__icon"><i class="fa-solid fa-layer-group"></i></span>
+    <span class="ips-profile-stat-card__value">{{ (s.content_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stat-card__label">{{ core__('member.content_count') }}</span>
+  </a>
+  <a href="{{ core_url('member/' ~ member_url_path(profileUser ?? null)) }}?filter=forum" class="ips-profile-stat-card ips-profile-stat-card--topics">
+    <span class="ips-profile-stat-card__icon"><i class="fa-solid fa-folder-open"></i></span>
+    <span class="ips-profile-stat-card__value">{{ (s.topic_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stat-card__label">{{ core__('profile.topics') }}</span>
+  </a>
+  <a href="{{ core_url('member/' ~ member_url_path(profileUser ?? null)) }}?filter=forum" class="ips-profile-stat-card ips-profile-stat-card--posts">
+    <span class="ips-profile-stat-card__icon"><i class="fa-solid fa-comments"></i></span>
+    <span class="ips-profile-stat-card__value">{{ (s.forum_reply_count ?? s.post_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stat-card__label">{{ core__('profile.posts') }}</span>
+  </a>
+  <div class="ips-profile-stat-card ips-profile-stat-card--likes">
+    <span class="ips-profile-stat-card__icon"><i class="fa-solid fa-heart"></i></span>
+    <span class="ips-profile-stat-card__value">{{ (s.like_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stat-card__label">{{ core__('member.stats_likes_received') }}</span>
+  </div>
+  {% if reputationEnabled %}
+  <a href="{{ core_url('member/' ~ member_url_path(profileUser ?? null)) }}/stats" class="ips-profile-stat-card ips-profile-stat-card--rep">
+    <span class="ips-profile-stat-card__icon"><i class="fa-solid fa-star"></i></span>
+    <span class="ips-profile-stat-card__value">{{ (s.reputation_net ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stat-card__label">{{ core__('member.stats_rep_net') }}</span>
+  </a>
+  {% endif %}
+  <a href="{{ core_url('member/' ~ member_url_path(profileUser ?? null)) }}/stats" class="ips-profile-stat-card ips-profile-stat-card--reward">
+    <span class="ips-profile-stat-card__icon"><i class="fa-solid fa-trophy"></i></span>
+    <span class="ips-profile-stat-card__value">{{ (s.reward_points ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stat-card__label">{{ core__('profile.reward_points_label') }}</span>
+  </a>
+  {% if portalEnabled and (s.article_count ?? 0) > 0 %}
+  <a href="{{ core_url('member/' ~ member_url_path(profileUser ?? null)) }}?filter=articles" class="ips-profile-stat-card ips-profile-stat-card--articles">
+    <span class="ips-profile-stat-card__icon"><i class="fa-solid fa-newspaper"></i></span>
+    <span class="ips-profile-stat-card__value">{{ (s.article_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stat-card__label">{{ core__('article.articles') }}</span>
+  </a>
+  {% endif %}
+  <a href="{{ core_url('member/' ~ member_url_path(profileUser ?? null)) }}/stats" class="ips-profile-stat-card ips-profile-stat-card--more">
+    <span class="ips-profile-stat-card__icon"><i class="fa-solid fa-chart-bar"></i></span>
+    <span class="ips-profile-stat-card__value"><i class="fa-solid fa-arrow-right"></i></span>
+    <span class="ips-profile-stat-card__label">{{ core__('member.tab_stats') }}</span>
+  </a>
+</div>

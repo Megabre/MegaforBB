@@ -1,0 +1,10 @@
+<div class="idelist-completion">
+  <div class="font-semibold text-emerald-700">{% if idea.statusDefinition %}{{ core_e(idea.statusDefinition.name) }}{% else %}{{ core_e(core__('idelist.status_completed')) }}{% endif %}</div>
+  <p class="mt-1 text-sm">{{ core_e(idea.completion_note ?? '') }}</p>
+  {% if idea.completion_url %}
+    <a class="btn btn-success btn-sm mt-2" href="{{ core_e(idea.completion_url) }}" target="_blank" rel="noopener noreferrer">
+      {% if 'github.com' in idea.completion_url %}<i class="fa-brands fa-github"></i>{% endif %}
+      {{ core_e(core__('idelist.view_implementation')) }}
+    </a>
+  {% endif %}
+</div>

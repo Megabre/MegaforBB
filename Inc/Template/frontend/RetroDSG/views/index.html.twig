@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% include 'partials/son_olaylar.html.twig' %}
+
+{% set ads = ads ?? [] %}
+{% for ci, cat in categories|default([]) %}
+  {% if ci > 0 and ads.category_between is defined and ads.category_between is not empty %}
+  <div class="ads-slot ads-category-between my-4 rdsg-reveal">
+    {% for html in ads.category_between %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% set catColor = cat.color is not empty ? core_e(cat.color) : '#2e7b8f' %}
+  <section class="rdsg-category rdsg-reveal" style="--rdsg-cat-color: {{ catColor }};">
+    <header class="rdsg-category-header">
+      <div class="rdsg-category-title-wrap">
+        <span class="rdsg-category-icon">
+          {% if cat.icon is not empty %}
+          <i class="{{ (cat.icon|length > 0 and ' ' in cat.icon) ? core_e(cat.icon) : 'fa-solid fa-' ~ core_e(cat.icon) }}"></i>
+          {% else %}
+          <i class="fa-solid fa-layer-group"></i>
+          {% endif %}
+        </span>
+        <div>
+          <h2 class="rdsg-category-title">{{ core_e(cat.name ?? '') }}</h2>
+          {% if cat.description is not empty %}<p class="rdsg-category-desc">{{ core_e(cat.description) }}</p>{% endif %}
+        </div>
+      </div>
+      <span class="rdsg-category-meta">{{ (cat.forums ?? [])|length }} {{ core__('stats.forums')|default('forum') }}</span>
+    </header>
+
+    <div class="rdsg-forum-table">
+      {% for f in cat.forums ?? [] %}
+      {% set forumUrl = core_url('forum/' ~ (f.slug ?? f.id)|e('url')) %}
+      {% set forumHasUnread = (f.has_unread ?? false) or ((f.unread_count ?? 0) > 0) %}
+      {% set forumTopics = (f.latest_topics ?? [])|slice(0, 12) %}
+      {% set topicPairs = forumTopics|batch(2, null) %}
+      <article class="rdsg-forum-row">
+        <div class="rdsg-forum-cell rdsg-forum-cell-info">
+          <a href="{{ forumUrl }}" class="rdsg-forum-icon-wrap" aria-label="{{ core_e(f.name ?? '') }}">
+            {% if f.image_url is not empty %}
+            <img src="{{ core_e(f.image_url) }}" alt="{{ core_e(f.name ?? '') }}" class="rdsg-forum-icon-image">
+            {% else %}
+            <span class="rdsg-forum-icon-fallback">
+              {% if f.icon is not empty %}
+              <i class="{{ (f.icon|length > 0 and ' ' in f.icon) ? core_e(f.icon) : 'fa-solid fa-' ~ core_e(f.icon) }}"></i>
+              {% else %}
+              <i class="fa-solid {{ forumHasUnread ? 'fa-folder-open' : 'fa-folder' }}"></i>
+              {% endif %}
+            </span>
+            {% endif %}
+          </a>
+
+          <div class="rdsg-forum-text">
+            <h3 class="rdsg-forum-name"><a href="{{ forumUrl }}">{{ core_e(f.name ?? '') }}</a></h3>
+            {% if f.description is not empty %}
+            <p class="rdsg-forum-description">{{ core_e(f.description) }}</p>
+            {% endif %}
+
+            <div class="rdsg-forum-meta">
+              <span><strong>{{ (f.topic_count ?? 0)|number_format(0) }}</strong> {{ core__('topic.topics')|default('konu') }}</span>
+              <span><strong>{{ (f.post_count ?? 0)|number_format(0) }}</strong> {{ core__('forum.posts')|default('mesaj') }}</span>
+            </div>
+
+            {% if f.subforums is defined and f.subforums is not empty %}
+            <div class="rdsg-subforum-inline">
+              {% for sub in f.subforums|slice(0, 6) %}
+              <a href="{{ sub.parent_slug is defined and sub.parent_slug is not empty ? core_url('forum/' ~ (sub.parent_slug|e('url')) ~ '/' ~ (sub.slug|e('url'))) : core_url('forum/' ~ (sub.slug|e('url'))) }}" class="rdsg-subforum-chip">{{ core_e(sub.name) }}</a>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="rdsg-forum-cell rdsg-forum-cell-topics">
+          {% if forumTopics is not empty %}
+          <ul class="rdsg-topic-grid">
+            {% for pair in topicPairs %}
+            <li class="rdsg-topic-grid-row">
+              {% for topic in pair %}
+                {% if topic %}
+                {% set topicLink = topic_url(topic) %}
+                {% set timeAgo = topic.created_at is defined ? topic.created_at|date('d.m.Y H:i') : '' %}
+                <a href="{{ topicLink }}" class="rdsg-topic-grid-item" title="{{ core_e(topic.title) }}">
+                  <span class="rdsg-topic-title">{% if (topic.is_private ?? 0) == 1 %}<i class="fa-solid fa-lock text-amber-500 mr-1" title="{{ core__('topic.private_topic')|e('html_attr') }}" aria-hidden="true"></i>{% endif %}{{ core_e(topic.title) }}</span>
+                  <span class="rdsg-topic-meta">{{ core_e(topic.username ?? '') }} - {{ timeAgo }}</span>
+                </a>
+                {% else %}
+                <span class="rdsg-topic-grid-item rdsg-topic-grid-item--ghost" aria-hidden="true"></span>
+                {% endif %}
+              {% endfor %}
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="rdsg-topic-empty">{{ core__('topic.no_topics_in_forum')|default('Bu forumda henuz konu bulunmuyor.') }}</div>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+{% endfor %}
+
+{% if ads.footer_above_home is defined and ads.footer_above_home is not empty %}
+<div class="ads-slot ads-footer-above mt-6 mb-4 rdsg-reveal">
+  {% for html in ads.footer_above_home %}<div class="ad-item my-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

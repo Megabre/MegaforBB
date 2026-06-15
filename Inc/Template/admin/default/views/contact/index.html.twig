@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+{% set messages = messages ?? [] %}
+{% set page = page ?? 1 %}
+{% set totalPages = totalPages ?? 1 %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-mail me-2"></i> {{ lang('admin.contact.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.contact.description') }}</div>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if messages is empty %}
+        <div class="alert alert-info">{{ lang('admin.contact.no_messages') }}</div>
+        {% else %}
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.common.status') }}</th>
+                            <th>{{ lang('admin.contact.sender_name') }}</th>
+                            <th>{{ lang('admin.common.email') }}</th>
+                            <th>{{ lang('admin.contact.subject') }}</th>
+                            <th>{{ lang('admin.contact.date') }}</th>
+                            <th class="w-1">{{ lang('admin.contact.action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for msg in messages %}
+                        <tr>
+                            <td class="text-muted w-1">
+                                {% if msg.is_read == 0 %}<span class="badge bg-green text-green-fg" title="{{ lang('admin.contact.unread') }}">{{ lang('admin.contact.new') }}</span>
+                                {% else %}<span class="badge bg-secondary text-secondary-fg" title="{{ lang('admin.contact.read') }}">{{ lang('admin.contact.read') }}</span>{% endif %}
+                            </td>
+                            <td>{{ core_e(msg.name) }}</td>
+                            <td class="text-muted">{{ core_e(msg.email) }}</td>
+                            <td>
+                                <a href="{{ core_url(adminPath ~ '/contact/show/' ~ msg.id) }}" class="text-reset font-weight-bold">{{ core_e(msg.subject) }}</a>
+                            </td>
+                            <td class="text-muted">{{ msg.created_at|date('d.m.Y H:i') }}</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a href="{{ core_url(adminPath ~ '/contact/show/' ~ msg.id) }}" class="btn btn-sm btn-primary">{{ lang('admin.common.read') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/contact/delete/' ~ msg.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('{{ lang('admin.contact.delete_confirm') }}');">
+                                        {{ core_csrf_field('admin_contact')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if totalPages > 1 %}
+            <div class="card-footer d-flex align-items-center">
+                <ul class="pagination m-0 ms-auto">
+                    <li class="page-item {{ page <= 1 ? 'disabled' : '' }}">
+                        <a class="page-link" href="?page={{ page - 1 }}" tabindex="-1" aria-disabled="true"><i class="ti ti-chevron-left"></i> {{ lang('admin.common.previous') }}</a>
+                    </li>
+                    {% for i in 1..totalPages %}
+                    <li class="page-item {{ i == page ? 'active' : '' }}">
+                        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {{ page >= totalPages ? 'disabled' : '' }}">
+                        <a class="page-link" href="?page={{ page + 1 }}">{{ lang('admin.common.next') }} <i class="ti ti-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

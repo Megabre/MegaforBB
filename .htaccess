@@ -1,0 +1,113 @@
+Options -Indexes
+DirectoryIndex public/index.php
+
+# =============================================================================
+# MegaforBB — Apache kuralları (nginx.vhost ile uyumlu)
+# Edge: HTTPS, canonical host, statik önbellek, hassas yol engelleri
+# Backend: front controller, /public yönlendirme, güvenlik
+# =============================================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # --- Edge: ACME / sertifika doğrulama (nginx: location ~ /.well-known) ---
+    RewriteRule ^\.well-known/ - [L]
+
+    # --- Edge: megaforbb.com.tr → https://www.megaforbb.org ---
+    RewriteCond %{HTTP_HOST} ^(www\.)?megaforbb\.com\.tr$ [NC]
+    RewriteRule ^ https://www.megaforbb.org%{REQUEST_URI} [R=301,L]
+
+    # --- Edge: HTTP → HTTPS (localhost / Laragon geliştirme hariç) ---
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+    RewriteCond %{HTTP_HOST} !^localhost$ [NC]
+    RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$ [NC]
+    RewriteCond %{HTTP_HOST} !\.local$ [NC]
+    RewriteCond %{HTTP_HOST} !\.test$ [NC]
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # --- Güvenlik: gizli dosya ve klasörler (.well-known hariç) ---
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+    # --- Güvenlik: hassas uygulama dizinleri (nginx: App|Forecor|Inc|Library|Route|bin) ---
+    RewriteRule ^(App|Forecor|Inc|Library|Route|bin)(/|$) - [F,L,NC]
+    RewriteRule ^Content/(storage|build)(/|$) - [F,L,NC]
+
+    # --- Güvenlik: migrate.php her yerde kapalı (nginx: migrate\.php$) ---
+    RewriteRule (^|/)migrate\.php$ - [F,L,NC]
+
+    # --- uploads / theme-assets: PHP controller ile sunulur (nginx: proxy ^~ /uploads|theme-assets) ---
+    RewriteRule ^(uploads|theme-assets)(/.*)?$ public/$1$2 [L,QSA,NC]
+
+    # --- Eski /Content statik URL'leri (nginx: try_files /public/$1/$2 /$1/$2) ---
+    RewriteCond %{DOCUMENT_ROOT}/public/$1/$2 -f
+    RewriteRule ^Content/(css|js|img|smileys)/(.*)$ public/$1/$2 [L,QSA,NC]
+    RewriteCond %{DOCUMENT_ROOT}/$1/$2 -f
+    RewriteRule ^Content/(css|js|img|smileys)/(.*)$ $1/$2 [L,QSA,NC]
+    RewriteRule ^Content/(css|js|img|smileys)/(.*)$ public/$1/$2 [L,QSA,NC]
+
+    # --- /public/*.php doğrudan erişim yok ---
+    RewriteCond %{REQUEST_URI} /public/.*\.php$ [NC]
+    RewriteRule ^public/.*\.php$ - [F,L,NC]
+
+    # --- Mevcut dosya/klasörler kökten sunulur ---
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # --- Kalan istekler front controller (public/) ---
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/$1 [L,QSA]
+</IfModule>
+
+# --- Güvenlik: VCS / sunucu gizli dosyaları (nginx: /\.(ht|svn|git)) ---
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.(ht|svn|git)">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^\.(ht|svn|git)">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# --- Güvenlik: hassas konfigürasyon dosyaları (nginx + mevcut .env koruması) ---
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(\.env(\..*)?|composer\.(json|lock)|phpunit\.xml|tailwind\.config\.(js|cjs|mjs|ts)|postcss\.config\.(js|cjs|mjs|ts)|vite\.config\.(js|cjs|mjs|ts)|webpack\.config\.(js|cjs|mjs|ts)|rollup\.config\.(js|cjs|mjs|ts)|tsconfig\.json|jsconfig\.json)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^(\.env(\..*)?|composer\.(json|lock)|phpunit\.xml|tailwind\.config\.(js|cjs|mjs|ts)|postcss\.config\.(js|cjs|mjs|ts)|vite\.config\.(js|cjs|mjs|ts)|webpack\.config\.(js|cjs|mjs|ts)|rollup\.config\.(js|cjs|mjs|ts)|tsconfig\.json|jsconfig\.json)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# --- Edge: statik dosyalar — CORS + uzun önbellek (nginx: css|js|jpg|... expires max) ---
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map|mjs)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    ExpiresByType video/mp4 "access plus 1 year"
+    ExpiresByType application/json "access plus 1 month"
+</IfModule>

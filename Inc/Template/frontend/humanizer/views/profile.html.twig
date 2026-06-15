@@ -1,0 +1,367 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set u = profileUser ?? null %}
+{% set userStats = userStats ?? { post_count: 0, topic_count: 0, like_count: 0, reputation_positive: 0, reputation_negative: 0, subscription_count: 0 } %}
+{% set isOwnProfile = isOwnProfile ?? false %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set iBlockedThem = iBlockedThem ?? false %}
+{% set theyBlockedMe = theyBlockedMe ?? false %}
+{% set rewardLevel = rewardLevel ?? null %}
+{% set profileOk = flash('profile_ok') %}
+{% set repError = flash('rep_error') %}
+{% set profileCommentError = flash('profile_comment_error') %}
+{% set profileComments = profileComments ?? [] %}
+{% set profileCommentsEnabled = profileCommentsEnabled ?? false %}
+{% set allowProfileComments = allowProfileComments ?? true %}
+{% set showFullProfile = showFullProfile ?? true %}
+{% if not u %}
+  <div class="mt-6 max-w-4xl mx-auto px-4">
+    <div class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl p-8 text-center">
+      <p class="text-gray-500">{{ core_e(lang('error.not_found')) }}</p>
+      <a href="{{ core_url('members') }}" class="inline-block mt-3 text-[#105289] hover:text-blue-600 hover:underline">{{ core_e(core__('common.members')) }}</a>
+    </div>
+  </div>
+{% else %}
+{% set baseUrl = core_url('member/' ~ member_url_path(u)) %}
+{% set showFullProfile = not theyBlockedMe and not iBlockedThem %}
+{% set coverUrl = u.cover_photo_path is not empty ? asset_url(u.cover_photo_path) : null %}
+{% set avatarUrl = (u.is_banned|default(false)) ? banned_avatar_url() : (u.avatar_path is not empty ? asset_url(u.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(u.username ?? null)|url_encode) %}
+{% set displayName = '' %}
+{% if u.show_name and ((u.first_name ?? '')|trim != '' or (u.last_name ?? '')|trim != '') %}
+  {% set displayName = ((u.first_name ?? '') ~ ' ' ~ (u.last_name ?? ''))|trim %}
+{% endif %}
+
+<nav aria-label="Breadcrumb" class="mt-4 text-sm text-gray-600">
+  <ol class="flex items-center gap-2 bg-white ring-1 ring-gray-200 rounded-lg shadow-sm px-4 py-2">
+    <li><a href="{{ core_url('') }}" class="text-[#105289] hover:text-blue-500 hover:underline">{{ core_e(core__('common.home')) }}</a></li>
+    <li>›</li>
+    <li><a href="{{ core_url('members') }}" class="text-[#105289] hover:text-blue-500 hover:underline">{{ core_e(core__('common.members')) }}</a></li>
+    <li>›</li>
+    <li class="text-gray-700 font-medium">{{ core_e(u.username) }}</li>
+  </ol>
+</nav>
+
+<div class="mt-6 space-y-4">
+  {% if profileOk %}
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-md text-sm">{{ core_e(profileOk) }}</div>
+  {% endif %}
+
+  {% if theyBlockedMe %}
+    <div class="bg-white ring-1 ring-gray-200 shadow-md rounded-xl p-6 text-center text-gray-600">
+      <p class="font-medium">{{ core__('member.profile_blocked_you') }}</p>
+      <p class="text-sm mt-1">{{ core__('member.profile_blocked_you_desc') }}</p>
+    </div>
+
+  {% elseif iBlockedThem %}
+    <div class="bg-white ring-1 ring-gray-200 shadow-md rounded-xl overflow-hidden">
+      <div class="h-32 bg-gradient-to-r from-[#105289] to-[#2c3e50]"></div>
+      <div class="px-6 pb-6 relative -mt-12 flex flex-col md:flex-row items-end gap-4">
+        <div class="relative">
+          <img src="{{ core_e(avatarUrl) }}" class="w-24 h-24 rounded-xl ring-4 ring-white shadow-lg bg-white object-cover" alt="">
+        </div>
+        <div class="flex-1">
+          {% if u.is_banned|default(false) %}<p class="text-xs font-bold uppercase text-red-600 mb-0.5">{{ core__('member.banned_badge') }}</p>{% endif %}
+          <h1 class="text-2xl font-bold text-gray-900"><span class="inline-flex items-center px-3 py-1 rounded-lg bg-gray-100 text-gray-800 font-bold">{{ core_e(u.username) }}</span></h1>
+          <p class="text-gray-600 mt-1">{{ core__('member.you_blocked') }}</p>
+          <form method="post" action="{{ core_url('member/' ~ member_url_path(u) ~ '/unblock') }}" class="mt-3 inline">
+            <input type="hidden" name="_token" value="{{ core_e(core_csrf_token('member_unblock')) }}">
+            <button type="submit" class="px-3 py-1.5 text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 rounded-md">{{ core__('member.unblock_btn') }}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    {# ——— Kapak: sabit yükseklik, kapak resmi alanı doldurur (object-cover), taşan kısım kesilir ——— #}
+    <div class="bg-white ring-1 ring-gray-200 shadow-md rounded-xl overflow-hidden">
+      <div class="profile-cover relative overflow-hidden bg-gradient-to-r from-[#105289] to-[#2c3e50]" style="height: 208px;">
+        {% if coverUrl %}
+          <img src="{{ core_e(coverUrl) }}" alt="" class="absolute inset-0 w-full h-full object-cover" style="width:100%;height:100%;object-fit:cover;display:block;">
+        {% endif %}
+        {% if isOwnProfile %}
+          <div class="absolute top-3 right-3 flex gap-2">
+            <a href="{{ core_url('profile/edit') }}" class="px-3 py-1.5 text-sm font-medium text-white bg-black/50 hover:bg-black/70 rounded-md backdrop-blur"><i class="fa-solid fa-pen mr-1"></i>{{ core__('profile.edit_link') }}</a>
+            <label class="px-3 py-1.5 text-sm font-medium text-white bg-black/50 hover:bg-black/70 rounded-md backdrop-blur cursor-pointer">
+              <input type="file" accept="image/*" id="cover-upload" class="hidden" data-upload-url="{{ core_e(core_url('profile/cover-upload')) }}" data-csrf="{{ core_e(core_csrf_token('profile_cover')) }}">
+              <i class="fa-solid fa-image mr-1"></i>{{ core__('profile.cover') }}
+            </label>
+          </div>
+        {% endif %}
+      </div>
+
+      {# Avatar: sabit 160x160px, yarısı kapakta yarısı içerikte (-80px) #}
+      <div class="px-4 sm:px-6 lg:px-8 pb-6 relative">
+        <div class="flex flex-col sm:flex-row sm:items-end gap-4" style="margin-top: -80px;">
+          <div class="relative flex-shrink-0" style="width: 160px; height: 160px;">
+            <img src="{{ core_e(avatarUrl) }}" alt="" class="rounded-2xl ring-4 ring-white shadow-xl bg-white" style="width: 160px; height: 160px; object-fit: cover; display: block; max-width: 160px; max-height: 160px;">
+            {% if u.is_verified %}
+              <span class="absolute inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-500 text-white border-2 border-white shadow" style="top: 5px; right: 5px;" title="{{ core__('profile.verified_badge_title') }}"><i class="fa-solid fa-certificate text-xs"></i></span>
+            {% endif %}
+          </div>
+          <div class="flex-1 min-w-0 pb-1">
+            {% if u.is_banned|default(false) %}
+              <p class="text-sm font-bold uppercase text-red-600 mb-1">{{ core__('member.banned_badge') }}</p>
+            {% endif %}
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">
+              <span class="inline-flex items-center px-4 py-2 rounded-xl bg-[#105289] text-white font-bold shadow-md">{{ core_e(u.username) }}</span>
+            </h1>
+
+            {# Tablo: Rol | Onaylı | Başlık | Doğum günü | Seviye #}
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[480px] rounded-lg overflow-hidden text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="text-left py-2.5 px-3 font-semibold text-gray-700 border-b border-gray-200">{{ core__('profile.role') }}</th>
+                    <th class="text-left py-2.5 px-3 font-semibold text-gray-700 border-b border-gray-200">{{ core__('profile.verified') }}</th>
+                    <th class="text-left py-2.5 px-3 font-semibold text-gray-700 border-b border-gray-200">{{ core__('profile.custom_title') }}</th>
+                    <th class="text-left py-2.5 px-3 font-semibold text-gray-700 border-b border-gray-200">{{ core__('profile.birthday') }}</th>
+                    <th class="text-left py-2.5 px-3 font-semibold text-gray-700 border-b border-gray-200">{{ core__('profile.level') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="py-2.5 px-3 border-b border-gray-100">
+                      {% if u.role_name is not empty %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold uppercase text-white" style="{% if u.role and (u.role.color|default('')) != '' %}background-color: {{ core_e(u.role.color) }};{% else %}background-color: #6b7280;{% endif %}">{{ core_e(u.role_name) }}</span>
+                      {% else %}
+                        <span class="text-gray-400">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-2.5 px-3 border-b border-gray-100">
+                      {% if u.is_verified %}
+                        <span class="inline-flex items-center gap-1 text-green-600 font-medium"><i class="fa-solid fa-check-circle"></i> {{ core__('profile.verified_yes') }}</span>
+                      {% else %}
+                        <span class="text-gray-400">{{ core__('profile.verified_no') }}</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-2.5 px-3 border-b border-gray-100">
+                      {% if u.custom_title is not empty %}
+                        <span class="text-gray-800">{{ core_e(u.custom_title) }}</span>
+                      {% else %}
+                        <span class="text-gray-400">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-2.5 px-3 border-b border-gray-100">
+                      {% if u.birthday is not empty %}
+                        <span class="text-gray-800"><i class="fa-solid fa-birthday-cake text-gray-400 mr-1"></i>{{ u.birthday|date('d.m.Y') }}</span>
+                      {% else %}
+                        <span class="text-gray-400">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-2.5 px-3 border-b border-gray-100">
+                      {% if rewardLevel %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium {{ core_e(rewardLevel.badge_css ?? 'text-gray-600') }} bg-gray-100 border border-gray-200">
+                          {% if rewardLevel.badge_icon %}<i class="fa {{ core_e(rewardLevel.badge_icon) }}"></i>{% endif %}
+                          {{ core_e(rewardLevel.badge_label ?? rewardLevel.name ?? '') }}
+                        </span>
+                      {% else %}
+                        <span class="text-gray-400">—</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {# Aksiyonlar #}
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              {% if isOwnProfile %}
+                <a href="{{ core_url('profile/edit') }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"><i class="fa-solid fa-pen mr-1.5"></i>{{ core__('profile.edit_link') }}</a>
+                <a href="{{ core_url('profile/password') }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">{{ core__('profile.password_change_link') }}</a>
+              {% elseif user %}
+                <a href="{{ core_url('conversations/new/' ~ u.username|e('url')) }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-[#105289] hover:bg-[#234a73] rounded-lg"><i class="fa-regular fa-envelope mr-1.5"></i>{{ core__('member.send_message') }}</a>
+                {% if reputationEnabled and showFullProfile %}
+                  <button type="button" class="give-rep-btn inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-green-100 text-green-800 hover:bg-green-200" data-username="{{ core_e(u.username) }}" data-value="1"><i class="fa-solid fa-thumbs-up mr-1"></i>+ Rep</button>
+                  <button type="button" class="give-rep-btn inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg bg-red-100 text-red-800 hover:bg-red-200" data-username="{{ core_e(u.username) }}" data-value="-1"><i class="fa-solid fa-thumbs-down mr-1"></i>− Rep</button>
+                {% endif %}
+                <form method="post" action="{{ core_url('member/' ~ member_url_path(u) ~ '/block') }}" class="inline">
+                  <input type="hidden" name="_token" value="{{ core_e(core_csrf_token('member_block')) }}">
+                  <button type="submit" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"><i class="fa-solid fa-ban mr-1.5"></i>{{ core__('member.block_btn') }}</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if repError %}
+          <div class="mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-sm">{{ core_e(repError) }}</div>
+        {% endif %}
+        {% if profileCommentError %}
+          <div class="mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-sm">{{ core_e(profileCommentError) }}</div>
+        {% endif %}
+
+        {# ——— Kişisel bilgiler: 4 kolon (sol = mevcut alanlar, sağ = cezalar / davetiye / reward points) ——— #}
+        <section class="mt-8 border-t border-gray-100 pt-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"><i class="fa-regular fa-user text-gray-500"></i> {{ core__('profile.section_personal_info') }}</h2>
+          <div class="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+            <table class="w-full text-sm">
+              <tr class="border-b border-gray-100 hover:bg-gray-50/80">
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-regular fa-user text-gray-400 mr-2 w-4"></i>{{ core__('profile.full_name') }}</td>
+                <td class="py-3 px-4 text-gray-900">{{ displayName != '' ? core_e(displayName) : '—' }}</td>
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-solid fa-exclamation-triangle text-gray-400 mr-2 w-4"></i>{{ core__('profile.warnings_punishments') }}</td>
+                <td class="py-3 px-4">
+                  {% set warningPoints = u.warning_points ?? 0 %}
+                  {% if warningPoints <= 0 %}
+                    <span class="inline-flex items-center gap-1.5 text-green-600 font-medium"><i class="fa-solid fa-circle-check"></i> {{ core__('profile.no_warnings') }}</span>
+                  {% else %}
+                    <div x-data="{ open: false }" class="inline">
+                      <button type="button" @click="open = !open" class="inline-flex items-center gap-1.5 text-amber-600 font-medium hover:text-amber-700">
+                        <i class="fa-solid text-sm" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        <span>{{ warningPoints }} {{ core__('member.puan') }}</span>
+                      </button>
+                      <div x-show="open" x-cloak class="mt-2 pl-4 border-l-2 border-amber-200 text-gray-600 text-xs">
+                        <p>{{ core__('profile.warnings_punishments') }} ({{ warningPoints }} {{ core__('member.puan') }})</p>
+                      </div>
+                    </div>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr class="border-b border-gray-100 hover:bg-gray-50/80">
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-solid fa-location-dot text-gray-400 mr-2 w-4"></i>{{ core__('profile.location') }}</td>
+                <td class="py-3 px-4 text-gray-900">{{ u.location is not empty ? core_e(u.location) : '—' }}</td>
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-solid fa-user-plus text-gray-400 mr-2 w-4"></i>{{ core__('profile.invited_by') }}</td>
+                <td class="py-3 px-4 text-gray-500">
+                  {% if u.inviter_user is defined and u.inviter_user %}
+                  <a href="{{ core_url('member/' ~ member_url_path(u.inviter_user)) }}" class="text-[#105289] hover:underline">{{ core_e(u.inviter_user.username) }}</a>
+                  {% else %}
+                  {{ core__('profile.invited_by_tbd') }}
+                  {% endif %}
+                </td>
+              </tr>
+              <tr class="border-b border-gray-100 hover:bg-gray-50/80">
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-solid fa-link text-gray-400 mr-2 w-4"></i>{{ core__('profile.website') }}</td>
+                <td class="py-3 px-4">{% if u.website is not empty %}<a href="{{ core_e(u.website) }}" target="_blank" rel="noopener" class="text-[#105289] hover:underline">{{ core_e(u.website) }}</a>{% else %}—{% endif %}</td>
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-solid fa-star text-amber-500 mr-2 w-4"></i>{{ core__('profile.reward_points_label') }}</td>
+                <td class="py-3 px-4 text-gray-900 font-medium">{{ (u.reward_points ?? 0)|number_format(0) }}</td>
+              </tr>
+              {% if u.show_invite_stats|default(false) and isOwnProfile %}
+              <tr class="border-b border-gray-100 hover:bg-gray-50/80">
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-solid fa-ticket text-gray-400 mr-2 w-4"></i>{{ core__('profile.available_invites') }}</td>
+                <td class="py-3 px-4 text-gray-900 font-medium">{{ (u.available_invites ?? 0)|number_format(0) }}</td>
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-solid fa-paper-plane text-gray-400 mr-2 w-4"></i>{{ core__('profile.invitations_sent') }}</td>
+                <td class="py-3 px-4 text-gray-900">{{ (u.invitations_sent_count ?? 0)|number_format(0) }}</td>
+              </tr>
+              {% endif %}
+              <tr class="border-b border-gray-100 hover:bg-gray-50/80">
+                <td class="py-3 px-4 text-gray-500 font-medium w-40"><i class="fa-regular fa-calendar text-gray-400 mr-2 w-4"></i>{{ core__('profile.joined') }}</td>
+                <td class="py-3 px-4 text-gray-900" colspan="3">{{ u.created_at is not empty ? u.created_at|date('d.m.Y') : '—' }}</td>
+              </tr>
+              {% if u.bio is not empty %}
+              <tr>
+                <td class="py-3 px-4 text-gray-500 font-medium w-40 align-top"><i class="fa-regular fa-comment-dots text-gray-400 mr-2 w-4"></i>{{ core__('profile.about') }}</td>
+                <td class="py-3 px-4 text-gray-700" colspan="3">{{ u.bio|e('html')|replace({"\r\n": "<br>", "\n": "<br>", "\r": "<br>"})|raw }}</td>
+              </tr>
+              {% endif %}
+            </table>
+            {% if displayName == '' and u.location is empty and u.website is empty and u.bio is empty and (u.reward_points ?? 0) == 0 %}
+              <p class="py-6 px-4 text-gray-400 text-sm">{{ core__('profile.no_personal_info') }}</p>
+            {% endif %}
+          </div>
+        </section>
+
+        {# ——— Yaptıkları / İstatistikler ——— #}
+        <section class="mt-8 border-t border-gray-100 pt-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-simple text-gray-500"></i> {{ core__('profile.section_activities') }}</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <a href="{{ baseUrl }}/topics" class="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition border border-gray-100">
+              <div class="text-xs text-gray-500 font-semibold uppercase tracking-wide">{{ core__('profile.topics') }}</div>
+              <div class="text-2xl font-bold text-[#105289] mt-1">{{ (userStats.topic_count ?? 0)|number_format(0) }}</div>
+            </a>
+            <a href="{{ baseUrl }}/posts" class="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition border border-gray-100">
+              <div class="text-xs text-gray-500 font-semibold uppercase tracking-wide">{{ core__('profile.posts') }}</div>
+              <div class="text-2xl font-bold text-[#105289] mt-1">{{ (userStats.post_count ?? 0)|number_format(0) }}</div>
+            </a>
+            <a href="{{ baseUrl }}/likes" class="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition border border-gray-100">
+              <div class="text-xs text-gray-500 font-semibold uppercase tracking-wide">{{ core__('profile.likes') }}</div>
+              <div class="text-2xl font-bold text-[#105289] mt-1">{{ (userStats.like_count ?? 0)|number_format(0) }}</div>
+            </a>
+            {% if reputationEnabled %}
+            <a href="{{ baseUrl }}/reputation" class="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition border border-gray-100">
+              <div class="text-xs text-gray-500 font-semibold uppercase tracking-wide">{{ core__('profile.reputation') }}</div>
+              <div class="text-2xl font-bold text-[#105289] mt-1">{{ (userStats.reputation_positive ?? 0)|number_format(0) }} <span class="text-red-500">/ {{ (userStats.reputation_negative ?? 0)|number_format(0) }}</span></div>
+            </a>
+            {% endif %}
+            {% if isOwnProfile %}
+            <a href="{{ baseUrl }}/subscriptions" class="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition border border-gray-100">
+              <div class="text-xs text-gray-500 font-semibold uppercase tracking-wide">{{ core__('profile.subscriptions') }}</div>
+              <div class="text-2xl font-bold text-[#105289] mt-1">{{ (userStats.subscription_count ?? 0)|number_format(0) }}</div>
+            </a>
+            {% endif %}
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    {# ——— Profil yorumları ——— #}
+    {% if showFullProfile and profileCommentsEnabled and allowProfileComments %}
+    <div class="mt-6 bg-white ring-1 ring-gray-200 shadow-md rounded-xl overflow-hidden">
+      <div class="px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2"><i class="fa-regular fa-comments text-gray-500"></i> {{ core__('member.profile_comments') }}</h2>
+        {% if isOwnProfile %}
+        <a href="{{ core_url('profile/preferences') }}" class="text-sm text-gray-500 hover:text-[#105289]">{{ core__('member.profile_comments_settings_hint') }}</a>
+        {% endif %}
+      </div>
+      <div class="px-4 sm:px-6 lg:px-8 py-4">
+        {% if user and not isOwnProfile %}
+        <form method="post" action="{{ core_url('member/' ~ member_url_path(u) ~ '/profile-comments') }}" class="mb-6">
+          <input type="hidden" name="_token" value="{{ core_e(core_csrf_token('profile_comment')) }}">
+          <textarea name="body" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#105289] focus:border-[#105289]" placeholder="{{ core__('member.profile_comment_placeholder') }}" required></textarea>
+          <div class="mt-2">
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-[#105289] hover:bg-[#234a73] rounded-lg">{{ core__('member.profile_comment_add') }}</button>
+          </div>
+        </form>
+        {% endif %}
+        <div class="space-y-4">
+          {% for c in profileComments %}
+          <div class="flex gap-3 py-3 border-b border-gray-100 last:border-0">
+            <a href="{{ core_url('member/' ~ (c.author_username|e('url'))) }}" class="flex-shrink-0">
+              <img src="{{ core_e(c.author_avatar_url) }}" alt="" class="w-10 h-10 rounded-lg object-cover" style="width:40px;height:40px;">
+            </a>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-900 break-words">{{ c.body_html|raw }}</p>
+              <p class="text-xs text-gray-500 mt-1">
+                <a href="{{ core_url('member/' ~ (c.author_username|e('url'))) }}" class="font-medium text-[#105289] hover:underline">{{ core_e(c.author_username) }}</a>
+                · {{ c.created_at|date('d.m.Y H:i') }}
+                {% if user and (isOwnProfile or (user.id is defined and user.id == c.author_id)) %}
+                <form method="post" action="{{ core_url('member/' ~ member_url_path(u) ~ '/profile-comments/' ~ c.id ~ '/delete') }}" class="inline ml-1" onsubmit="return confirm('{{ core__('member.profile_comment_delete_confirm') }}');">
+                  <input type="hidden" name="_token" value="{{ core_e(core_csrf_token('profile_comment_delete')) }}">
+                  <button type="submit" class="text-red-600 hover:text-red-700 text-xs">{{ core__('member.profile_comment_delete_btn') }}</button>
+                </form>
+                {% endif %}
+              </p>
+            </div>
+          </div>
+          {% else %}
+          <p class="text-sm text-gray-500 py-4">{{ core__('member.profile_comments_empty') }}</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+{% if reputationEnabled and not isOwnProfile and user and showFullProfile %}
+<div id="rep-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <div class="fixed inset-0 bg-black/50" id="rep-modal-backdrop"></div>
+  <div class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-lg shadow-xl p-6 z-10">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ core__('member.give_rep_title') }}</h3>
+    <form id="rep-form" method="post" action="">
+      <input type="hidden" name="_token" value="{{ core_e(core_csrf_token('give_rep')) }}">
+      <input type="hidden" name="value" id="rep-value" value="1">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">{{ core__('member.give_rep_comment') }}</label>
+        <textarea name="comment" id="rep-comment" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2" required placeholder="{{ core__('member.give_rep_placeholder') }}"></textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" id="rep-modal-cancel" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">{{ core__('common.cancel') }}</button>
+        <button type="submit" class="px-4 py-2 text-white bg-[#105289] rounded-md hover:bg-[#234a73]">{{ core__('member.give_rep_submit') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

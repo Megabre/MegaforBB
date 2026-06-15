@@ -1,0 +1,163 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set conversationId = conversationId ?? 0 %}
+{% set convPath = conversation_url_path_by_id(conversationId) %}
+{% set conversations = conversations ?? [] %}
+{% set other = other ?? null %}
+{% set messages = messages ?? [] %}
+{% set convError = flash('conv_error') %}
+{% set convSuccess = flash('conv_success') %}
+{% set pmQuota = pmQuota ?? null %}
+
+<div class="flex flex-col md:flex-row rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden min-h-[calc(100vh-12rem)] max-h-none md:max-h-[720px]">
+  <aside class="w-full md:w-[30%] flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col bg-slate-50/50 min-h-0 max-h-[min(42vh,320px)] md:max-h-none">
+    <div class="p-4 border-b border-gray-200 bg-white flex items-center justify-between gap-3 flex-shrink-0">
+      <h2 class="text-lg font-bold text-[#105289]">
+        <i class="fa-solid fa-inbox mr-2 text-[#105289]/70"></i>{{ core__('conv.page_title') }}
+      </h2>
+      <a href="{{ core_url('conversations/new') }}" class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[#105289] hover:bg-[#234a73] rounded-lg transition-colors">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span class="hidden sm:inline">{{ core__('conv.new_message_btn') }}</span>
+      </a>
+    </div>
+    <div class="p-3 border-b border-gray-200 bg-white space-y-2 flex-shrink-0">
+      {% if convSuccess %}
+      <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">{{ core_e(convSuccess) }}</div>
+      {% endif %}
+      {% if pmQuota %}{% include 'conversations/_pm_quota.html.twig' %}{% endif %}
+      <form action="{{ core_url('conversations/purge') }}" method="post" onsubmit='return confirm({{ core__('conv.purge_inbox_confirm')|json_encode|raw }});'>
+        {{ core_csrf_field('conversation_manage')|raw }}
+        <button type="submit" class="w-full text-left text-xs font-medium text-red-700 hover:text-red-900 py-1.5 px-2 rounded-lg hover:bg-red-50 transition-colors">
+          <i class="fa-solid fa-trash-can mr-1.5"></i>{{ core__('conv.purge_inbox') }}
+        </button>
+      </form>
+    </div>
+    <div class="flex-1 min-h-0 overflow-y-auto">
+      {% if conversations is empty %}
+      <div class="p-4 text-center text-gray-500 text-sm">
+        <a href="{{ core_url('conversations/new') }}" class="text-[#105289] font-medium hover:underline">{{ core__('conv.new_message_btn') }}</a>
+      </div>
+      {% else %}
+      {% for c in conversations %}
+      {% set otherUser = c.other ?? null %}
+      {% set last = c.last_message ?? null %}
+      {% set unread = c.unread ?? 0 %}
+      {% set cid = c.conversation_id ?? 0 %}
+      {% set convUrl = core_url('conversations/' ~ conversation_url_path_by_id(cid)) %}
+      {% set isActive = (cid == conversationId) %}
+      {% set otherName = otherUser.username ?? 'Kullanıcı' %}
+      {% set avatarUrl = (otherUser.avatar_path|default('')) != '' ? asset_url(otherUser.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(otherUser.username|default(''))|url_encode) ~ '&size=48&background=1a252f&color=fff') %}
+      {% set lastSnippet = (last and (last.body|default('')) != '') ? ((last.body|striptags)|slice(0, 50) ~ ((last.body|striptags)|length > 50 ? '…' : '')) : 'Mesaj yok' %}
+      {% set lastTime = (last and last.created_at|default('') != '') ? (last.created_at|time_ago) : '' %}
+      <a href="{{ convUrl }}" class="flex items-center gap-3 px-4 py-3 border-b border-gray-100 transition-colors {{ isActive ? 'bg-[#105289] text-white' : 'hover:bg-white' }}">
+        <img src="{{ core_e(avatarUrl) }}" alt="" class="w-12 h-12 rounded-full object-cover ring-2 flex-shrink-0 {{ isActive ? 'ring-white/50' : 'ring-white shadow' }}">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-semibold truncate block {{ isActive ? 'text-white' : 'text-[#105289]' }}">{{ core_e(otherName) }}</span>
+            {% if unread > 0 and not isActive %}
+            <span class="flex-shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold text-white bg-[#105289] rounded-full">{{ unread > 99 ? '99+' : unread }}</span>
+            {% elseif lastTime %}
+            <span class="flex-shrink-0 text-xs {{ isActive ? 'text-white/80' : 'text-gray-400' }}">{{ lastTime }}</span>
+            {% endif %}
+          </div>
+          <p class="text-sm truncate mt-0.5 {{ isActive ? 'text-white/90' : 'text-gray-500' }}">{{ core_e(lastSnippet) }}</p>
+        </div>
+        <i class="fa-solid fa-chevron-right text-xs flex-shrink-0 {{ isActive ? 'text-white/70' : 'text-gray-300' }}"></i>
+      </a>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </aside>
+
+  <section class="flex-1 flex flex-col min-h-[min(48vh,520px)] md:min-h-0 bg-white">
+    {% if not other %}
+    <div class="flex-1 flex items-center justify-center p-8 text-gray-500">
+      <p>Bu konuşmaya erişim yok.</p>
+    </div>
+    {% else %}
+    {% set otherName = other.username ?? 'Kullanıcı' %}
+    {% set otherAvatarUrl = (other.avatar_path|default('')) != '' ? asset_url(other.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(other.username|default(''))|url_encode) ~ '&size=48&background=1a252f&color=fff') %}
+    {# Sohbet başlığı #}
+    <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-slate-50/50 flex-shrink-0">
+      <a href="{{ core_url('member/' ~ (otherName|e('url'))) }}">
+        <img src="{{ core_e(otherAvatarUrl) }}" alt="" class="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow">
+      </a>
+      <div class="min-w-0 flex-1">
+        <a href="{{ core_url('member/' ~ (otherName|e('url'))) }}" class="font-semibold text-[#105289] hover:underline">{{ core_e(otherName) }}</a>
+        <p class="text-xs text-gray-500">Özel mesaj</p>
+      </div>
+    </div>
+
+    {% if convError %}
+    <div class="mx-4 mt-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{{ core_e(convError) }}</div>
+    {% endif %}
+
+    <div class="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-100 bg-white text-xs flex-shrink-0">
+      <form action="{{ core_url('conversations/' ~ convPath ~ '/hide') }}" method="post" class="inline" onsubmit='return confirm({{ core__('conv.hide_conversation_confirm')|json_encode|raw }});'>
+        {{ core_csrf_field('conversation_manage')|raw }}
+        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium">
+          <i class="fa-regular fa-eye-slash"></i>{{ core__('conv.hide_conversation') }}
+        </button>
+      </form>
+      {# form id aşağıdaki mesaj formuyla aynı; üstten seçilenleri silmek için (HTML5 form="" ilişkisi) #}
+      <button type="submit" form="conv-delete-messages-form" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-800 bg-red-50 hover:bg-red-100 font-medium" title="{{ core__('conv.select_messages_hint')|e('html_attr') }}">
+        <i class="fa-solid fa-check-double"></i>{{ core__('conv.delete_selected') }}
+      </button>
+      <form action="{{ core_url('conversations/' ~ convPath ~ '/messages/purge-thread') }}" method="post" class="inline" onsubmit='return confirm({{ core__('conv.delete_all_in_thread_confirm')|json_encode|raw }});'>
+        {{ core_csrf_field('conversation_manage')|raw }}
+        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 text-amber-900 bg-amber-50 hover:bg-amber-100 font-medium">
+          <i class="fa-solid fa-eraser"></i>{{ core__('conv.delete_all_in_thread') }}
+        </button>
+      </form>
+    </div>
+
+    {# Mesaj listesi + seçili sil #}
+    <form id="conv-delete-messages-form" action="{{ core_url('conversations/' ~ convPath ~ '/messages/delete') }}" method="post" class="flex-1 flex flex-col min-h-0" onsubmit='return confirm({{ core__('conv.confirm_delete_selected')|json_encode|raw }});'>
+      {{ core_csrf_field('conversation_manage')|raw }}
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <p class="text-xs text-slate-500 -mt-1 mb-2">{{ core__('conv.select_messages_hint') }}</p>
+        {% if messages is empty %}
+        <p class="text-sm text-slate-500 py-6 text-center">{{ core__('conv.no_visible_messages') }}</p>
+        {% endif %}
+        {% for msg in messages %}
+        {% set isMe = (msg.user_id ?? 0) == (user.id ?? 0) %}
+        {% set msgAvatarUrl = (msg.avatar_path|default('')) != '' ? asset_url(msg.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(msg.username|default(''))|url_encode) ~ '&size=40&background=1a252f&color=fff') %}
+        <div class="flex gap-2 items-start {{ isMe ? 'flex-row-reverse' : '' }}">
+          <label class="flex-shrink-0 pt-1 cursor-pointer" title="{{ core__('conv.delete_selected')|e('html_attr') }}">
+            <input type="checkbox" name="message_ids[]" value="{{ msg.id }}" class="rounded border-gray-300 text-[#105289] focus:ring-[#105289]/30">
+          </label>
+          <div class="flex gap-3 flex-1 min-w-0 {{ isMe ? 'flex-row-reverse' : '' }}">
+            <img src="{{ core_e(msgAvatarUrl) }}" alt="" class="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5">
+            <div class="max-w-[75%] {{ isMe ? 'text-right' : '' }}">
+              <div class="inline-block px-4 py-2 rounded-2xl text-sm {{ isMe ? 'bg-[#105289] text-white rounded-br-md' : 'bg-slate-100 text-[#105289] rounded-bl-md' }}">
+                {# ÖM: body_html eski sürümde HTML sanıtısı/Twig kalıntısı üretebiliyordu; gösterim her zaman ham metinden (kaçırılmış). #}
+                {{ core_e(msg.body|default(''))|nl2br|smileys|raw }}
+              </div>
+              <p class="text-xs text-gray-400 mt-1 {{ isMe ? 'text-right' : '' }}">{{ msg.created_at|default('')|date('d.m.Y H:i') }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="px-4 py-2 border-t border-gray-100 bg-slate-50/50 flex-shrink-0">
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-red-700 hover:bg-red-800 rounded-lg transition-colors">
+          <i class="fa-solid fa-check-double"></i>{{ core__('conv.delete_selected') }}
+        </button>
+      </div>
+    </form>
+
+    {# Yanıt formu #}
+    <div class="p-4 border-t border-gray-200 bg-slate-50/30 flex-shrink-0">
+      <form action="{{ core_url('conversations/' ~ convPath ~ '/reply') }}" method="post" class="flex gap-2">
+        {{ core_csrf_field('conversation_reply')|raw }}
+        <textarea name="body" rows="2" class="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-[#105289]/20 focus:border-[#105289]" required placeholder="Mesajınızı yazın..."></textarea>
+        <button type="submit" class="self-end px-4 py-3 text-sm font-medium text-white bg-[#105289] hover:bg-[#234a73] rounded-xl transition-colors flex-shrink-0">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

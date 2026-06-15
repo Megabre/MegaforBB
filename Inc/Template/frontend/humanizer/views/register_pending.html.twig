@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set require_email_verification = require_email_verification ?? false %}
+{% set require_approval = require_approval ?? false %}
+
+<div class="min-h-[60vh] flex items-center justify-center">
+  <div class="w-full max-w-lg bg-white ring-1 ring-gray-200 shadow-sm rounded-lg p-6">
+    <div class="text-center">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-100 text-amber-600 mb-4">
+        <i class="fa-solid fa-envelope-circle-check text-2xl"></i>
+      </div>
+      <h1 class="text-xl font-semibold text-[#105289] mb-2">Kayıt talebiniz alındı</h1>
+      <p class="text-gray-600 text-sm mb-4">
+        {% if require_email_verification and require_approval %}
+          E-posta adresinize doğrulama linki gönderildi. Linke tıkladıktan sonra hesabınız yönetici onayına gönderilecektir; onaylandıktan sonra giriş yapabilirsiniz.
+        {% elseif require_email_verification %}
+          E-posta adresinize doğrulama linki gönderildi. Linke tıklayarak e-postanızı doğrulayın; ardından giriş yapabilirsiniz.
+        {% elseif require_approval %}
+          Hesabınız yönetici onayına gönderildi. Onaylandıktan sonra giriş yapabilirsiniz.
+        {% else %}
+          Kısa süre içinde giriş yapabileceksiniz.
+        {% endif %}
+      </p>
+      <p class="text-gray-500 text-xs mb-4">
+        E-posta gelmediyse spam klasörünü kontrol edin.
+      </p>
+      <a href="{{ core_url('login') }}" class="inline-block text-white bg-[#105289] hover:bg-[#234a73] rounded-md px-4 py-2 text-sm">Giriş sayfasına git</a>
+      <div class="mt-4"><a href="{{ core_url('') }}" class="text-sm text-gray-500 hover:underline">Ana sayfa</a></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

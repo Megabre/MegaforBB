@@ -1,0 +1,59 @@
+{# pmQuota: PrivateMessageQuotaService::getPanelSummary #}
+{% set q = pmQuota ?? {} %}
+<div class="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-xs text-slate-700 space-y-3">
+  <p class="font-bold text-[#1a252f] text-sm flex items-center gap-2">
+    <i class="fa-solid fa-gauge-high text-[#1a252f]/70"></i>{{ core__('conv.quota_title') }}
+  </p>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
+    <div class="flex justify-between gap-2 border-b border-slate-200/80 sm:border-0 pb-1 sm:pb-0">
+      <span class="text-slate-500">{{ core__('conv.quota_send_today') }}</span>
+      <span class="font-semibold text-[#1a252f]">{{ q.sent_today|default(0) }}{% if (q.daily_send_limit|default(0)) > 0 %} / {{ q.daily_send_limit }}{% endif %}</span>
+    </div>
+    <div class="flex justify-between gap-2 border-b border-slate-200/80 sm:border-0 pb-1 sm:pb-0">
+      <span class="text-slate-500">{{ core__('conv.quota_send_remaining') }}</span>
+      <span class="font-semibold text-[#1a252f]">{% if (q.daily_send_limit|default(0)) > 0 %}{{ q.send_remaining|default(0) }}{% else %}{{ core__('conv.unlimited') }}{% endif %}</span>
+    </div>
+    <div class="flex justify-between gap-2 border-b border-slate-200/80 sm:border-0 pb-1 sm:pb-0">
+      <span class="text-slate-500">{{ core__('conv.quota_lifetime_used') }}</span>
+      <span class="font-semibold text-[#1a252f]">{{ q.total_visible_messages|default(0) }}{% if (q.lifetime_total_limit|default(0)) > 0 %} / {{ q.lifetime_total_limit }}{% endif %}</span>
+    </div>
+    <div class="flex justify-between gap-2 border-b border-slate-200/80 sm:border-0 pb-1 sm:pb-0">
+      <span class="text-slate-500">{{ core__('conv.quota_lifetime_remaining') }}</span>
+      <span class="font-semibold text-[#1a252f]">{% if (q.lifetime_total_limit|default(0)) > 0 %}{{ q.lifetime_remaining|default(0) }}{% else %}{{ core__('conv.unlimited') }}{% endif %}</span>
+    </div>
+    <div class="flex justify-between gap-2 sm:col-span-2">
+      <span class="text-slate-500">{{ core__('conv.quota_lifetime_cap') }}</span>
+      <span class="font-semibold text-[#1a252f]">{% if (q.lifetime_total_limit|default(0)) > 0 %}{{ q.lifetime_total_limit }}{% else %}{{ core__('conv.unlimited') }}{% endif %}</span>
+    </div>
+  </div>
+  <div class="flex flex-col sm:flex-row items-center gap-4 pt-1 border-t border-slate-200/80">
+    <div
+      class="w-28 h-28 shrink-0 flex items-center justify-center rounded-full border-2 border-white shadow ring-1 ring-slate-200/80 bg-white overflow-hidden"
+      role="img"
+      aria-label="{{ core__('conv.quota_chart_caption')|e('html_attr') }}"
+    >
+      {% if q.pie_svg|default('') %}
+        {{ q.pie_svg|raw }}
+      {% else %}
+        <div class="w-full h-full rounded-full" style="{{ (q.pie_inline_style|default('background:#e2e8f0;'))|e('html_attr') }}"></div>
+      {% endif %}
+    </div>
+    <div class="flex-1 space-y-1.5 w-full">
+      <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{{ core__('conv.quota_chart_caption') }}</p>
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded-sm bg-[#1a252f]"></span>
+        <span class="text-slate-600">{{ core__('conv.quota_sent_share') }}: <strong class="text-[#1a252f]">{{ q.sent_visible|default(0) }}</strong></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded-sm bg-slate-500"></span>
+        <span class="text-slate-600">{{ core__('conv.quota_received_share') }}: <strong class="text-[#1a252f]">{{ q.received_visible|default(0) }}</strong></span>
+      </div>
+      {% if not (q.pie_unlimited|default(false)) and (q.lifetime_total_limit|default(0)) > 0 %}
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded-sm bg-slate-300"></span>
+        <span class="text-slate-600">{{ core__('conv.quota_remaining_share') }}: <strong class="text-[#1a252f]">{{ q.lifetime_remaining|default(0) }}</strong></span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

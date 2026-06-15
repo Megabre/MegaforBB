@@ -1,0 +1,104 @@
+<div class="modal modal-blur fade" id="icon-selector-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">İkon Seçici</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <input type="text" id="icon-search-input" class="form-control" placeholder="İkon ara...">
+        </div>
+        <div class="row g-2 overflow-auto" id="icon-list-container" style="max-height: 400px;">
+          <!-- Icons will be populated by JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn me-auto" data-bs-dismiss="modal">İptal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var iconModal = document.getElementById('icon-selector-modal');
+    if (!iconModal) return;
+
+    var currentInput = null;
+    var currentPreview = null;
+
+    var icons = [
+        'comments', 'folder', 'folder-open', 'newspaper', 'message', 'bullhorn', 'circle-info',
+        'lock', 'thumbs-up', 'heart', 'star', 'fire', 'bolt', 'image', 'video', 'music', 'gamepad',
+        'laptop', 'desktop', 'mobile-screen-button', 'code', 'bug', 'database', 'server', 'cloud',
+        'shield-halved', 'user', 'users', 'user-tie', 'graduation-cap', 'book', 'pen', 'pen-nib',
+        'chalkboard', 'briefcase', 'money-bill', 'chart-line', 'cart-shopping', 'shop', 'building',
+        'house', 'car', 'plane', 'truck', 'ship', 'bicycle', 'motorcycle', 'wrench', 'hammer',
+        'screwdriver', 'toolbox', 'gears', 'robot', 'wand-magic-sparkles', 'gem', 'crown', 'trophy',
+        'medal', 'certificate', 'globe', 'earth-americas', 'map', 'location-dot', 'compass',
+        'calendar', 'clock', 'bell', 'envelope', 'paper-plane', 'phone', 'camera', 'microphone',
+        'headphones', 'tv', 'ticket', 'bookmark', 'tag', 'tags', 'clipboard', 'paste', 'copy',
+        'file', 'file-lines', 'folder-tree', 'sitemap', 'share-nodes', 'link', 'paperclip',
+        'trash', 'box', 'boxes-stacked', 'layer-group', 'puzzle-piece', 'shapes', 'cubes',
+        'cube', 'futbol', 'baseball-bat-ball', 'basketball', 'volleyball', 'table-tennis-paddle-ball',
+        'dumbbell', 'person-running', 'person-swimming', 'person-biking', 'tree', 'leaf', 'seedling',
+        'fire-flame-curved', 'droplet', 'cloud-rain', 'snowflake', 'sun', 'moon', 'star-and-crescent',
+        'peace', 'yin-yang', 'om', 'cross', 'ankh', 'dharmachakra', 'menorah', 'star-of-david',
+        'fa-regular fa-newspaper', 'fa-regular fa-comments', 'fa-regular fa-folder', 'fa-regular fa-folder-open',
+        'fa-regular fa-message', 'fa-regular fa-heart', 'fa-regular fa-star', 'fa-regular fa-image',
+        'fa-regular fa-user', 'fa-regular fa-eye', 'fa-regular fa-thumbs-up'
+    ];
+
+    var container = document.getElementById('icon-list-container');
+    var searchInput = document.getElementById('icon-search-input');
+
+    function renderIcons(filter) {
+        filter = filter || '';
+        container.innerHTML = '';
+        var f = filter.toLowerCase();
+        icons.forEach(function(i) {
+            if (f && i.toLowerCase().indexOf(f) === -1) return;
+            var className = i.indexOf(' ') !== -1 ? i : 'fa-solid fa-' + i;
+            var btn = document.createElement('div');
+            btn.className = 'col-2 col-sm-1 text-center';
+            btn.innerHTML = '<button type="button" class="btn btn-outline-secondary w-100 p-2" title="' + i + '" data-icon="' + i + '"><i class="' + className + ' fs-3"></i></button>';
+            container.appendChild(btn);
+        });
+    }
+
+    renderIcons();
+
+    searchInput.addEventListener('input', function() {
+        renderIcons(this.value);
+    });
+
+    container.addEventListener('click', function(e) {
+        var btn = e.target.closest('button[data-icon]');
+        if (!btn) return;
+        var iconVal = btn.getAttribute('data-icon');
+        if (currentInput) {
+            currentInput.value = iconVal;
+        }
+        if (currentPreview) {
+            var className = iconVal.indexOf(' ') !== -1 ? iconVal : 'fa-solid fa-' + iconVal;
+            currentPreview.className = className;
+        }
+        var bsModal = bootstrap.Modal.getInstance(iconModal);
+        if (bsModal) {
+            bsModal.hide();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        var trigger = e.target.closest('.icon-selector-btn');
+        if (!trigger) return;
+        var targetId = trigger.getAttribute('data-target');
+        var previewId = trigger.getAttribute('data-preview');
+        currentInput = document.getElementById(targetId);
+        currentPreview = document.getElementById(previewId);
+        var bsModal = new bootstrap.Modal(iconModal);
+        bsModal.show();
+    });
+});
+</script>

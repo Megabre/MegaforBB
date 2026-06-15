@@ -1,0 +1,79 @@
+{# Portal vitrin: Öne Çıkan İçerikler – sonOlaylarSettings & portalTabVisibility ile #}
+{% set sonOlaylarSettings = sonOlaylarSettings ?? {} %}
+{% set portalTabVisibility = portalTabVisibility ?? { newest_topics: 1 } %}
+{% set tabOrder = sonOlaylarSettings.tab_order ?? ['newest_topics', 'most_replied', 'most_viewed', 'top_replied', 'top_viewed', 'popular_users'] %}
+{% set firstVisibleTab = null %}
+{% for t in tabOrder %}
+  {% if portalTabVisibility[t]|default(0) and firstVisibleTab is null %}
+    {% set firstVisibleTab = t %}
+  {% endif %}
+{% endfor %}
+{% set tabLabels = {
+  'newest_topics': sonOlaylarSettings.tab_label_newest_topics ?? lang('portal.tab_newest_topics'),
+  'most_replied': sonOlaylarSettings.tab_label_most_replied ?? lang('portal.tab_most_replied'),
+  'most_viewed': sonOlaylarSettings.tab_label_most_viewed ?? lang('portal.tab_most_viewed'),
+  'top_replied': sonOlaylarSettings.tab_label_top_replied ?? lang('portal.tab_top_replied'),
+  'top_viewed': sonOlaylarSettings.tab_label_top_viewed ?? lang('portal.tab_top_viewed'),
+  'popular_users': sonOlaylarSettings.tab_label_popular_users ?? lang('portal.tab_popular_users')
+} %}
+{% set topicTabs = [
+  {id: 'newest_topics', data: portalNewestTopics ?? []},
+  {id: 'most_replied', data: portalMostRepliedTopics ?? []},
+  {id: 'most_viewed', data: portalMostViewedTopics ?? []},
+  {id: 'top_replied', data: portalTopRepliedTopics ?? []},
+  {id: 'top_viewed', data: portalTopViewedTopics ?? []}
+] %}
+{% set activeTabData = null %}
+{% for tab in topicTabs %}
+  {% if tab.id == firstVisibleTab %}
+    {% set activeTabData = tab.data %}
+  {% endif %}
+{% endfor %}
+{% if firstVisibleTab is null %}
+  {% set firstVisibleTab = 'newest_topics' %}
+  {% set activeTabData = portalNewestTopics ?? [] %}
+{% endif %}
+{% set showShowcase = (sonOlaylarSettings.enabled is not defined or sonOlaylarSettings.enabled) and ((firstVisibleTab == 'popular_users' and (portalPopularUsers ?? [])|length > 0) or (firstVisibleTab != 'popular_users' and (activeTabData ?? [])|length > 0)) %}
+{% if showShowcase %}
+{% if firstVisibleTab == 'popular_users' %}
+{# Popüler kullanıcılar – vitrin kartları #}
+<section class="mfbb-showcase">
+  <div class="mfbb-showcase__head">
+    <h2 class="mfbb-showcase__title">{{ core_e(tabLabels.popular_users ?? 'Popüler Kullanıcılar') }}</h2>
+    <a href="{{ core_url('forum') }}" class="mfbb-showcase__link">Tümünü Gör <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+  </div>
+  <div class="mfbb-showcase__grid mfbb-showcase__grid--users">
+    {% set showcaseUserLimit = portalTabLimit|default(15) %}
+    {% for u in (portalPopularUsers ?? [])|slice(0, showcaseUserLimit) %}
+      {% set url = core_url('member/' ~ (u.username|default('')|e('url'))) %}
+      {% set avatarUrl = (u.avatar_path|default('')) != '' ? asset_url(u.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(u.username|default(''))|url_encode) ~ '&size=96&background=random') %}
+      <a href="{{ url }}" class="mfbb-showcase-card mfbb-showcase-card--user">
+        <div class="mfbb-showcase-card__avatar"><img src="{{ core_e(avatarUrl) }}" alt="" loading="lazy"></div>
+        <span class="mfbb-showcase-card__name">{{ core_e(u.username|default('')) }}</span>
+        <span class="mfbb-showcase-card__meta">{{ (u.post_count ?? 0) }} paylaşım</span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+{# Konu listesi – vitrin kartları #}
+<section class="mfbb-showcase">
+  <div class="mfbb-showcase__head">
+    <h2 class="mfbb-showcase__title">{{ core_e(tabLabels[firstVisibleTab] ?? 'Öne Çıkan İçerikler') }}</h2>
+    <a href="{{ core_url('forum') }}" class="mfbb-showcase__link">Tümünü Gör <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+  </div>
+  <div class="mfbb-showcase__grid">
+    {% set topicTitleLimit = (sonOlaylarSettings.topic_title_limit ?? 60)|clamp(40, 80) %}
+    {% set showcaseTopicLimit = portalLatestTopicsCount|default(10) %}
+    {% for t in activeTabData|slice(0, showcaseTopicLimit) %}
+      {% set url = core_url('topic/' ~ topic_url_path(t)) %}
+      {% set title = (t.title ?? '')|length > topicTitleLimit ? ((t.title ?? '')|slice(0, topicTitleLimit) ~ '…') : (t.title ?? '') %}
+      <a href="{{ url }}" class="mfbb-showcase-card mfbb-showcase-card--topic">
+        <h3 class="mfbb-showcase-card__title">{{ core_e(title) }}</h3>
+        <span class="mfbb-showcase-card__author">{{ core_e(t.username|default(lang('portal.anonymous'))) }}</span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endif %}

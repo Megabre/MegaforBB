@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+<div class="min-h-[50vh] flex items-center justify-center px-4 py-8">
+  <div class="w-full max-w-lg">
+    <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2 mb-6">
+      <ol class="flex items-center gap-2 flex-wrap">
+        <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(core__('common.home')) }}</a></li>
+        <li>›</li>
+        <li><a href="{{ core_url('forum/' ~ (forum_slug ?? '')|e('url')) }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(forum_name ?? '') }}</a></li>
+        <li>›</li>
+        <li class="text-gray-600">{{ core_e(topic_title ?? '') }}</li>
+      </ol>
+    </nav>
+
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6 sm:p-8 text-center">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-100 text-amber-600 mb-4">
+        <i class="fa-solid fa-lock text-2xl" aria-hidden="true"></i>
+      </div>
+      <h1 class="text-xl font-semibold text-[#1a252f] mb-2">{{ core_e(core__('topic.private_page_title')) }}</h1>
+      <p class="text-gray-600 text-sm leading-relaxed mb-6">{{ core_e(core__('topic.private_page_message')) }}</p>
+      <a href="{{ core_url('forum/' ~ (forum_slug ?? '')|e('url')) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#1a252f] text-white rounded-md hover:bg-[#172029] text-sm font-medium">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        {{ core_e(core__('topic.private_page_back_forum')) }}
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

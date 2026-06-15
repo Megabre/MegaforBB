@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? 'admin' %}
+{% set status = status ?? {} %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-lg">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-warning"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+                    {{ lang('admin.license.page_title') }}
+                </h2>
+                <div class="text-muted mt-1">{{ lang('admin.license.subtitle') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-lg">
+
+        {# Flash mesajları #}
+        {% if flash_ok %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+            {{ flash_ok|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if flash_err %}
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+            {{ flash_err|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {# ── Durum kartı ── #}
+        <div class="row row-cards mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ lang('admin.license.status_card') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-5">{{ lang('admin.license.field_status') }}</dt>
+                            <dd class="col-7">
+                                {% if status.status == 'active' %}
+                                    <span class="badge bg-success">{{ lang('admin.license.status_active') }}</span>
+                                {% elseif status.status == 'inactive' %}
+                                    <span class="badge bg-secondary">{{ lang('admin.license.status_inactive') }}</span>
+                                {% elseif status.status == 'invalid' %}
+                                    <span class="badge bg-danger">{{ lang('admin.license.status_invalid') }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">{{ lang('admin.license.status_unknown') }}</span>
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-5">{{ lang('admin.license.field_key') }}</dt>
+                            <dd class="col-7"><code>{{ status.key_masked|default(lang('admin.license.not_applicable'))|e }}</code></dd>
+
+                            <dt class="col-5">{{ lang('admin.license.field_product') }}</dt>
+                            <dd class="col-7"><code>{{ status.product_id|default(lang('admin.license.not_applicable'))|e }}</code></dd>
+
+                            <dt class="col-5">{{ lang('admin.license.field_domain') }}</dt>
+                            <dd class="col-7"><code>{{ status.domain|default(lang('admin.license.not_applicable'))|e }}</code></dd>
+
+                            <dt class="col-5">{{ lang('admin.license.field_token') }}</dt>
+                            <dd class="col-7">
+                                {% if status.has_token %}
+                                    <span class="text-success">{{ lang('admin.license.token_yes') }}</span>
+                                {% else %}
+                                    <span class="text-danger">{{ lang('admin.license.token_no') }}</span>
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-5">{{ lang('admin.license.field_cache') }}</dt>
+                            <dd class="col-7">
+                                {% if status.cache_age_hours >= 0 %}
+                                    {{ lang('admin.license.cache_age')|replace({':hours': status.cache_age_hours}) }}
+                                {% else %}
+                                    <span class="text-muted">{{ lang('admin.license.cache_none') }}</span>
+                                {% endif %}
+                            </dd>
+
+                            {% if status.activated_at %}
+                            <dt class="col-5">{{ lang('admin.license.field_activated') }}</dt>
+                            <dd class="col-7">{{ status.activated_at|e }}</dd>
+                            {% endif %}
+
+                            <dt class="col-5">{{ lang('admin.license.field_api') }}</dt>
+                            <dd class="col-7 text-truncate"><small class="text-muted">{{ status.api_base|default(lang('admin.license.not_applicable'))|e }}</small></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {# ── Eylem butonları ── #}
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ lang('admin.license.operations') }}</h3></div>
+            <div class="card-body d-flex flex-wrap gap-2">
+
+                {# Aktifleştir #}
+                <form action="{{ core_url(adminPath ~ '/license/activate') }}" method="post">
+                    {{ core_csrf_field('admin_license')|raw }}
+                    <button type="submit" class="btn btn-success"
+                        onclick="return confirm('{{ lang('admin.license.confirm_activate')|e('js') }}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        {{ lang('admin.license.btn_activate') }}
+                    </button>
+                </form>
+
+                {# Yeniden Doğrula #}
+                <form action="{{ core_url(adminPath ~ '/license/recheck') }}" method="post">
+                    {{ core_csrf_field('admin_license')|raw }}
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                        {{ lang('admin.license.btn_recheck') }}
+                    </button>
+                </form>
+
+                {# Deaktif Et #}
+                {% if status.has_token %}
+                <form action="{{ core_url(adminPath ~ '/license/deactivate') }}" method="post">
+                    {{ core_csrf_field('admin_license')|raw }}
+                    <button type="submit" class="btn btn-outline-danger"
+                        onclick="return confirm('{{ lang('admin.license.confirm_deactivate')|e('js') }}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        {{ lang('admin.license.btn_deactivate') }}
+                    </button>
+                </form>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <a href="{{ core_url(adminPath) }}" class="btn btn-outline-secondary">{{ lang('admin.license.back_dashboard') }}</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

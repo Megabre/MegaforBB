@@ -1,0 +1,549 @@
+/**
+ * MegaforBB Portal – İçerik blokları (portal_card_1,2,3 – admin ayarları)
+ * Vitrin tarzı, premium görünüm.
+ */
+
+/* -------------------------------------------------------------------------
+   BLOCKS CONTAINER
+   ------------------------------------------------------------------------- */
+.mfbb-portal-page .mfbb-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+
+/* 2 list kartı yan yana */
+.mfbb-blocks__list-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .mfbb-blocks__list-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.mfbb-blocks__list-col {
+  min-width: 0;
+}
+
+.mfbb-blocks__list-col .mfbb-block {
+  height: 100%;
+}
+
+.mfbb-blocks__list-col .mfbb-block__body {
+  min-height: 0;
+}
+
+/* -------------------------------------------------------------------------
+   SINGLE BLOCK (section) – Elito tarzı vitrin section
+   ------------------------------------------------------------------------- */
+.mfbb-block {
+  scroll-margin-top: 2rem;
+  padding: 2rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mfbb-block:last-child {
+  border-bottom: none;
+}
+
+.mfbb-blocks__list-col .mfbb-block {
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.04);
+}
+
+.mfbb-blocks__list-col .mfbb-block:last-child {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mfbb-block__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  min-width: 0;
+}
+
+.mfbb-block__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mfbb-block__accent {
+  width: 4px;
+  height: 1.75rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.mfbb-block__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.mfbb-block__desc {
+  width: 100%;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #64748b;
+  margin: 0.5rem 0 0 1rem;
+  max-width: 36rem;
+}
+
+.mfbb-block__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--block-accent, var(--primary-color, #206bc4));
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mfbb-block__link:hover {
+  background: rgba(32, 107, 196, 0.08);
+  color: var(--block-accent, var(--primary-color, #206bc4));
+}
+
+.mfbb-block__body {
+  margin: 0;
+}
+
+/* Empty state */
+.mfbb-block-empty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  border-radius: 16px;
+}
+
+.mfbb-block-empty__icon {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #cbd5e1;
+}
+
+.mfbb-block-empty__text {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0;
+}
+
+/* -------------------------------------------------------------------------
+   SLIDER (4+ öğe – per_slide kadar göster, kaydırma)
+   ------------------------------------------------------------------------- */
+.mfbb-cards-wrapper--slider {
+  overflow: hidden;
+}
+
+.mfbb-cards-slider {
+  position: relative;
+}
+
+.mfbb-cards-slider__track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  gap: 0;
+  scrollbar-width: thin;
+}
+
+.mfbb-cards-slider__track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.mfbb-cards-slider__track::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.mfbb-cards-slider__track::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.mfbb-cards-slider__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  min-width: 0;
+}
+
+/* -------------------------------------------------------------------------
+   CARDS GRID (2–6 cols – taşma yok)
+   ------------------------------------------------------------------------- */
+.mfbb-cards {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.mfbb-cards--cols-2,
+.mfbb-cards--cols-3,
+.mfbb-cards--cols-4,
+.mfbb-cards--cols-5,
+.mfbb-cards--cols-6 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+
+  .mfbb-cards--cols-2,
+  .mfbb-cards--cols-3,
+  .mfbb-cards--cols-4,
+  .mfbb-cards--cols-5,
+  .mfbb-cards--cols-6 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mfbb-cards--cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mfbb-cards--cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mfbb-cards--cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mfbb-cards--cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .mfbb-cards--cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+/* -------------------------------------------------------------------------
+   CARD (grid & list) – vitrin kartı
+   ------------------------------------------------------------------------- */
+.mfbb-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--block-border, #e2e8f0);
+  overflow: hidden;
+  box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.06);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  min-width: 0;
+}
+
+.mfbb-card:hover {
+  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+  border-color: #cbd5e1;
+}
+
+/* Forum yazısı – fotoğraf yok, sadece metin */
+.mfbb-card--text .mfbb-card__content {
+  padding: 1.25rem;
+}
+
+.mfbb-card__content {
+  padding: 1rem 1.25rem;
+}
+
+.mfbb-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.mfbb-card__type {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  border-radius: 5px;
+}
+
+.mfbb-card__date {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.mfbb-card__title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 0.5rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.mfbb-card__title a {
+  color: #0f172a;
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.mfbb-card__title a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--card-accent, var(--primary-color, #206bc4));
+  text-underline-offset: 3px;
+}
+
+.mfbb-card__snippet {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #64748b;
+  margin: 0 0 0.75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Card footer – author + replies */
+.mfbb-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.mfbb-card__author {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.mfbb-card__author i {
+  font-size: 0.9375rem;
+  color: #94a3b8;
+}
+
+.mfbb-card__replies {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mfbb-card__replies i {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+/* Grid card – full height */
+.mfbb-card--grid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mfbb-card--grid .mfbb-card__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mfbb-card--grid .mfbb-card__snippet {
+  flex: 1;
+}
+
+/* -------------------------------------------------------------------------
+   LIST LAYOUT – Admin’de “Liste” seçildiğinde tek sütun, alt alta
+   ------------------------------------------------------------------------- */
+/* Liste modu: tek sütun (admin’de “Liste” seçili) */
+.mfbb-cards--list-only,
+.mfbb-cards--list {
+  gap: 0;
+  grid-template-columns: 1fr !important;
+}
+
+@media (min-width: 640px) {
+  .mfbb-cards--list {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mfbb-cards--list {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.mfbb-card--list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  padding: 1.5rem 0;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: none;
+}
+
+.mfbb-card--list:first-child {
+  padding-top: 0;
+}
+
+.mfbb-card--list:hover {
+  box-shadow: none;
+  border-color: #e2e8f0;
+}
+
+.mfbb-card--list .mfbb-card__content {
+  padding: 0;
+}
+
+.mfbb-card--list .mfbb-card__author {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+/* Responsive block head */
+@media (max-width: 767px) {
+  .mfbb-block__head {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+  }
+
+  .mfbb-block__link {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block__head {
+    border-color: #334155;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block__title {
+    color: inherit;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block__desc {
+    color: #94a3b8;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block__link {
+    background: #334155;
+    color: #f8fafc;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block__link:hover {
+    background: #475569;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block-empty {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: #334155;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block-empty__icon {
+    background: #1e293b;
+    border-color: #334155;
+    color: #475569;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block-empty__text {
+    color: #94a3b8;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card:hover {
+    border-color: #475569;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card__content {
+    border-color: transparent;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card__title a {
+    color: #f8fafc;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card__snippet {
+    color: #94a3b8;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card__author {
+    color: #cbd5e1;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card__footer {
+    border-color: #334155;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card__replies {
+    background: #334155;
+    color: #94a3b8;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card--list {
+    border-color: #334155;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-card--list .mfbb-card__author {
+    background: #334155;
+  }
+
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-blocks__list-col .mfbb-block {
+    background: #1e293b;
+    border-color: #334155;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .mfbb-card,
+  .mfbb-block__link {
+    transition: none;
+  }
+}

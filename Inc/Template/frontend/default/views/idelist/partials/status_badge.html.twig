@@ -1,0 +1,17 @@
+{% set sd = statusDefinition|default(null) %}
+{% set label = sd ? sd.name : (core__('idelist.status_' ~ status)|default(status)) %}
+{% set badge_class = 'idelist-badge--open' %}
+{% if sd and sd.slug %}
+  {% set badge_class = 'idelist-badge--' ~ sd.slug|replace({'-': '_'}) %}
+{% else %}
+  {% if status == 'planned' %}{% set badge_class = 'idelist-badge--planned' %}{% endif %}
+  {% if status == 'in_progress' %}{% set badge_class = 'idelist-badge--in_progress' %}{% endif %}
+  {% if status == 'completed' %}{% set badge_class = 'idelist-badge--completed' %}{% endif %}
+  {% if status == 'rejected' %}{% set badge_class = 'idelist-badge--rejected' %}{% endif %}
+  {% if status == 'pending' %}{% set badge_class = 'idelist-badge--pending' %}{% endif %}
+{% endif %}
+{% if sd and sd.color %}
+<span class="idelist-badge idelist-badge--custom" style="background: {{ sd.color }}; border-color: {{ sd.color }}">{{ core_e(label) }}</span>
+{% else %}
+<span class="idelist-badge {{ badge_class }}">{{ core_e(label) }}</span>
+{% endif %}

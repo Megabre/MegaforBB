@@ -1,0 +1,201 @@
+{# Son Olaylar kartı – Portal ve Forum. Sekmeli klasik tablo. #}
+{% set portalTabVisibility = portalTabVisibility ?? { newest_topics: 1, most_replied: 1, most_viewed: 1, top_replied: 1, top_viewed: 1, popular_users: 1 } %}
+{% set sonOlaylarSettings = sonOlaylarSettings ?? {} %}
+{% if sonOlaylarSettings.enabled is defined and not sonOlaylarSettings.enabled %}
+{% else %}
+{% set showRepliesViews = sonOlaylarSettings.show_replies_views ?? true %}
+{% set showLastReply = sonOlaylarSettings.show_last_reply ?? true %}
+{% set showCategory = sonOlaylarSettings.show_category ?? true %}
+{% set showTopicIcon = sonOlaylarSettings.show_topic_icon ?? true %}
+{% set commentSnippetLimit = (sonOlaylarSettings.comment_snippet_limit ?? 80)|clamp(40, 150) %}
+{% set topicTitleLimit = (sonOlaylarSettings.topic_title_limit ?? 80)|clamp(40, 120) %}
+{% set tabLabels = {
+  'newest_topics': sonOlaylarSettings.tab_label_newest_topics ?? lang('portal.tab_newest_topics'),
+  'most_replied': sonOlaylarSettings.tab_label_most_replied ?? lang('portal.tab_most_replied'),
+  'most_viewed': sonOlaylarSettings.tab_label_most_viewed ?? lang('portal.tab_most_viewed'),
+  'top_replied': sonOlaylarSettings.tab_label_top_replied ?? lang('portal.tab_top_replied'),
+  'top_viewed': sonOlaylarSettings.tab_label_top_viewed ?? lang('portal.tab_top_viewed'),
+  'popular_users': sonOlaylarSettings.tab_label_popular_users ?? lang('portal.tab_popular_users')
+} %}
+{% set tabOrder = sonOlaylarSettings.tab_order ?? ['newest_topics', 'most_replied', 'most_viewed', 'top_replied', 'top_viewed', 'popular_users'] %}
+{% set colOrder = sonOlaylarSettings.column_order ?? ['title', 'replies_views', 'last_reply', 'category'] %}
+{% set colVisible = { 'title': true, 'replies_views': showRepliesViews, 'last_reply': showLastReply, 'category': showCategory } %}
+
+{% set portalTabLimit = portalTabLimit ?? 15 %}
+{% set portalTabMax = portalTabMax ?? 50 %}
+{% set portalNewestTopics = portalNewestTopics ?? [] %}
+{% set portalPopularUsers = portalPopularUsers ?? [] %}
+{% set portalMostViewedTopics = portalMostViewedTopics ?? [] %}
+{% set portalMostRepliedTopics = portalMostRepliedTopics ?? [] %}
+{% set portalTopRepliedTopics = portalTopRepliedTopics ?? [] %}
+{% set portalTopViewedTopics = portalTopViewedTopics ?? [] %}
+{% set firstVisibleTab = null %}
+{% for t in tabOrder %}
+  {% if portalTabVisibility[t]|default(0) and firstVisibleTab is null %}
+    {% set firstVisibleTab = t %}
+  {% endif %}
+{% endfor %}
+{% set sonOlaylarDataAttrs = { show_replies_views: showRepliesViews, show_last_reply: showLastReply, show_category: showCategory, show_topic_icon: showTopicIcon, comment_snippet_limit: commentSnippetLimit, topic_title_limit: topicTitleLimit }|json_encode %}
+
+<div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded son-olaylar-card son-olaylar-card--hz flex flex-col mb-4 shadow-sm" style="height: 380px;" data-api-url="{{ core_url('api/portal-tab')|e('html_attr') }}" data-tab-limit="{{ portalTabLimit }}" data-tab-max="{{ portalTabMax }}" data-son-olaylar-settings="{{ sonOlaylarDataAttrs|e('html_attr') }}" data-refresh-interval="30">
+  
+  {# Tabs Header #}
+  <div class="border-b border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex-shrink-0 pt-2 px-1 overflow-x-auto select-none no-scrollbar flex items-end">
+    <nav class="flex gap-1 min-w-max px-2" role="tablist">
+      {% for tid in tabOrder %}
+        {% if portalTabVisibility[tid]|default(0) %}
+        <button type="button" class="portal-tab-btn px-3 py-1.5 text-[11px] font-bold border rounded-t-sm transition-colors {{ firstVisibleTab == tid ? 'bg-white dark:bg-slate-900 text-primary border-slate-300 dark:border-slate-700 border-b-white dark:border-b-slate-900 active-tab-style' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700 inactive-tab-style' }}" style="{{ firstVisibleTab == tid ? 'margin-bottom: -1px;' : 'margin-bottom: 0;' }}" data-tab="{{ tid|e('html_attr') }}" data-active="{{ firstVisibleTab == tid ? 'true' : 'false' }}">
+          {{ core_e(tabLabels[tid] ?? tid) }}
+        </button>
+        {% endif %}
+      {% endfor %}
+    </nav>
+  </div>
+  
+  {# Panels Wrapper #}
+  <div class="portal-tab-panels flex-1 min-h-0 relative bg-white dark:bg-slate-900">
+    
+    {% set topicTabs = [
+      {id: 'newest_topics', data: portalNewestTopics},
+      {id: 'most_replied', data: portalMostRepliedTopics},
+      {id: 'most_viewed', data: portalMostViewedTopics},
+      {id: 'top_replied', data: portalTopRepliedTopics},
+      {id: 'top_viewed', data: portalTopViewedTopics}
+    ] %}
+    {% for tab in topicTabs %}
+      {% if portalTabVisibility[tab.id]|default(0) %}
+      <div class="portal-tab-panel {{ firstVisibleTab != tab.id ? 'hidden' : '' }} absolute inset-0 overflow-y-auto" data-tab="{{ tab.id }}" data-offset="{{ portalTabLimit }}">
+        <table class="w-full text-left border-collapse text-sm hz-son-table">
+          <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 z-10 shadow-sm hz-son-thead">
+            <tr>
+              {% for col in colOrder %}
+                {% if colVisible[col] %}
+                  {% if col == 'title' %}
+                    <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200">{{ lang('portal.col_topic_title') }}</th>
+                  {% elseif col == 'replies_views' %}
+                    <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200 text-center w-28">{{ lang('portal.col_replies_views') }}</th>
+                  {% elseif col == 'last_reply' %}
+                    <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200 text-center w-24">{{ lang('portal.col_last_action') }}</th>
+                  {% elseif col == 'category' %}
+                    <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200 text-right w-36">{{ lang('portal.col_category') }}</th>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-700/60">
+            {% for t in tab.data %}
+              {% set url = core_url('topic/' ~ topic_url_path(t)) %}
+              {% set title = (t.title ?? '')|length > topicTitleLimit ? ((t.title ?? '')|slice(0, topicTitleLimit) ~ '…') : (t.title ?? '') %}
+              {% set avatarUrl = (t.author_avatar_path|default('')) != '' ? asset_url(t.author_avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(t.username|default(''))|url_encode) ~ '&size=32&background=random') %}
+              {% set timeAgo = (t.last_post_at ?? t.created_at ?? '')|time_ago %}
+              
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group hz-son-tr">
+                {% for col in colOrder %}
+                  {% if colVisible[col] %}
+                    {% if col == 'title' %}
+                      <td class="px-2 py-1.5 w-full max-w-[200px]">
+                        <div class="flex items-center gap-1.5">
+                          {% if showTopicIcon %}
+                            <img src="{{ core_e(avatarUrl) }}" alt="" class="w-7 h-7 rounded-sm object-cover border border-slate-300 dark:border-slate-600 shrink-0">
+                          {% endif %}
+                          <div class="min-w-0">
+                            <a href="{{ url }}" class="text-[12px] font-bold text-primary hover:underline truncate block" title="{{ core_e(t.title ?? '') }}">
+                              {{ core_e(title) }}
+                            </a>
+                            <div class="text-[10px] text-slate-500 font-medium truncate">{{ core_e(t.username|default(lang('portal.anonymous'))) }}</div>
+                          </div>
+                        </div>
+                      </td>
+                    {% elseif col == 'replies_views' %}
+                      <td class="px-2 py-1.5 text-center text-[11px] text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">
+                        {{ t.reply_count ?? 0 }} / {{ t.view_count ?? 0 }}
+                      </td>
+                    {% elseif col == 'last_reply' %}
+                      <td class="px-2 py-1.5 text-center text-[10px] text-slate-500 font-medium whitespace-nowrap">
+                        {{ timeAgo }}
+                      </td>
+                    {% elseif col == 'category' %}
+                      <td class="px-2 py-1.5 text-right">
+                        <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-px rounded-sm whitespace-nowrap">
+                          {{ core_e(t.forum_name ?? lang('portal.category_default')) }}
+                        </span>
+                      </td>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </tr>
+            {% endfor %}
+            {% if tab.data is empty %}
+              <tr>
+                <td colspan="4" class="py-8 text-center text-slate-500 text-sm">{{ lang('portal.no_content') }}</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    {% endfor %}
+
+    {# POPULAR USERS #}
+    {% if portalTabVisibility.popular_users|default(0) %}
+    <div class="portal-tab-panel {{ firstVisibleTab != 'popular_users' ? 'hidden' : '' }} absolute inset-0 overflow-y-auto" data-tab="popular_users" data-offset="{{ portalTabLimit }}">
+      <table class="w-full text-left border-collapse text-sm hz-son-table">
+        <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 z-10 shadow-sm hz-son-thead">
+          <tr>
+            <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200">{{ lang('portal.col_user') }}</th>
+            <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200 text-center w-20">{{ lang('portal.col_reputation') }}</th>
+            <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200 text-center w-20">{{ lang('portal.col_posts') }}</th>
+            <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200 text-center w-20">{{ lang('portal.col_topics') }}</th>
+            <th class="px-2 py-1.5 font-bold text-slate-700 dark:text-slate-200 text-right w-28">{{ lang('portal.col_location') }}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700/60">
+          {% for u in portalPopularUsers %}
+            {% set url = core_url('member/' ~ (u.username|default('')|e('url'))) %}
+            {% set avatarUrl = (u.avatar_path|default('')) != '' ? asset_url(u.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(u.username|default(''))|url_encode) ~ '&size=32&background=random') %}
+            {% set repNet = (u.reputation_net ?? 0) %}
+            
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group hz-son-tr">
+              <td class="px-2 py-1.5">
+                <div class="flex items-center gap-1.5">
+                  <img src="{{ core_e(avatarUrl) }}" alt="" class="w-7 h-7 rounded-sm object-cover border border-slate-300 dark:border-slate-600 shrink-0">
+                  <a href="{{ url }}" class="text-[12px] font-bold text-slate-800 dark:text-slate-200 hover:text-primary truncate">{{ core_e(u.username|default('')) }}</a>
+                </div>
+              </td>
+              <td class="px-2 py-1.5 text-center">
+                <span class="text-[11px] font-bold {{ repNet > 0 ? 'text-green-600' : (repNet < 0 ? 'text-red-500' : 'text-slate-500') }}">{{ repNet > 0 ? '+' : '' }}{{ repNet }}</span>
+              </td>
+              <td class="px-2 py-1.5 text-center text-slate-600 dark:text-slate-400 text-[11px] font-medium">{{ u.post_count ?? 0 }}</td>
+              <td class="px-2 py-1.5 text-center text-slate-600 dark:text-slate-400 text-[11px] font-medium">{{ u.topic_count ?? 0 }}</td>
+              <td class="px-2 py-1.5 text-right text-slate-500 text-[10px] truncate max-w-[100px] font-medium">
+                {{ core_e(u.location|default('-')) }}
+              </td>
+            </tr>
+          {% endfor %}
+          {% if portalPopularUsers is empty %}
+            <tr>
+              <td colspan="5" class="py-8 text-center text-slate-500 text-sm">{{ lang('portal.no_data') }}</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  </div>
+  
+  {# Footer (Loading / Extra settings info) #}
+  <div class="border-t border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 py-1 px-2.5 flex items-center justify-between flex-shrink-0 hz-son-footer">
+    <div class="text-[10px] text-slate-500 font-medium">
+      <i class="fa-solid fa-clock opacity-70"></i> {{ lang('portal.realtime') }}
+    </div>
+    {% if portalTabMax > portalTabLimit and firstVisibleTab %}
+      <button type="button" class="portal-load-more-btn text-[11px] font-bold text-primary hover:underline cursor-pointer" data-limit="{{ (portalTabMax - portalTabLimit)|clamp(0, 15) }}">
+        {{ lang('portal.load_more') }}
+      </button>
+    {% endif %}
+  </div>
+
+</div>
+{% endif %}

@@ -1,0 +1,357 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set topic = topic ?? null %}
+{% set firstPost = firstPost ?? null %}
+{% set commentPosts = commentPosts ?? [] %}
+{% set articleCommentsEnabled = articleCommentsEnabled ?? true %}
+{% set cu = cu ?? user ?? null %}
+{% set reputationEnabled = reputationEnabled ?? false %}
+{% set isStaff = cu and ((cu.role_id ?? 0) == 1 or (cu.role_id ?? 0) == 2) %}
+{% set canManageTopic = cu and (cu.id == topic.user_id or isStaff) %}
+{% set topicError = topicError ?? flash('topic_error') %}
+{% set topicOk = topicOk ?? flash('topic_ok') %}
+{% set error = error ?? flash('reply_error') %}
+
+{% if not topic %}
+  <div class="max-w-5xl mx-auto mt-8">
+    <p class="p-6 text-gray-500 bg-white rounded-xl shadow-sm text-center">{{ core__('article.not_found') }}</p>
+  </div>
+{% else %}
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  if(window.location.hash) return;
+  window.scrollTo(0,0);
+  setTimeout(function(){ if(!window.location.hash) window.scrollTo(0,0); }, 100);
+});
+</script>
+
+<div class="w-full max-w-6xl mx-auto px-4 py-6 md:py-10">
+  {# Breadcrumb #}
+  <nav aria-label="Breadcrumb" class="mb-6">
+    <ol class="flex items-center gap-2 flex-wrap text-sm text-gray-500 font-medium">
+      <li><a href="{{ core_url('') }}" class="hover:text-[#1a252f] transition-colors">{{ core__('common.home') }}</a></li>
+      <li><i class="fa-solid fa-chevron-right text-[10px] opacity-70"></i></li>
+      <li><a href="{{ core_url('articles') }}" class="hover:text-[#1a252f] transition-colors">{{ core__('article.articles') }}</a></li>
+      <li><i class="fa-solid fa-chevron-right text-[10px] opacity-70"></i></li>
+      <li class="text-gray-900 truncate max-w-[200px] sm:max-w-md" title="{{ core_e(topic.title) }}">{{ core_e(topic.title) }}</li>
+    </ol>
+  </nav>
+
+  {% if topicError %}<div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">{{ core_e(topicError) }}</div>{% endif %}
+  {% if topicOk %}<div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm font-medium">{{ core_e(topicOk) }}</div>{% endif %}
+
+  {# Article Container #}
+  <article class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-10">
+    {# Article Header #}
+    <header class="px-6 md:px-10 pt-8 md:pt-12 pb-6 border-b border-gray-100">
+      <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#1a252f] leading-tight mb-8">
+        {{ core_e(topic.title) }}
+        {% if topic.is_sticky %} <span class="text-amber-500 ml-2 text-2xl align-middle" title="{{ core__('article.sticky_title')|e('html_attr') }}"><i class="fa-solid fa-thumbtack"></i></span>{% endif %}
+        {% if topic.is_locked %} <span class="text-red-500 ml-2 text-2xl align-middle" title="{{ core__('article.locked_title')|e('html_attr') }}"><i class="fa-solid fa-lock"></i></span>{% endif %}
+      </h1>
+
+      {% if firstPost %}
+      {% set p = firstPost %}
+      {% set avatarUrl = (p.avatar_path|default('')) != '' ? asset_url(p.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(p.username|default(''))|url_encode) ~ '&size=128') %}
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+          <a href="{{ core_url('member/' ~ (p.username|default('')|e('url'))) }}" class="shrink-0 group">
+            <img src="{{ core_e(avatarUrl) }}" alt="{{ core_e(p.username|default('')) }}" class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-gray-100 group-hover:border-blue-500 transition-colors">
+          </a>
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <a href="{{ core_url('member/' ~ (p.username|default('')|e('url'))) }}" class="font-bold text-lg text-gray-900 hover:text-blue-600 transition-colors">{{ core_e(p.username|default('')) }}</a>
+              {% if p.role_name|default('') %}
+                <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider" style="{{ p.role_color|default('') != '' ? ('background-color:' ~ p.role_color|e('css')) : '' }}">{{ core_e(p.role_name) }}</span>
+              {% endif %}
+            </div>
+            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 font-medium font-mono">
+              <span class="flex items-center gap-1.5" title="{{ core__('article.published_date')|e('html_attr') }}"><i class="fa-regular fa-calendar-days opacity-70"></i> {{ core_e(p.created_at|default('')) }}</span>
+              <span class="flex items-center gap-1.5" title="{{ core__('article.views_title')|e('html_attr') }}"><i class="fa-regular fa-eye opacity-70"></i> {{ (topic.view_count ?? 0)|number_format(0) }} {{ core__('article.views') }}</span>
+              {% if commentPosts|length > 0 %}
+              <span class="flex items-center gap-1.5" title="{{ core__('article.comments')|e('html_attr') }}"><i class="fa-regular fa-comments opacity-70"></i> {{ commentPosts|length }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        {% if canManageTopic %}
+        <div class="flex items-center gap-2">
+          <a href="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/edit') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 transition-all">
+            <i class="fa-solid fa-pen"></i> <span class="hidden sm:inline">{{ core__('article.edit') }}</span>
+          </a>
+          {% if isStaff %}
+            <div class="relative group">
+              <button type="button" class="inline-flex items-center justify-center w-11 h-11 text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 transition-all">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+              </button>
+              <div class="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 p-1.5">
+                <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/toggle-sticky') }}" method="post" class="block">{{ core_csrf_field('topic_action')|raw }}<button type="submit" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"><div class="w-6 text-center text-gray-400"><i class="fa-solid fa-thumbtack"></i></div>{{ topic.is_sticky ? core__('article.unsticky') : core__('article.sticky') }}</button></form>
+                <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/toggle-lock') }}" method="post" class="block">{{ core_csrf_field('topic_action')|raw }}<button type="submit" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"><div class="w-6 text-center text-gray-400"><i class="fa-solid fa-lock"></i></div>{{ topic.is_locked ? core__('article.unlock') : core__('article.lock') }}</button></form>
+                <a href="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/move') }}" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"><div class="w-6 text-center text-gray-400"><i class="fa-solid fa-arrows-alt"></i></div>{{ core__('article.move') }}</a>
+                <form action="{{ core_url('article/' ~ topic.id ~ '/convert-to-forum') }}" method="post" class="block" onsubmit="return confirm('{{ core__('article.convert_confirm')|e('js') }}');">{{ core_csrf_field('topic_action')|raw }}<button type="submit" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"><div class="w-6 text-center text-gray-400"><i class="fa-solid fa-comments"></i></div>{{ core__('article.convert_to_forum') }}</button></form>
+                <div class="my-1.5 border-t border-gray-100"></div>
+                <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/delete') }}" method="post" class="block" onsubmit="return confirm('{{ core__('article.delete_confirm')|e('js') }}');">{{ core_csrf_field('delete_topic')|raw }}<button type="submit" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors"><div class="w-6 text-center text-red-500"><i class="fa-solid fa-trash"></i></div>{{ core__('article.delete') }}</button></form>
+              </div>
+            </div>
+          {% else %}
+            <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/delete') }}" method="post" class="inline-block" onsubmit="return confirm('{{ core__('article.delete_confirm')|e('js') }}');">{{ core_csrf_field('delete_topic')|raw }}<button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 focus:ring-4 focus:ring-red-50 transition-all"><i class="fa-solid fa-trash"></i> <span class="hidden sm:inline">{{ core__('article.delete') }}</span></button></form>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </header>
+
+    {# Article Content #}
+    <div class="px-6 md:px-10 py-10 md:py-12 text-[#1a252f] leading-loose prose prose-lg md:prose-xl max-w-none prose-headings:font-bold prose-a:text-blue-600 hover:prose-a:text-blue-700 prose-img:rounded-2xl prose-img:shadow-sm">
+      {% if firstPost %}
+        {% set firstBody = core_sanitize_html(core_display_post_html(firstPost.body ?? '', firstPost.body_html ?? '')) %}
+        {% if firstBody != '' %}{{ firstBody|smileys|raw }}{% else %}<p class="text-gray-500 italic">{{ core__('article.no_content') }}</p>{% endif %}
+      {% else %}
+        <p class="text-gray-500 italic">{{ core__('article.no_content') }}</p>
+      {% endif %}
+    </div>
+
+    {# Author Signature #}
+    {% if firstPost and (firstPost.user_signature|default('')) != '' %}
+    <div class="px-6 md:px-10 pb-8">
+      <div class="px-5 py-4 bg-gray-50/80 rounded-xl text-sm md:text-base text-gray-500 italic border-l-4 border-gray-300 post-signature">
+        {{ core_sanitize_html(firstPost.user_signature)|smileys|raw }}
+      </div>
+    </div>
+    {% endif %}
+
+    {# Layout Footer: Likes & Rep #}
+    {% if firstPost %}
+    <div class="px-6 md:px-10 py-5 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex flex-wrap items-center gap-6">
+        <form action="{{ core_url('post/' ~ p.id ~ '/like') }}" method="post" class="inline post-like-form" data-post-id="{{ p.id }}" data-liked="{{ p.liked_by_me|default(false) ? '1' : '0' }}" data-count="{{ (p.like_count ?? 0) }}" data-label-like="{{ core__('forum.like')|e('html_attr') }}" data-label-unlike="{{ core__('forum.unlike')|e('html_attr') }}">
+          {{ core_csrf_field('post_like')|raw }}
+          <button type="submit" class="group flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all {% if p.liked_by_me|default(false) %}bg-[#1a252f] text-white hover:bg-gray-800 shadow-md{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm{% endif %} post-like-btn">
+            <i class="fa-regular fa-thumbs-up post-like-icon {% if not p.liked_by_me|default(false) %}group-hover:text-blue-500 group-hover:-translate-y-0.5 transition-transform{% endif %} text-lg"></i>
+            <span class="post-like-label">{{ p.liked_by_me|default(false) ? core__('forum.unlike') : core__('forum.like') }}</span>
+            {% if (p.like_count ?? 0) > 0 %}
+              <div class="w-px h-4 {% if p.liked_by_me|default(false) %}bg-gray-600{% else %}bg-gray-300{% endif %} mx-1"></div>
+              <span class="post-like-count">{{ (p.like_count ?? 0) }}</span>
+            {% else %}
+              <span class="post-like-count hidden">0</span>
+            {% endif %}
+          </button>
+        </form>
+
+        {# Article Rating (Local Storage) #}
+        <div class="flex items-center gap-3 bg-white border border-gray-200 px-4 py-2 rounded-full shadow-sm" id="article-rating-container" data-topic-id="{{ topic.id|default('0')|e('html_attr') }}">
+          <span class="text-sm font-bold text-gray-600 hidden sm:inline">{{ core__('article.rate_article') }}:</span>
+          <div class="flex items-center gap-1 rating-stars text-xl" dir="rtl">
+            <input type="radio" id="star5" name="rating" value="5" class="hidden peer" />
+            <label for="star5" class="cursor-pointer text-gray-200 hover:text-amber-400 peer-checked:text-amber-400 transition-colors"><i class="fa-solid fa-star"></i></label>
+            <input type="radio" id="star4" name="rating" value="4" class="hidden peer" />
+            <label for="star4" class="cursor-pointer text-gray-200 hover:text-amber-400 peer-checked:text-amber-400 transition-colors"><i class="fa-solid fa-star"></i></label>
+            <input type="radio" id="star3" name="rating" value="3" class="hidden peer" />
+            <label for="star3" class="cursor-pointer text-gray-200 hover:text-amber-400 peer-checked:text-amber-400 transition-colors"><i class="fa-solid fa-star"></i></label>
+            <input type="radio" id="star2" name="rating" value="2" class="hidden peer" />
+            <label for="star2" class="cursor-pointer text-gray-200 hover:text-amber-400 peer-checked:text-amber-400 transition-colors"><i class="fa-solid fa-star"></i></label>
+            <input type="radio" id="star1" name="rating" value="1" class="hidden peer" />
+            <label for="star1" class="cursor-pointer text-gray-200 hover:text-amber-400 peer-checked:text-amber-400 transition-colors"><i class="fa-solid fa-star"></i></label>
+          </div>
+          <p id="rating-success-msg" class="text-green-600 font-bold text-xs hidden absolute -mt-10 bg-green-50 px-2 py-1 rounded shadow border border-green-100 whitespace-nowrap"><i class="fa-solid fa-check mr-1"></i>{{ core__('article.rate_success') }}</p>
+        </div>
+      </div>
+      
+      <style>
+        .rating-stars label:hover,
+        .rating-stars label:hover ~ label,
+        .rating-stars input:checked ~ label { color: #fbbf24; }
+      </style>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const container = document.getElementById('article-rating-container');
+          if(!container) return;
+          const topicId = container.dataset.topicId;
+          const storageKey = 'megafor_article_rating_' + topicId;
+          const currentRating = localStorage.getItem(storageKey);
+          const inputs = container.querySelectorAll('input[name="rating"]');
+          const msg = document.getElementById('rating-success-msg');
+          
+          if(currentRating) {
+            const matched = container.querySelector('input[value="'+currentRating+'"]');
+            if(matched) matched.checked = true;
+          }
+
+          inputs.forEach(input => {
+            input.addEventListener('change', function() {
+              localStorage.setItem(storageKey, this.value);
+              msg.classList.remove('hidden');
+              setTimeout(() => { msg.classList.add('hidden'); }, 3000);
+            });
+          });
+        });
+      </script>
+
+
+      
+      {% if reputationEnabled and cu and (p.user_id ?? 0) != cu.id %}
+      <div class="flex items-center gap-2 bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
+        <button type="button" class="post-rep-btn flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-green-700 hover:bg-green-50 transition-colors" data-username="{{ core_e(p.username|default('')) }}" data-value="1" data-post-id="{{ p.id }}">
+          <div class="bg-green-100 p-1 rounded-full"><i class="fa-solid fa-plus text-xs"></i></div> Rep
+        </button>
+        <div class="w-px h-6 bg-gray-200"></div>
+        <button type="button" class="post-rep-btn flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 transition-colors" data-username="{{ core_e(p.username|default('')) }}" data-value="-1" data-post-id="{{ p.id }}">
+          <div class="bg-red-100 p-1 rounded-full"><i class="fa-solid fa-minus text-xs"></i></div> Rep
+        </button>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </article>
+
+  {# Comments Section #}
+  {% if articleCommentsEnabled %}
+  <div class="mt-12">
+    <div class="flex items-center gap-3 mb-8 px-2">
+      <h2 class="text-2xl font-black text-[#1a252f]">{{ core__('article.comments') }}</h2>
+      <span class="bg-[#1a252f] text-white text-sm font-bold px-3 py-1 rounded-full">{{ commentPosts|length }}</span>
+    </div>
+
+    {# Add Comment Form - Placed BEFORE the comments list for better UX on articles #}
+    {% if cu and not topic.is_locked %}
+    <div class="mb-10 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-5 md:p-6 flex gap-4 md:gap-6 bg-gray-50/30">
+        <div class="shrink-0 hidden sm:block">
+          {% set cuAvatarUrl = (cu.avatar_path|default('')) != '' ? asset_url(cu.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(cu.username|default(''))|url_encode) ~ '&size=128') %}
+          <img src="{{ core_e(cuAvatarUrl) }}" alt="{{ core_e(cu.username|default('')) }}" class="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm">
+        </div>
+        <div class="flex-1 min-w-0">
+          {% if error %}<div class="mb-4 text-red-700 bg-red-50 p-4 rounded-xl text-sm font-medium border border-red-100">{{ core_e(error) }}</div>{% endif %}
+          <form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/reply') }}" method="post">
+            {{ core_csrf_field('reply_topic')|raw }}
+            <textarea name="body" id="article-reply-body" rows="4" data-editor data-secret-tooltip="{{ core__('editor.secret_tooltip')|e('html_attr') }}" data-secret-placeholder="{{ core__('editor.secret_placeholder')|e('html_attr') }}" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#1a252f] focus:border-[#1a252f] sm:text-base p-4 transition-colors mb-4 placeholder-gray-400" required placeholder="{{ core__('article.comment_placeholder')|e('html_attr') }}"></textarea>
+            <div class="flex justify-end">
+              <button type="submit" class="px-8 py-3 text-sm font-bold text-white bg-[#1a252f] rounded-xl hover:bg-gray-800 shadow-md hover:shadow-lg focus:ring-4 focus:ring-gray-200 transition-all flex items-center gap-2">
+                <i class="fa-regular fa-paper-plane"></i> {{ core__('article.send') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% elseif topic.is_locked %}
+    <div class="mb-10 p-8 text-center text-gray-500 bg-gray-50/80 rounded-2xl border border-gray-200">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 mb-3 text-gray-400">
+        <i class="fa-solid fa-lock text-xl"></i>
+      </div>
+      <p class="font-medium text-lg">{{ core__('article.comments_closed') }}</p>
+    </div>
+    {% else %}
+    <div class="mb-10 p-8 text-center text-gray-600 bg-gray-50/80 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white border border-gray-200 mb-3 text-gray-400 shadow-sm">
+        <i class="fa-regular fa-comment-dots text-xl"></i>
+      </div>
+      <p class="mb-4 font-medium">{{ core__('article.login_to_comment') }}</p>
+      <a href="{{ core_url('login') }}" class="inline-flex items-center justify-center gap-2 px-8 py-3 text-sm font-bold text-white bg-[#1a252f] rounded-xl hover:bg-gray-800 shadow-md transition-all">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> {{ core__('common.login') }}
+      </a>
+    </div>
+    {% endif %}
+
+    {# Comments List #}
+    {% if commentPosts|length > 0 %}
+    <div class="space-y-6">
+      {% for p in commentPosts %}
+      {% set avatarUrl = (p.avatar_path|default('')) != '' ? asset_url(p.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(p.username|default(''))|url_encode) ~ '&size=128') %}
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6 transition-all hover:shadow-md group">
+        <div class="flex gap-4 md:gap-5">
+          <a href="{{ core_url('member/' ~ (p.username|default('')|e('url'))) }}" class="shrink-0 mt-1">
+            <img src="{{ core_e(avatarUrl) }}" alt="{{ core_e(p.username|default('')) }}" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover ring-4 ring-gray-50 group-hover:ring-blue-50 transition-all">
+          </a>
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
+              <div class="flex items-center gap-2">
+                <a href="{{ core_url('member/' ~ (p.username|default('')|e('url'))) }}" class="font-extrabold text-[#1a252f] hover:text-blue-600 text-lg transition-colors">{{ core_e(p.username|default('')) }}</a>
+                {% if p.role_name|default('') %}
+                  <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider" style="{{ p.role_color|default('') != '' ? ('background-color:' ~ p.role_color|e('css')) : '' }}">{{ core_e(p.role_name) }}</span>
+                {% endif %}
+              </div>
+              <div class="text-sm text-gray-500 font-medium opacity-80 flex items-center gap-1.5">
+                <i class="fa-regular fa-clock text-xs"></i> {{ core_e(p.created_at|default('')) }}
+              </div>
+            </div>
+            
+            <div class="text-gray-800 prose prose-sm md:prose-base max-w-none mb-4 prose-img:rounded-xl leading-relaxed">
+              {% if (p.body_html|default('')) != '' %}{{ core_sanitize_html(p.body_html)|smileys|raw }}{% else %}{{ core_sanitize_html(p.body|default(''))|smileys|raw }}{% endif %}
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3 pt-4 mt-2 border-t border-gray-50">
+              <form action="{{ core_url('post/' ~ p.id ~ '/like') }}" method="post" class="inline post-like-form" data-post-id="{{ p.id }}" data-liked="{{ p.liked_by_me|default(false) ? '1' : '0' }}" data-count="{{ (p.like_count ?? 0) }}" data-label-like="{{ core__('forum.like')|e('html_attr') }}" data-label-unlike="{{ core__('forum.unlike')|e('html_attr') }}">
+                {{ core_csrf_field('post_like')|raw }}
+                <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors post-like-btn {% if p.liked_by_me|default(false) %}bg-[#1a252f] text-white{% else %}text-gray-600 bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200{% endif %}">
+                  <i class="fa-regular fa-thumbs-up post-like-icon text-sm"></i>
+                  <span class="post-like-label">{{ p.liked_by_me|default(false) ? core__('forum.unlike') : core__('forum.like') }}</span>
+                  {% if (p.like_count ?? 0) > 0 %}
+                    <span class="post-like-count {% if p.liked_by_me|default(false) %}bg-gray-700{% else %}bg-gray-200{% endif %} px-1.5 py-0.5 rounded-md ml-1">{{ (p.like_count ?? 0) }}</span>
+                  {% else %}
+                    <span class="post-like-count hidden">0</span>
+                  {% endif %}
+                </button>
+              </form>
+              
+              {% if reputationEnabled and cu and (p.user_id ?? 0) != cu.id %}
+              <div class="flex items-center gap-1">
+                <button type="button" class="post-rep-btn px-2.5 py-1.5 rounded-lg text-xs font-bold text-green-700 hover:bg-green-100 bg-green-50 transition-colors" title="+ Rep" data-username="{{ core_e(p.username|default('')) }}" data-value="1" data-post-id="{{ p.id }}"><i class="fa-solid fa-arrow-up"></i></button>
+                <button type="button" class="post-rep-btn px-2.5 py-1.5 rounded-lg text-xs font-bold text-red-700 hover:bg-red-100 bg-red-50 transition-colors" title="- Rep" data-username="{{ core_e(p.username|default('')) }}" data-value="-1" data-post-id="{{ p.id }}"><i class="fa-solid fa-arrow-down"></i></button>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% if reputationEnabled and cu %}
+<div id="postbit-rep-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 sm:p-0" aria-hidden="true">
+  <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" id="postbit-rep-backdrop"></div>
+  <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all">
+    <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+      <h3 class="text-lg font-extrabold text-[#1a252f]">{{ core__('article.rep_give') }}</h3>
+      <button type="button" id="postbit-rep-close" class="text-gray-400 hover:text-gray-600 focus:outline-none bg-white border border-gray-200 rounded-lg p-1.5 transition-colors">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+    <form id="postbit-rep-form" method="post" action="">
+      <div class="p-6">
+        <input type="hidden" name="_token" value="{{ core_csrf_token('give_rep') }}">
+        <input type="hidden" name="value" id="postbit-rep-value" value="1">
+        <input type="hidden" name="post_id" id="postbit-rep-post-id" value="">
+        <div class="mb-4">
+          <label class="block text-sm font-bold text-gray-700 mb-2">{{ core__('article.rep_comment_label') }}</label>
+          <textarea name="comment" id="postbit-rep-comment" rows="3" class="w-full border-gray-300 rounded-xl focus:ring-[#1a252f] focus:border-[#1a252f] sm:text-sm p-3 placeholder-gray-400 shadow-sm" required placeholder="{{ core__('article.rep_comment_placeholder')|e('html_attr') }}"></textarea>
+        </div>
+      </div>
+      <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+        <button type="button" id="postbit-rep-cancel" class="px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors">{{ core__('common.cancel') }}</button>
+        <button type="submit" class="px-6 py-2.5 text-sm font-bold text-white bg-[#1a252f] rounded-xl hover:bg-gray-800 focus:ring-4 focus:ring-gray-200 transition-colors shadow-md">{{ core__('article.send') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+
+  {# Scroll Action Buttons #}
+  <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+    <button type="button" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-12 h-12 bg-white/90 backdrop-blur border border-gray-200 text-gray-600 rounded-full shadow-lg hover:text-[#1a252f] hover:border-[#1a252f] transition-all flex items-center justify-center opacity-80 hover:opacity-100" aria-label="Yukarı">
+      <i class="fa-solid fa-arrow-up text-lg"></i>
+    </button>
+    <button type="button" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" class="w-12 h-12 bg-white/90 backdrop-blur border border-gray-200 text-gray-600 rounded-full shadow-lg hover:text-[#1a252f] hover:border-[#1a252f] transition-all flex items-center justify-center opacity-80 hover:opacity-100" aria-label="Aşağı">
+      <i class="fa-solid fa-arrow-down text-lg"></i>
+    </button>
+  </div>
+{% endblock %}

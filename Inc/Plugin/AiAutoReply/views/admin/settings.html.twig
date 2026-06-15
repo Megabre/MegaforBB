@@ -1,0 +1,114 @@
+{% extends 'base.html.twig' %}
+{% set s = settings ?? {} %}
+{% set selectedForums = selectedForums ?? [] %}
+{% set users = users ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">AI Otomatik Yanit</h2>
+                <div class="text-muted mt-1">Konu acilinca AI Asistan ile otomatik yanit olusturur.</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('admin_success', []) %}
+        <div class="alert alert-success" role="alert">{{ core_e(msg) }}</div>
+        {% endfor %}
+        {% for msg in app.session.getFlashBag().get('admin_error', []) %}
+        <div class="alert alert-danger" role="alert">{{ core_e(msg) }}</div>
+        {% endfor %}
+
+        <div class="card">
+            <form action="{{ core_url(adminPath ~ '/ai-auto-reply/save') }}" method="post">
+                {{ core_csrf_field('admin_ai_auto_reply_save')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="hidden" name="enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="enabled" value="1" class="form-check-input" {{ s.enabled ? 'checked' : '' }}>
+                            <span class="form-check-label">AI otomatik yanit aktif</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">OpenAI API Key</label>
+                        <input type="password" name="openai_api_key" class="form-control" value="" autocomplete="off" placeholder="{{ s.has_api_key ? 'Kayitli key var, degistirmek icin yeniden girin' : 'sk-...' }}">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Base URL</label>
+                            <input type="text" name="base_url" class="form-control" value="{{ core_e(s.base_url ?? 'https://api.openai.com/v1') }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Model</label>
+                            <input type="text" name="model" class="form-control" value="{{ core_e(s.model ?? 'gpt-4o-mini') }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Yanit yazacak varsayilan kullanici</label>
+                            <select name="bot_user_id" class="form-select">
+                                {% for u in users %}
+                                <option value="{{ u.id }}" {{ (s.bot_user_id ?? 1) == u.id ? 'selected' : '' }}>
+                                    {{ core_e(u.username) }}{% if u.role %} — {{ core_e(u.role.name) }}{% endif %} (ID {{ u.id }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Maks. karakter</label>
+                            <input type="number" min="300" max="4000" name="max_chars" class="form-control" value="{{ s.max_chars ?? 1200 }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Dakika basina limit</label>
+                            <input type="number" min="1" max="50" name="max_per_minute" class="form-control" value="{{ s.max_per_minute ?? 3 }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Gunluk kota</label>
+                            <input type="number" min="1" max="5000" name="daily_quota" class="form-control" value="{{ s.daily_quota ?? 100 }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Konu basina AI yanit limiti</label>
+                            <input type="number" min="1" max="20" name="max_replies_per_topic" class="form-control" value="{{ s.max_replies_per_topic ?? 3 }}">
+                            <small class="form-hint">Bir konuda AI en fazla bu sayi kadar yanit yazar.</small>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Etiket/Alinti icin konu limiti</label>
+                            <input type="number" min="1" max="100" name="max_mention_replies_per_topic" class="form-control" value="{{ s.max_mention_replies_per_topic ?? 8 }}">
+                            <small class="form-hint">@etiket veya alintida bu limite kadar cevap verebilir.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Forum bazli aktif forumlar</label>
+                        <select name="forum_ids[]" class="form-select" multiple size="10">
+                            {% for fo in forums %}
+                            <option value="{{ fo.id }}" {{ fo.id in selectedForums ? 'selected' : '' }}>
+                                {{ fo.category ? core_e(fo.category.name) ~ ' › ' : '' }}{{ core_e(fo.name) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-hint">Bos birakirsan tum forumlarda calisir.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Sistem prompt (opsiyonel)</label>
+                        <textarea name="prompt" class="form-control" rows="5">{{ core_e(s.prompt ?? '') }}</textarea>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

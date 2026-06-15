@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set prefixes = prefixes ?? [] %}
+{% set styleLabels = styleLabels ?? {} %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle ?? admin__('menu.topic_prefixes')) }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/prefixes/create') }}" class="btn btn-primary">{{ core_e(admin__('prefixes.new_prefix')) }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ core_e(admin__('prefixes.name')) }}</th>
+                            <th>{{ core_e(admin__('prefixes.icon_class')) }}</th>
+                            <th>{{ core_e(admin__('prefixes.category')) }}</th>
+                            <th>{{ core_e(admin__('prefixes.style')) }}</th>
+                            <th>{{ core_e(admin__('prefixes.sort_order')) }}</th>
+                            <th class="w-1">{{ core_e(admin__('common.actions')) }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if prefixes is empty %}
+                        <tr><td colspan="6" class="text-center text-muted">{{ core_e(admin__('prefixes.no_prefixes')) }}</td></tr>
+                        {% else %}
+                        {% for p in prefixes %}
+                        <tr>
+                            <td class="font-weight-bold">
+                                {% if p.badge_bg and p.badge_text %}
+                                <span class="text-xs px-2 py-0.5 rounded inline-flex items-center gap-1" style="background-color:{{ core_e(p.badge_bg) }};color:{{ core_e(p.badge_text) }};">{% if p.icon_class %}<i class="{{ core_e(p.icon_class) }}"></i>{% endif %}{{ core_e(p.name) }}</span>
+                                {% else %}
+                                <span class="{{ core_e(p.css_class ?? '') }}">{% if p.icon_class %}<i class="{{ core_e(p.icon_class) }} me-1"></i>{% endif %}{{ core_e(p.name) }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small font-monospace">{{ p.icon_class ? core_e(p.icon_class) : '—' }}</td>
+                            <td class="text-muted">{{ p.category ? core_e(p.category.name) : core_e(admin__('prefixes.category_all')) }}</td>
+                            <td class="text-muted small">
+                                {% if p.badge_bg and p.badge_text %}
+                                {{ core_e(admin__('prefixes.use_hex_badge')) }}
+                                {% else %}
+                                {{ core_e(styleLabels[p.css_class ?? ''] ?? admin__('prefixes.style_custom')) }}
+                                {% endif %}
+                            </td>
+                            <td>{{ p.sort_order ?? 0 }}</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a href="{{ core_url(adminPath ~ '/prefixes/edit/' ~ p.id) }}" class="btn btn-sm btn-white">{{ core_e(admin__('common.edit')) }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/prefixes/delete/' ~ p.id) }}" method="post" onsubmit="return confirm('{{ core_e(admin__('common.are_you_sure')) }}');" style="display:inline;">
+                                        {{ core_csrf_field()|raw }}
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ core_e(admin__('common.delete')) }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

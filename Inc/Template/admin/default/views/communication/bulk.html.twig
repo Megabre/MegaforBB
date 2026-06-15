@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+{% set templates = templates ?? [] %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-mail-forward me-2"></i> {{ lang('admin.communication.bulk_message_title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.communication.bulk_message_desc') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flashError is defined and flashError %}
+        <div class="alert alert-danger alert-dismissible mb-3">
+            {{ (flashError is iterable ? flashError[0] : flashError)|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        {% if flashSuccess is defined and flashSuccess %}
+        <div class="alert alert-success alert-dismissible mb-3">
+            {{ (flashSuccess is iterable ? flashSuccess[0] : flashSuccess)|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <form action="{{ core_url(adminPath ~ '/communication/bulk') }}" method="post">
+                {{ core_csrf_field('admin_communication')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.target') }}</label>
+                        <select name="target" id="bulk_target" class="form-select">
+                            <option value="all">{{ lang('admin.communication.target_all') }}</option>
+                            <option value="selected">{{ lang('admin.communication.target_selected') }}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="wrap_user_ids">
+                        <label class="form-label">{{ lang('admin.communication.user_ids_ph') }}</label>
+                        <input type="text" name="user_ids" class="form-control" placeholder="{{ lang('admin.communication.user_ids_ph') }}">
+                    </div>
+                    {% if templates is not empty %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.load_template') }}</label>
+                        <select id="template_select" class="form-select">
+                            <option value="">{{ lang('admin.common.choose')|default('Seçin...') }}</option>
+                            {% for t in templates %}
+                            <option value="{{ loop.index0 }}">{{ core_e(t.name) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <script>
+                    window.messageTemplates = [{% for t in templates %}{"subject": {{ t.subject|json_encode|raw }}, "body_html": {{ t.body_html|json_encode|raw }}}{% if not loop.last %},{% endif %}{% endfor %}];
+                    </script>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.subject') }}</label>
+                        <input type="text" name="subject" id="bulk_subject" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.communication.body') }}</label>
+                        <textarea id="bulk-body-editor" name="body_html" class="form-control" rows="10" required></textarea>
+                        {% if placeholders is defined and placeholders is not empty %}
+                        <div class="mt-2 p-3 bg-light rounded small">
+                            <strong>{{ lang('admin.communication.available_tags') }}</strong>
+                            <p class="text-muted mb-1 mt-1">{{ lang('admin.communication.available_tags_hint') }}</p>
+                            <code class="d-inline-flex flex-wrap gap-1">{% for key, desc in placeholders %}<span title="{{ desc|e('html_attr') }}">{{ '{' ~ key ~ '}' }}</span>{% if not loop.last %} · {% endif %}{% endfor %}</code>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary"><i class="ti ti-send me-1"></i> {{ lang('admin.communication.bulk_message_title') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var target = document.getElementById('bulk_target');
+    var wrapIds = document.getElementById('wrap_user_ids');
+    if (target && wrapIds) {
+        function toggle() {
+            if (target.value === 'selected') wrapIds.classList.remove('d-none'); else wrapIds.classList.add('d-none');
+        }
+        target.addEventListener('change', toggle);
+        toggle();
+    }
+    var tplSelect = document.getElementById('template_select');
+    if (tplSelect && typeof window.messageTemplates !== 'undefined' && window.messageTemplates.length) {
+        tplSelect.addEventListener('change', function() {
+            var idx = parseInt(this.value, 10);
+            if (!isNaN(idx) && window.messageTemplates[idx]) {
+                var t = window.messageTemplates[idx];
+                document.getElementById('bulk_subject').value = t.subject || '';
+                if (typeof jQuery !== 'undefined' && jQuery('#bulk-body-editor').data('summernote')) {
+                    jQuery('#bulk-body-editor').summernote('code', t.body_html || '');
+                } else {
+                    document.getElementById('bulk-body-editor').value = t.body_html || '';
+                }
+            }
+        });
+    }
+    if (typeof jQuery !== 'undefined' && jQuery().summernote) {
+        jQuery('#bulk-body-editor').summernote({ height: 280 });
+    }
+});
+</script>
+{% endblock %}

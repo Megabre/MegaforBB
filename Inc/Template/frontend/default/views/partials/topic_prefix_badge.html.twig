@@ -1,0 +1,24 @@
+{# Ön ek rozeti: hex renk veya Tailwind sınıfları + isteğe bağlı ikon
+   Admin ikon seçici kısa ad kaydeder (örn. comments); FA6 için fa-solid fa-* üretilir. #}
+{% set pn = prefix_name ?? '' %}
+{% if pn is not empty %}
+{% set pbg = prefix_badge_bg ?? '' %}
+{% set ptx = prefix_badge_text ?? '' %}
+{% set picRaw = (prefix_icon_class ?? '')|trim %}
+{% set pic = '' %}
+{% if picRaw != '' %}
+  {% if ' ' in picRaw or picRaw|slice(0, 3) == 'ti ' %}
+    {% set pic = picRaw %}
+  {% elseif picRaw|slice(0, 3) == 'fa-' %}
+    {% set pic = 'fa-solid ' ~ picRaw %}
+  {% else %}
+    {% set pic = 'fa-solid fa-' ~ picRaw %}
+  {% endif %}
+{% endif %}
+{% set pcss = prefix_css_class ?? 'bg-gray-100 text-gray-800' %}
+{% if pbg is not empty and ptx is not empty %}
+<span class="text-xs px-2 py-0.5 rounded mr-1 inline-flex items-center gap-1 shrink-0" style="background-color: {{ core_e(pbg) }}; color: {{ core_e(ptx) }};">{% if pic is not empty %}<i class="{{ core_e(pic) }}" aria-hidden="true"></i>{% endif %}{{ core_e(pn) }}</span>
+{% else %}
+<span class="{{ core_e(pcss) }} text-xs px-2 py-0.5 rounded mr-1 inline-flex items-center gap-1 shrink-0">{% if pic is not empty %}<i class="{{ core_e(pic) }}" aria-hidden="true"></i>{% endif %}{{ core_e(pn) }}</span>
+{% endif %}
+{% endif %}

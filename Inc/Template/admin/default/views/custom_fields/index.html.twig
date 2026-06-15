@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+{% set list = list ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.custom_fields.title') }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/custom-fields/create') }}" class="btn btn-primary">{{ lang('admin.custom_fields.new') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted mb-4">{{ lang('admin.custom_fields.description') }}</p>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.common.sort_order') }}</th>
+                            <th>{{ lang('admin.common.name') }}</th>
+                            <th>{{ lang('admin.custom_fields.key') }}</th>
+                            <th>{{ lang('admin.custom_fields.type') }}</th>
+                            <th>{{ lang('admin.custom_fields.required') }}</th>
+                            <th>{{ lang('admin.custom_fields.on_registration') }}</th>
+                            <th>{{ lang('admin.custom_fields.on_profile') }}</th>
+                            <th>{{ lang('admin.custom_fields.on_postbit') }}</th>
+                            <th class="w-1">{{ lang('admin.common.actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if list is empty %}
+                        <tr><td colspan="9" class="text-center text-muted">{{ lang('admin.custom_fields.no_fields') }}</td></tr>
+                        {% else %}
+                        {% for r in list %}
+                        <tr>
+                            <td>{{ r.sort_order ?? 0 }}</td>
+                            <td class="font-weight-bold">{{ (r.name ?? '')|e }}</td>
+                            <td class="text-muted">{{ (r.field_key ?? '')|e }}</td>
+                            <td>{{ (r.field_type ?? 'text')|e }}</td>
+                            <td>{{ r.is_required ? lang('admin.common.yes') : lang('admin.common.no') }}</td>
+                            <td>{{ r.show_on_registration ? lang('admin.common.yes') : lang('admin.common.no') }}</td>
+                            <td>{{ r.show_on_profile ? lang('admin.common.yes') : lang('admin.common.no') }}</td>
+                            <td>{{ r.show_in_postbit ? lang('admin.common.yes') : lang('admin.common.no') }}</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a href="{{ core_url(adminPath ~ '/custom-fields/edit/' ~ r.id) }}" class="btn btn-sm btn-white">{{ lang('admin.common.edit') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/custom-fields/delete/' ~ r.id) }}" method="post" onsubmit="return confirm('{{ lang('admin.custom_fields.delete_confirm') }}');" style="display:inline;">
+                                        {{ core_csrf_field('admin_custom_field_delete')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set backups = backups ?? [] %}
+{% set phpLimits = phpLimits ?? [] %}
+{% set dbRisky = dbRisky ?? false %}
+{% set filesRisky = filesRisky ?? false %}
+{% set zipAvailable = zipAvailable ?? true %}
+{% set csrfToken = csrfToken ?? '' %}
+{% set urlBackup = urlBackup ?? core_url(adminPath ~ '/backup') %}
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-database-export me-2"></i>{{ lang('admin.backup.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.backup.description')|raw }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% for msg in app.session.getFlashBag().get('backup_success', []) %}
+    <div class="alert alert-success alert-dismissible">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="ti ti-check me-1"></i>{{ core_e(msg) }}
+    </div>
+    {% endfor %}
+    {% for msg in app.session.getFlashBag().get('backup_error', []) %}
+    <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="ti ti-alert-circle me-1"></i>{{ core_e(msg) }}
+    </div>
+    {% endfor %}
+    {% if app.session.getFlashBag().get('backup_remind_delete', [])|length > 0 or backups|length > 0 %}
+    <div class="alert alert-warning mb-4">
+        <i class="ti ti-alert-triangle me-1"></i>{{ lang('admin.backup.remind_delete') }}
+        {% if backups|length > 0 %}
+        <div class="mt-2">
+            <form action="{{ core_url(adminPath ~ '/backup/delete-all') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.backup.delete_all_confirm')|e('js') }}');">
+                {{ core_csrf_field('admin_backup')|raw }}
+                <button type="submit" class="btn btn-warning btn-sm"><i class="ti ti-trash me-1"></i>{{ lang('admin.backup.delete_all') }}</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if dbRisky or filesRisky %}
+    <div class="alert alert-warning mb-4">
+        <h4 class="alert-heading"><i class="ti ti-alert-triangle me-1"></i>{{ lang('admin.backup.warning_timeout_title') }}</h4>
+        <p class="mb-0">{{ lang('admin.backup.warning_timeout_text') }}</p>
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="ti ti-database me-2"></i>{{ lang('admin.backup.create_db') }}</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">{{ lang('admin.backup.create_db_hint') }}</p>
+                    <form action="{{ core_url(adminPath ~ '/backup/create-db') }}" method="post">
+                        {{ core_csrf_field('admin_backup')|raw }}
+                        <button type="submit" class="btn btn-primary"><i class="ti ti-download me-1"></i>{{ lang('admin.backup.create_db') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="ti ti-file-zip me-2"></i>{{ lang('admin.backup.create_files') }}</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">{{ lang('admin.backup.create_files_hint') }}</p>
+                    {% if not zipAvailable %}
+                    <div class="alert alert-warning small mb-3">
+                        <i class="ti ti-alert-triangle me-1"></i>{{ lang('admin.backup.zip_required') }}
+                    </div>
+                    <button type="button" class="btn btn-primary" disabled><i class="ti ti-download me-1"></i>{{ lang('admin.backup.create_files') }}</button>
+                    {% else %}
+                    <form action="{{ core_url(adminPath ~ '/backup/create-files') }}" method="post">
+                        {{ core_csrf_field('admin_backup')|raw }}
+                        <button type="submit" class="btn btn-primary"><i class="ti ti-download me-1"></i>{{ lang('admin.backup.create_files') }}</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h3 class="card-title mb-0"><i class="ti ti-list me-2"></i>{{ lang('admin.backup.list_title') }}</h3>
+            {% if phpLimits is not empty %}
+            <small class="text-muted">
+                {{ lang('admin.backup.php_limits') }}:
+                {{ lang('admin.backup.php_max_time') }}=<code>{{ phpLimits.max_execution_time|e }}</code>s,
+                {{ lang('admin.backup.php_memory') }}=<code>{{ phpLimits.memory_limit|e }}</code>
+            </small>
+            {% endif %}
+        </div>
+        <div class="card-body p-0">
+            {% if backups is empty %}
+            <div class="p-5 text-center text-muted">
+                <i class="ti ti-folder-off mb-2" style="font-size: 2.5rem;"></i>
+                <p class="mb-0">{{ lang('admin.backup.no_backups') }}</p>
+            </div>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.backup.col_type') }}</th>
+                            <th>{{ lang('admin.backup.col_filename') }}</th>
+                            <th>{{ lang('admin.backup.col_size') }}</th>
+                            <th>{{ lang('admin.backup.col_date') }}</th>
+                            <th class="text-end w-1">{{ lang('admin.backup.download') }} / {{ lang('admin.backup.delete') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in backups %}
+                        <tr>
+                            <td>
+                                {% if b.type == 'db' %}
+                                <span class="badge bg-blue-lt">{{ lang('admin.backup.type_db') }}</span>
+                                {% elseif b.type == 'files' %}
+                                <span class="badge bg-green-lt">{{ lang('admin.backup.type_files') }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">—</span>
+                                {% endif %}
+                            </td>
+                            <td><code class="small">{{ b.filename|e }}</code></td>
+                            <td>
+                                {% if b.size >= 1048576 %}
+                                {{ (b.size / 1048576)|number_format(2) }} MB
+                                {% elseif b.size >= 1024 %}
+                                {{ (b.size / 1024)|number_format(0) }} KB
+                                {% else %}
+                                {{ b.size }} B
+                                {% endif %}
+                            </td>
+                            <td>{{ b.date|e }}</td>
+                            <td class="text-end">
+                                <a href="{{ core_url(adminPath ~ '/backup/download?file=' ~ (b.filename|url_encode)) }}" class="btn btn-ghost-primary btn-sm me-1" download><i class="ti ti-download"></i></a>
+                                <form action="{{ core_url(adminPath ~ '/backup/delete') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.backup.delete_confirm')|e('js') }}');">
+                                    {{ core_csrf_field('admin_backup')|raw }}
+                                    <input type="hidden" name="file" value="{{ b.filename|e('html_attr') }}">
+                                    <button type="submit" class="btn btn-ghost-danger btn-sm"><i class="ti ti-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if backups|length > 0 %}
+            <div class="card-footer py-2 d-flex justify-content-between align-items-center">
+                <span class="text-muted small">{{ lang('admin.backup.list_count')|replace({':count': backups|length}) }}</span>
+                <form action="{{ core_url(adminPath ~ '/backup/delete-all') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.backup.delete_all_confirm')|e('js') }}');">
+                    {{ core_csrf_field('admin_backup')|raw }}
+                    <button type="submit" class="btn btn-outline-danger btn-sm"><i class="ti ti-trash me-1"></i>{{ lang('admin.backup.delete_all') }}</button>
+                </form>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,826 @@
+{% set currentUser = user ?? null %}
+{% set navItems = top_menu_items ?? [] %}
+{% if navItems is empty %}
+  {% set portalEnabled = portal_enabled ?? false %}
+  {% set membersEnabled = members_list_enabled ?? true %}
+  {% set documentationEnabled = documentation_enabled ?? false %}
+  {% if portalEnabled %}
+    {% set navItems = [
+      { label: core__('common.home'), href: core_url(''), children: [] },
+      { label: core__('common.forum'), href: core_url('forum'), children: [] },
+      { label: core__('article.articles'), href: core_url('articles'), children: [] },
+      { label: core__('documentation.title'), href: core_url('documentation'), children: [] },
+      { label: core__('common.members'), href: core_url('members'), children: [] },
+      { label: core__('common.rules'), href: core_url('page/kurallar'), children: [] },
+      { label: core__('common.new_posts'), href: core_url('') ~ '#latest', children: [] }
+    ] %}
+  {% else %}
+    {% set navItems = [
+      { label: core__('common.forum'), href: core_url(''), children: [] },
+      { label: core__('article.articles'), href: core_url('articles'), children: [] },
+      { label: core__('documentation.title'), href: core_url('documentation'), children: [] },
+      { label: core__('common.members'), href: core_url('members'), children: [] },
+      { label: core__('common.rules'), href: core_url('page/kurallar'), children: [] },
+      { label: core__('common.new_posts'), href: core_url('') ~ '#latest', children: [] }
+    ] %}
+  {% endif %}
+  {% if not documentationEnabled %}
+    {% set navItems = navItems|filter(n => (n.href ?? '') != core_url('documentation')) %}
+  {% endif %}
+  {% if not membersEnabled %}
+    {% set navItems = navItems|filter(n => (n.href ?? '') != core_url('members')) %}
+  {% endif %}
+{% endif %}
+<!DOCTYPE html>
+<html lang="{{ core_e(locale ?? core_config('app.locale', 'tr')) }}" class="humanizer-theme">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# SEO & Meta: Admin > Sistem Ayarları > SEO & Meta sekmesinden gelir #}
+  {% set currentSiteName = site_name|default(core_config('app.name'))|trim %}
+  {% set currentPageTitle = pageTitle|default(currentSiteName)|trim %}
+  <title>{% if currentPageTitle == currentSiteName %}{{ core_e(currentSiteName) }}{% else %}{{ core_e(currentPageTitle) }} - {{ core_e(currentSiteName) }}{% endif %}</title>
+  {% if forum_favicon_url|default('') is not empty %}<link rel="icon" href="{{ core_e(forum_favicon_url) }}" type="image/x-icon"><link rel="shortcut icon" href="{{ core_e(forum_favicon_url) }}">{% endif %}
+  {% set _seo_desc = seo_description|default('') %}
+  {% if _seo_desc is not empty %}<meta name="description" content="{{ core_e(_seo_desc) }}">{% endif %}
+  {% set _seo_kw = seo_keywords|default('') %}
+  {% if _seo_kw is not empty %}<meta name="keywords" content="{{ core_e(_seo_kw) }}">{% endif %}
+  {% set _canonical = canonical_url|default('') %}
+  {% if _canonical is not empty %}<link rel="canonical" href="{{ core_e(_canonical) }}">{% endif %}
+  <meta property="og:type" content="{{ core_e(og_type|default('website')) }}">
+  <meta property="og:title" content="{{ core_e(og_title|default(site_name|default(core_config('app.name')))) }}">
+  {% set _og_desc = og_description|default('') %}
+  {% if _og_desc is not empty %}<meta property="og:description" content="{{ core_e(_og_desc) }}">{% endif %}
+  {% set _og_img = og_image|default('') %}
+  {% if _og_img is not empty %}<meta property="og:image" content="{{ core_e(_og_img) }}">{% endif %}
+  {% if _canonical is not empty %}<meta property="og:url" content="{{ core_e(_canonical) }}">{% endif %}
+  {% set _schema = schema_json|default('') %}
+  {% if _schema is not empty %}
+    {% set ld = _schema|schema_ld_json %}
+    {% if ld != '' %}<script type="application/ld+json">{{ ld|raw }}</script>{% endif %}
+  {% endif %}
+  {# PWA: Admin > Ayarlar > PWA Ayarları #}
+  {% if pwa_enabled|default(false) %}
+  <link rel="manifest" href="{{ core_e(pwa_manifest_url|default(core_url('manifest.json'))) }}">
+  <meta name="theme-color" content="{{ pwa_theme_color|default('#2d5580') }}">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  {% if pwa_icon_192_url|default('') is not empty %}<link rel="apple-touch-icon" sizes="192x192" href="{{ core_e(pwa_icon_192_url) }}">{% endif %}
+  {% if pwa_icon_512_url|default('') is not empty %}<link rel="apple-touch-icon" sizes="512x512" href="{{ core_e(pwa_icon_512_url) }}">{% endif %}
+  {% endif %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/tailwind.css') }}?v={{ 'now'|date('U') }}">
+  <link rel="stylesheet" href="{{ theme_asset_url('css/tailwind-custom.css') }}?v={{ 'now'|date('U') }}">
+  <link rel="stylesheet" href="{{ core_url('css/main.css') }}?v={{ core_config('app.version', '1.0.0') }}">
+  <link rel="stylesheet" href="{{ theme_asset_url('css/theme.css') }}?v={{ 'now'|date('U') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <link rel="stylesheet" href="{{ theme_asset_url('css/portal.css') }}?v={{ 'now'|date('U') }}">
+  <link rel="stylesheet" href="{{ theme_asset_url('css/portal-showcase.css') }}?v={{ 'now'|date('U') }}">
+  <link rel="stylesheet" href="{{ theme_asset_url('css/portal-cards.css') }}?v={{ 'now'|date('U') }}">
+  <link rel="stylesheet" href="{{ theme_asset_url('css/humanizer-classic.css') }}?v={{ 'now'|date('U') }}">
+  {# 3.13.3: x-show+x-transition yarışı → konsol hatası (Alpine 3.14+) #}
+  <script defer src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  {% if editor_type|default('toast_ui') == 'toast_ui' %}
+  <!-- Toast UI Editor: CDN (sadece editör Toast UI seçiliyse) -->
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+  {% endif %}
+
+  <style>
+    :root {
+      --primary-color: {{ theme_primary_color|default('#105289')|raw }};
+      --theme-header-bg: {{ theme_header_bg_color|default('#2d5580')|raw }};
+      --theme-header-text: {{ theme_header_text_color|default('#ffffff')|raw }};
+      --theme-menu-bg: {{ theme_menu_bg_color|default('#35608c')|raw }};
+      --theme-menu-text: {{ theme_menu_text_color|default('#ffffff')|raw }};
+      --theme-footer-bg: {{ theme_footer_bg_color|default('#2a3f55')|raw }};
+      --theme-footer-text: {{ theme_footer_text_color|default('#d4dce8')|raw }};
+      --theme-card-bg: {{ theme_card_bg_color|default('#ffffff')|raw }};
+      --theme-card-border: {{ theme_card_border_color|default('#b5c0cb')|raw }};
+      --theme-button-radius: {{ theme_button_radius|default('4')|raw }}px;
+    }
+    #site-header,
+    #header-bar {
+      background: var(--theme-header-bg, #2d5580) !important;
+      color: var(--theme-header-text, #ffffff) !important;
+    }
+    #site-header a,
+    #header-bar a,
+    #header-bar .text-gray-600,
+    #header-bar .text-gray-700,
+    #header-bar .text-gray-800 {
+      color: var(--theme-header-text, #ffffff) !important;
+    }
+    #main-menu-bar,
+    #mobile-menu-panel {
+      background: var(--theme-menu-bg, #35608c) !important;
+      color: var(--theme-menu-text, #ffffff) !important;
+      border-color: color-mix(in srgb, var(--theme-menu-bg, #35608c) 70%, #ffffff 30%) !important;
+    }
+    #main-menu-bar a,
+    #main-menu-bar span,
+    #mobile-menu-panel a,
+    #mobile-menu-panel span {
+      color: var(--theme-menu-text, #ffffff) !important;
+    }
+    footer {
+      background: var(--theme-footer-bg, #2a3f55) !important;
+      color: var(--theme-footer-text, #d4dce8) !important;
+    }
+    footer a,
+    footer p,
+    footer span {
+      color: var(--theme-footer-text, #d4dce8) !important;
+    }
+    .card,
+    .son-olaylar-card,
+    .portal-card-item,
+    .mfbb-showthread-card {
+      background-color: var(--theme-card-bg, #ffffff) !important;
+      border-color: var(--theme-card-border, #e5e7eb) !important;
+    }
+    .btn {
+      border-radius: var(--theme-button-radius, 10px);
+    }
+    {% if custom_css is not empty %}
+    {{ custom_css|raw }}
+    {% endif %}
+  </style>
+  {% block head_extra %}{% endblock %}
+  {% if header_extra is defined and header_extra is not empty %}{{ header_extra|raw }}{% endif %}
+</head>
+<body class="min-h-screen flex flex-col overflow-x-hidden {% block body_class %}mfbb-layout-forum{% endblock %}">
+  <div id="mfbb-top-progress" class="mfbb-top-progress" aria-hidden="true">
+    <span id="mfbb-top-progress-bar" class="mfbb-top-progress__bar"></span>
+  </div>
+  <script>
+  (function() {
+    var progressEl = document.getElementById('mfbb-top-progress');
+    var progressBarEl = document.getElementById('mfbb-top-progress-bar');
+    var count = 0;
+    var progress = 0;
+    var progressTimer = null;
+    function setProgress(pct, immediate) {
+      if (!progressBarEl) return;
+      var clamped = Math.max(0, Math.min(100, pct));
+      if (immediate) progressBarEl.style.transition = 'none';
+      progressBarEl.style.transform = 'scaleX(' + (clamped / 100) + ')';
+      if (immediate) {
+        progressBarEl.offsetHeight;
+        progressBarEl.style.transition = '';
+      }
+    }
+    function startProgress() {
+      if (!progressEl || !progressBarEl) return;
+      progress = 12;
+      setProgress(progress, true);
+      progressEl.classList.add('is-active');
+      if (progressTimer) clearInterval(progressTimer);
+      progressTimer = setInterval(function() {
+        if (progress >= 88) return;
+        progress += progress < 50 ? 9 : (progress < 75 ? 5 : 2.2);
+        setProgress(progress, false);
+      }, 180);
+    }
+    function finishProgress() {
+      if (!progressEl || !progressBarEl) return;
+      if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+      }
+      progress = 100;
+      setProgress(progress, false);
+      setTimeout(function() {
+        progressEl.classList.remove('is-active');
+        setProgress(0, true);
+      }, 260);
+    }
+    function showLoading() {
+      count++;
+      if (count !== 1) return;
+      startProgress();
+      window.dispatchEvent(new CustomEvent('mfbb:loading-start'));
+    }
+    function hideLoading() {
+      count = Math.max(0, count - 1);
+      if (count !== 0) return;
+      finishProgress();
+      window.dispatchEvent(new CustomEvent('mfbb:loading-end'));
+    }
+    function urlSkipLoading(url) {
+      if (typeof url !== 'string') return true;
+      var u = url.split('?')[0];
+      return u.indexOf('/api/badges') !== -1 || u.indexOf('/api/sse') !== -1 || u.indexOf('/api/notifications/unread') !== -1 || u.indexOf('/api/notifications/dropdown') !== -1 || u.indexOf('/api/hover/user') !== -1 || u.indexOf('/api/hover/post') !== -1;
+    }
+    window.MegaforBBLoading = {
+      show: showLoading,
+      hide: hideLoading,
+      startProgress: startProgress,
+      finishProgress: finishProgress
+    };
+    var origFetch = window.fetch;
+    if (origFetch) {
+      window.fetch = function(input, init) {
+        var url = typeof input === 'string' ? input : (input && input.url);
+        if (urlSkipLoading(url)) return origFetch.apply(this, arguments);
+        showLoading();
+        return origFetch.apply(this, arguments).then(function(r) { hideLoading(); return r; }, function(e) { hideLoading(); throw e; });
+      };
+    }
+    var OrigXHR = window.XMLHttpRequest;
+    if (OrigXHR) {
+      window.XMLHttpRequest = function() {
+        var xhr = new OrigXHR();
+        var origSend = xhr.send;
+        xhr.send = function() {
+          var url = xhr._mfbbUrl || '';
+          if (urlSkipLoading(url)) return origSend.apply(this, arguments);
+          showLoading();
+          var done = function() { hideLoading(); };
+          xhr.addEventListener('load', done, { once: true });
+          xhr.addEventListener('error', done, { once: true });
+          xhr.addEventListener('abort', done, { once: true });
+          return origSend.apply(this, arguments);
+        };
+        var origOpen = xhr.open;
+        xhr.open = function(method, url) { xhr._mfbbUrl = url; return origOpen.apply(this, arguments); };
+        return xhr;
+      };
+    }
+  })();
+  </script>
+  <div id="toast-container" class="mfbb-toast-container" aria-live="polite"></div>
+  {% if isStaff %}{% include 'partials/staff_topbar.html.twig' %}{% endif %}
+  <div class="flex-1 flex flex-col" x-data="{ mobileMenu: false }">
+  <header id="site-header" class="w-full bg-[#105289] text-white shadow-sm">
+    <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-4" id="header-bar"
+        @mfbb-sse-notification.window="handleSseNotification($event.detail)"
+        @mfbb-soft-nav-loaded.window="refreshBadges(); if (openNotifications) loadNotificationDropdown()"
+        x-data="{
+          openUser: false,
+          openNotifications: false,
+          notificationList: [],
+          badges: { notifications: {{ unreadNotifications ?? 0 }}, messages: {{ unreadMessages ?? 0 }} },
+          shownNotifIds: [],
+          badgeUrl: '{{ core_e(core_url('api/badges')) }}',
+          notifUrl: '{{ core_e(core_url('api/notifications/unread')) }}',
+          notifDropdownUrl: '{{ core_e(core_url('api/notifications/dropdown')) }}',
+          sseUrl: '{{ currentUser and notificationsEnabled|default(true) ? core_e(core_url('api/sse')) : '' }}',
+          readAllUrl: {{ core_url('notifications/read-all')|json_encode|e('html_attr') }},
+          readAllCsrf: {{ core_csrf_token('notifications_read_all')|json_encode|e('html_attr') }},
+          markAllReadLoading: false,
+          toastEnabled: {{ notificationToastEnabled ? 'true' : 'false' }},
+          async refreshBadges() {
+            try {
+              const r = await fetch(this.badgeUrl);
+              const d = await r.json();
+              if (d.notifications !== undefined) this.badges.notifications = d.notifications;
+              if (d.messages !== undefined) this.badges.messages = d.messages;
+            } catch (e) {}
+          },
+          handleSseNotification(detail) {
+            const list = (detail && detail.notifications) ? detail.notifications : [];
+            list.forEach(n => {
+              if (this.shownNotifIds.includes(n.id)) return;
+              this.shownNotifIds.push(n.id);
+              if (n.type === 'message') {
+                this.badges.messages = (this.badges.messages || 0) + 1;
+              } else {
+                this.badges.notifications = (this.badges.notifications || 0) + 1;
+              }
+               if (this.toastEnabled && typeof window.MegaforBBPushNotification === 'function') {
+                 window.MegaforBBPushNotification(n);
+               }
+            });
+            if (list.length) this.loadNotificationDropdown();
+          },
+          async loadNotificationDropdown() {
+            try {
+              const r = await fetch(this.notifDropdownUrl);
+              const d = await r.json();
+              this.notificationList = d.notifications || [];
+            } catch (e) { this.notificationList = []; }
+          },
+          async markAllNotificationsRead() {
+            if (this.badges.notifications === 0 || this.markAllReadLoading) return;
+            this.markAllReadLoading = true;
+            const fd = new FormData();
+            fd.append('_token', this.readAllCsrf);
+            try {
+              const r = await fetch(this.readAllUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+              const d = await r.json();
+              if (d && d.ok) { this.badges.notifications = 0; await this.loadNotificationDropdown(); if (typeof window.mfbbToast === 'function') window.mfbbToast('Tüm bildirimler okundu işaretlendi.', 'success'); }
+            } catch (e) { if (typeof window.mfbbToast === 'function') window.mfbbToast('İşlem yapılamadı.', 'error'); }
+            this.markAllReadLoading = false;
+          }
+        }"
+        x-init="
+          setInterval(async () => {
+            try {
+              const r = await fetch(badgeUrl);
+              const d = await r.json();
+              if (d.notifications !== undefined) badges.notifications = d.notifications;
+              if (d.messages !== undefined) badges.messages = d.messages;
+            } catch (e) {}
+          }, 60000);
+          if (toastEnabled) {
+            setInterval(async () => {
+              try {
+                const r = await fetch(notifUrl);
+                const d = await r.json();
+                (d.notifications || []).forEach(n => {
+                  if (shownNotifIds.includes(n.id)) return;
+                  shownNotifIds.push(n.id);
+                  if (typeof window.MegaforBBPushNotification === 'function') {
+                    window.MegaforBBPushNotification(n);
+                  }
+                });
+              } catch (e) {}
+            }, 45000);
+          }
+          if (sseUrl && typeof EventSource !== 'undefined') {
+            const startSSE = () => {
+              const es = new EventSource(sseUrl);
+              es.addEventListener('notification', (e) => {
+                try {
+                  const d = JSON.parse(e.data);
+                  window.dispatchEvent(new CustomEvent('mfbb-sse-notification', { detail: d }));
+                } catch (err) {}
+              });
+              es.onerror = () => { es.close(); setTimeout(startSSE, 3000); };
+            };
+            startSSE();
+          }
+        ">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            {% if forum_logo_url is not empty %}
+            <a href="{{ core_url('') }}" class="flex items-center shrink-0"><img src="{{ core_e(forum_logo_url) }}" alt="" class="h-[50px] w-auto max-w-[240px] object-contain" style="height:50px;max-width:240px;" id="site-logo"></a>
+            {% else %}
+            <div class="h-10 w-10 rounded-md bg-white text-[#105289] flex items-center justify-center">
+              <i class="fa-solid fa-comments"></i>
+            </div>
+            {% endif %}
+            {% if forum_logo_url is empty or show_site_title_next_to_logo %}
+            <a href="{{ core_url('') }}" class="text-xl font-semibold">{{ core_e(site_name ?? core__('common.site_name')) }}</a>
+            {% endif %}
+          </div>
+          <div class="flex items-center gap-2 sm:gap-3">
+            <button type="button" class="md:hidden flex items-center justify-center h-9 w-9 rounded-md border border-white/50 hover:bg-white hover:text-[#105289] transition-colors" @click.stop="mobileMenu = !mobileMenu" aria-label="Menü">
+              <i class="fa-solid" :class="mobileMenu ? 'fa-times' : 'fa-bars'"></i>
+            </button>
+            <div class="hidden md:block">
+              <form class="flex items-center bg-[#355a7d] border border-[#4a6b8a] rounded-md px-3 py-2" action="{{ core_url('search') }}" method="get">
+                <input name="q" class="bg-transparent outline-none text-sm text-white placeholder-gray-300 w-48 md:w-64" type="search" placeholder="{{ core_e(core__('common.search')) }}">
+                <button type="submit" class="ml-2 text-sm text-[#105289] bg-white hover:bg-gray-100 rounded-md px-3 py-1.5">{{ core_e(core__('common.search_btn')) }}</button>
+              </form>
+            </div>
+            <div class="flex items-center" id="auth-nav-container">
+              {% if currentUser %}
+                {% include 'partials/user_nav.html.twig' with { currentUser: currentUser, notificationsEnabled: notificationsEnabled|default(true), messagesEnabled: messagesEnabled|default(true) } %}
+              {% else %}
+                <div class="hidden md:flex items-center gap-2">
+                  <a href="{{ core_url('login') }}" class="text-sm text-white border border-white hover:bg-white hover:text-[#105289] rounded-md px-3 py-1.5">{{ core_e(core__('common.login')) }}</a>
+                  <a href="{{ core_url('register') }}" class="text-sm text-[#105289] bg-white hover:bg-gray-100 rounded-md px-3 py-1.5">{{ core_e(core__('common.register')) }}</a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <nav id="main-menu-bar" class="hidden md:block w-full bg-[#234a73] text-white shadow-sm border-b border-[#4a6b8a]">
+    <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <ul class="flex items-center gap-1 flex-wrap">
+        {% for nav in navItems %}
+          {% set href = nav.href ?? core_url('') %}
+          {% set label = nav.label ?? '' %}
+          {% set children = nav.children ?? [] %}
+          {% set isExternal = href starts with 'http://' or href starts with 'https://' %}
+          {% set linkAttr = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '' %}
+          <li class="relative group">
+            {% if children is not empty %}
+              <span class="block px-4 py-3 hover:bg-[#105289] rounded-md cursor-default flex items-center gap-1">
+                {{ core_e(label) }} <i class="fa-solid fa-chevron-down text-xs"></i>
+              </span>
+              <ul class="absolute left-0 top-full min-w-[160px] bg-[#105289] border border-[#4a6b8a] rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                <li><a href="{{ core_e(href) }}" class="block px-4 py-2 hover:bg-[#243447] text-sm"{{ linkAttr|raw }}>{{ core_e(label) }}</a></li>
+                {% for ch in children %}
+                {% set chHref = ch.href ?? core_url('') %}
+                {% set chExternal = chHref starts with 'http://' or chHref starts with 'https://' %}
+                <li><a href="{{ core_e(chHref) }}" class="block px-4 py-2 hover:bg-[#243447] text-sm"{% if chExternal %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ core_e(ch.label ?? '') }}</a></li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <a href="{{ core_e(href) }}" class="block px-4 py-3 hover:bg-[#105289] rounded-md"{{ linkAttr|raw }}>{{ core_e(label) }}</a>
+            {% endif %}
+          </li>
+        {% endfor %}
+
+      </ul>
+      {% if social_show_header and (social_facebook or social_twitter or social_instagram or social_youtube or social_linkedin) %}
+      <div class="flex items-center gap-1.5 shrink-0 pl-4 ml-2 border-l border-[#4a6b8a]">
+        {% include 'partials/social_links.html.twig' with _context|merge({ social_zone: 'menu' }) %}
+      </div>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="md:hidden fixed inset-0 bg-black/30 z-40"
+    x-show="mobileMenu"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    @click="mobileMenu = false"
+    style="display: none;"></div>
+  <div id="mobile-menu-panel" class="md:hidden bg-[#105289] border-b border-[#4a6b8a] overflow-hidden relative z-50"
+    x-show="mobileMenu"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0 -translate-y-2"
+    x-transition:enter-end="opacity-100 translate-y-0"
+    style="display: none;">
+    <div class="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
+      <form class="flex items-center bg-[#355a7d] border border-[#4a6b8a] rounded-lg px-3 py-2.5" action="{{ core_url('search') }}" method="get">
+        <i class="fa-solid fa-magnifying-glass text-gray-400 mr-2"></i>
+        <input name="q" class="bg-transparent outline-none text-sm text-white placeholder-gray-400 flex-1" type="search" placeholder="{{ core_e(core__('common.search')) }}...">
+        <button type="submit" class="ml-2 text-sm text-[#105289] bg-white hover:bg-gray-100 rounded-md px-3 py-1.5 font-medium">{{ core_e(core__('common.search_btn')) }}</button>
+      </form>
+      <nav class="space-y-0.5">
+        {% for nav in navItems %}
+          {% set mHref = nav.href ?? core_url('') %}
+          <a href="{{ core_e(mHref) }}" class="block px-3 py-2.5 text-white hover:bg-[#243447] rounded-lg text-sm font-medium transition-colors"{% if mHref starts with 'http://' or mHref starts with 'https://' %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ core_e(nav.label ?? '') }}</a>
+          {% for ch in nav.children ?? [] %}
+          {% set cHref = ch.href ?? core_url('') %}
+          <a href="{{ core_e(cHref) }}" class="block px-3 py-2 pl-8 text-gray-300 hover:bg-[#243447] hover:text-white rounded-lg text-sm transition-colors"{% if cHref starts with 'http://' or cHref starts with 'https://' %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ core_e(ch.label ?? '') }}</a>
+          {% endfor %}
+        {% endfor %}
+
+      </nav>
+      {% if currentUser %}
+      <div class="border-t border-[#4a6b8a] pt-3 space-y-0.5">
+        <a href="{{ core_url('notifications') }}" class="flex items-center justify-between px-3 py-2.5 text-white hover:bg-[#243447] rounded-lg text-sm transition-colors">
+          <span><i class="fa-regular fa-bell mr-2"></i>{{ core_e(core__('common.notifications')) }}</span>
+          {% if unreadNotifications %}<span class="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">{{ unreadNotifications }}</span>{% endif %}
+        </a>
+        <a href="{{ core_url('conversations') }}" class="flex items-center justify-between px-3 py-2.5 text-white hover:bg-[#243447] rounded-lg text-sm transition-colors">
+          <span><i class="fa-regular fa-envelope mr-2"></i>{{ core_e(core__('common.messages')) }}</span>
+          {% if unreadMessages %}<span class="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">{{ unreadMessages }}</span>{% endif %}
+        </a>
+        <a href="{{ core_url('member/' ~ currentUser.username|e('url')) }}" class="block px-3 py-2.5 text-white hover:bg-[#243447] rounded-lg text-sm transition-colors"><i class="fa-regular fa-user mr-2"></i>{{ core_e(core__('common.profile')) }}</a>
+        <a href="{{ core_url('profile/preferences') }}" class="block px-3 py-2.5 text-white hover:bg-[#243447] rounded-lg text-sm transition-colors"><i class="fa-solid fa-gear mr-2"></i>{{ core__('common.preferences') }}</a>
+        <form action="{{ core_url('logout') }}" method="post" class="block">
+            {{ core_csrf_field()|raw }}
+            <button type="submit" class="w-full text-left px-3 py-2.5 text-red-400 hover:bg-[#243447] rounded-lg text-sm transition-colors"><i class="fa-solid fa-right-from-bracket mr-2"></i>{{ core_e(core__('common.logout')) }}</button>
+        </form>
+      </div>
+      {% else %}
+      <div class="border-t border-[#4a6b8a] pt-3 flex gap-3">
+        <a href="{{ core_url('login') }}" class="flex-1 text-center text-sm text-white border border-white/30 hover:bg-white hover:text-[#105289] rounded-lg px-4 py-2.5 font-medium transition-colors">{{ core_e(core__('common.login')) }}</a>
+        <a href="{{ core_url('register') }}" class="flex-1 text-center text-sm text-[#105289] bg-white hover:bg-gray-100 rounded-lg px-4 py-2.5 font-medium transition-colors">{{ core_e(core__('common.register')) }}</a>
+      </div>
+      {% endif %}
+      {% if social_show_header and (social_facebook or social_twitter or social_instagram or social_youtube or social_linkedin) %}
+      <div class="border-t border-[#4a6b8a] pt-3 flex items-center gap-2">
+        <span class="text-gray-400 text-sm mr-1">{{ core__('footer.social') }}</span>
+        {% include 'partials/social_links.html.twig' with _context|merge({ social_zone: 'menu' }) %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if ads.header_below_menu is defined and ads.header_below_menu is not empty %}
+  <div class="ads-slot ads-header-below w-full bg-gray-100 border-b border-gray-200">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      {% for html in ads.header_below_menu %}<div class="ad-item mb-2 text-center text-sm text-gray-500 rounded-lg overflow-hidden">{{ core_sanitize_html(html)|raw }}</div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% set headerAnnouncements = announcements.header ?? [] %}
+  {% if headerAnnouncements is not empty %}
+  <div class="announcements-slot announcements-header-below w-full border-b" id="announcements-header">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2">
+      {% for ann in headerAnnouncements %}
+      <div class="announcement-item flex items-center justify-between gap-3 py-2 px-3 rounded-lg mb-2 announcement-badge-{{ core_e(ann.badge_type ?? 'info') }}" data-announcement-id="{{ ann.id ?? 0 }}" data-dismissible="{{ ann.is_dismissible ? '1' : '0' }}">
+        <div class="flex-1 min-w-0">
+          <span class="font-medium">{{ core_e(ann.title ?? '') }}</span>
+          {% if ann.body is not empty %}<div class="text-sm opacity-90 mt-0.5">{{ core_sanitize_html(ann.body)|raw }}</div>{% endif %}
+        </div>
+        {% if ann.is_dismissible %}
+        <button type="button" class="announcement-dismiss shrink-0 w-8 h-8 flex items-center justify-center rounded hover:bg-white/20 transition" aria-label="Kapat" data-announcement-id="{{ ann.id ?? 0 }}" data-token="{{ core_csrf_token('api_announcement_dismiss') }}"><i class="fa-solid fa-times"></i></button>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div id="mfbb-page-container" class="mfbb-page-container w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-x-hidden">
+    {% set heroVisible = hero_visible ?? true %}
+    {% set heroTitle = hero_title ?? core__('stats.forums') %}
+    {% set heroDescription = hero_description ?? core__('stats.forums_desc') %}
+    {% set forumSectionAnnouncements = announcements.forum_section ?? [] %}
+    {% if heroVisible and forumSectionAnnouncements is not empty %}
+    <div class="forum-announcements-box mfbb-hero-strip bg-white ring-1 ring-gray-200 shadow-sm rounded-xl p-5 mb-6">
+      <div class="flex flex-col md:flex-row md:items-stretch md:justify-between gap-4">
+        <div class="flex-1">
+          <div class="text-xl font-semibold text-[#105289] mb-3">{{ core_e(heroTitle) }}</div>
+          <div class="text-sm text-gray-500 mb-4">{{ core_e(heroDescription) }}</div>
+          {% for ann in forumSectionAnnouncements %}
+          <div class="announcement-forum-item flex items-start justify-between gap-3 py-3 px-4 rounded-lg mb-2 announcement-badge-{{ core_e(ann.badge_type ?? 'info') }}" data-announcement-id="{{ ann.id ?? 0 }}" data-dismissible="{{ ann.is_dismissible ? '1' : '0' }}">
+            <div class="flex-1 min-w-0">
+              <span class="font-medium">{{ core_e(ann.title ?? '') }}</span>
+              {% if ann.body is not empty %}<div class="text-sm mt-1">{{ core_sanitize_html(ann.body)|raw }}</div>{% endif %}
+            </div>
+            {% if ann.is_dismissible %}
+            <button type="button" class="announcement-dismiss shrink-0 w-8 h-8 flex items-center justify-center rounded hover:opacity-80 transition" aria-label="Kapat" data-announcement-id="{{ ann.id ?? 0 }}" data-token="{{ core_csrf_token('api_announcement_dismiss') }}"><i class="fa-solid fa-times"></i></button>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% elseif heroVisible %}
+    <div class="mfbb-hero-strip bg-white ring-1 ring-gray-200 shadow-sm rounded-xl p-5 flex flex-col md:flex-row md:items-stretch md:justify-between gap-4 mb-6">
+      <div class="flex flex-col justify-center">
+        <div class="text-xl font-semibold text-[#105289]">{{ core_e(heroTitle) }}</div>
+        <div class="text-sm text-gray-500">{{ core_e(heroDescription) }}</div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-sm min-h-[44px]">
+        {% set stats = stats ?? { total_topics: 0, total_posts: 0, total_members: 0 } %}
+        <div class="flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 h-[44px] box-border text-xs sm:text-sm"><i class="fa-solid fa-folder-open text-gray-600"></i><span><span class="font-semibold">{{ stats.total_topics|number_format(0) }}</span> {{ core_e(core__('stats.topics')) }}</span></div>
+        <div class="flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 h-[44px] box-border text-xs sm:text-sm"><i class="fa-solid fa-comments text-gray-600"></i><span><span class="font-semibold">{{ stats.total_posts|number_format(0) }}</span> {{ core_e(core__('stats.posts')) }}</span></div>
+        <div class="flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 h-[44px] box-border text-xs sm:text-sm"><i class="fa-solid fa-user-group text-gray-600"></i><span><span class="font-semibold">{{ stats.total_members|number_format(0) }}</span> {{ core_e(core__('stats.members')) }}</span></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="flex flex-col lg:flex-row items-start gap-6">
+      <main class="flex-1 min-w-0 w-full">
+{% block content %}{% endblock %}
+{% if withSidebar %}
+      {% include 'sidebar.html.twig' %}
+{% else %}
+      </main>
+      </div>
+{% endif %}
+    </div>
+  </div>
+  {% block topic_float_ui %}{% endblock %}
+  {% include 'footer.html.twig' %}
+  </div>
+  {% if jquery_enabled|default(true) %}
+  {# jQuery 3.6.4: 3.7.x :has() feature detection bazı tarayıcılarda "querySelector :has(*,:jqfake) is not a valid selector" hatası verip JS'i bozuyor #}
+  {% set jquery_src = (jquery_cdn_url|default(''))|trim != '' ? jquery_cdn_url : 'https://code.jquery.com/jquery-3.6.4.min.js' %}
+  <script src="{{ core_e(jquery_src) }}" {% if (jquery_cdn_url|default(''))|trim == '' %}crossorigin="anonymous"{% endif %}></script>
+  <script>(function($){ if ($ && !$.fn.tooltip) $.fn.tooltip = function(){ return this; }; if ($ && !$.fn.popover) $.fn.popover = function(){ return this; }; })(typeof jQuery !== 'undefined' ? jQuery : null);</script>
+  {% endif %}
+  <script>window.MEGAFORBB_AJAX_ENABLED = {{ (ajax_enabled|default(true)) ? 'true' : 'false' }}; window.MEGAFORBB_EDITOR = {{ (editor_type|default('toast_ui')) == 'tinymce' ? '"tinymce"' : ((editor_type|default('toast_ui')) == 'ckeditor' ? '"ckeditor"' : '"toast_ui"') }};</script>
+  {% if editor_type|default('toast_ui') == 'tinymce' %}
+  <script src="{{ core_url('ui-vendor/tinymce/tinymce.min.js') }}"></script>
+  <script>
+    (function() {
+      document.querySelectorAll('textarea[data-editor][data-initial-base64]').forEach(function(ta) {
+        var raw = ta.getAttribute('data-initial-base64');
+        if (!raw) return;
+        try {
+          var bstr = atob(raw);
+          if (bstr) {
+            var decoded = decodeURIComponent(bstr.split('').map(function(c) { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join(''));
+            if (typeof decoded === 'string') ta.value = decoded;
+          }
+        } catch (e) {
+          try { ta.value = atob(raw) || ''; } catch (e2) {}
+        }
+      });
+      var base = {{ core_url('ui-vendor/tinymce')|json_encode|raw }};
+      var uploadUrl = window.MEGAFORBB_UPLOAD_URL || {{ base_url('upload/image')|json_encode|raw }};
+      var baseUrl = (window.MEGAFORBB_BASE_URL || '').replace(/\/$/, '');
+      function getMediaEmbedHtml(url) {
+        if (!url || typeof url !== 'string') return '';
+        url = url.trim();
+        var yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        if (yt) return '<div class="mfbb-media-embed ratio ratio-16x9"><iframe src="https://www.youtube.com/embed/' + yt[1] + '" allowfullscreen loading="lazy"></iframe></div>';
+        var dm = url.match(/dailymotion\.com\/(?:video\/|embed\/video\/)([a-zA-Z0-9]+)/);
+        if (dm) return '<div class="mfbb-media-embed ratio ratio-16x9"><iframe src="https://www.dailymotion.com/embed/video/' + dm[1] + '" allowfullscreen loading="lazy"></iframe></div>';
+        return '';
+      }
+      if (typeof tinymce !== 'undefined') {
+        tinymce.init({
+          license_key: 'gpl',
+          promotion: false,
+          sandbox_iframes: false,
+          base_url: base,
+          selector: 'textarea[data-editor]',
+          height: 320,
+          min_height: 200,
+          valid_elements: '*[*]',
+          relative_urls: false,
+          entity_encoding: 'raw',
+          remove_script_host: false,
+          menubar: 'file insert format table help',
+          plugins: 'advlist autolink lists link image charmap preview searchreplace visualblocks code codesample fullscreen insertdatetime media table',
+          toolbar: 'fullscreen code preview | undo redo | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | numlist bullist | forecolor backcolor removeformat | image media link | mfbb_spoiler mfbb_secret mfbb_emoji mfbb_media',
+          content_css: [ base + '/editor_content.css' ],
+          language: {{ (locale|default('tr')) == 'en' ? '"en"' : '"tr"' }},
+          mobile: { menubar: 'file insert format table help' },
+          images_upload_handler: function(blobInfo, progress) {
+            return new Promise(function(resolve, reject) {
+              var fd = new FormData();
+              fd.append('file', blobInfo.blob(), blobInfo.filename());
+              var url = uploadUrl.indexOf('http') === 0 ? uploadUrl : (window.location.origin + (uploadUrl.charAt(0) === '/' ? uploadUrl : '/' + uploadUrl));
+              var xhr = new XMLHttpRequest();
+              xhr.open('POST', url);
+              xhr.withCredentials = true;
+              xhr.onload = function() {
+                try {
+                  var d = JSON.parse(xhr.responseText);
+                  if (d && d.url) resolve(d.url); else reject(new Error(d && d.error && d.error.message ? d.error.message : 'Upload failed'));
+                } catch (e) { reject(e); }
+              };
+              xhr.onerror = function() { reject(new Error('Upload failed')); };
+              xhr.send(fd);
+            });
+          },
+          setup: function(editor) {
+            var lang = window.MEGAFORBB_EDITOR_LANG || {};
+            var spoilerPh = lang.spoiler_placeholder || 'Spoiler içeriği';
+            var secretPh = lang.spoiler_placeholder || 'Gizli İçerik';
+            editor.ui.registry.addButton('mfbb_spoiler', { text: '👁', tooltip: lang.spoiler_tooltip || 'Spoiler', onAction: function() {
+              var sel = editor.selection.getContent({ format: 'text' }) || spoilerPh;
+              editor.insertContent('<details class="mfbb-spoiler"><summary>Spoiler</summary>' + (sel || spoilerPh) + '</details>');
+            }});
+            editor.ui.registry.addButton('mfbb_secret', { text: '🔒', tooltip: 'Misafire gizli içerik', onAction: function() {
+              var sel = editor.selection.getContent({ format: 'text' }) || secretPh;
+              editor.insertContent('[secret]' + (sel || secretPh) + '[/secret]');
+            }});
+            editor.ui.registry.addButton('mfbb_media', { text: '▶', tooltip: lang.media_embed || 'Video ekle', onAction: function() {
+              var url = window.prompt(lang.media_url_placeholder || 'YouTube veya Dailymotion URL', 'https://');
+              var html = getMediaEmbedHtml(url);
+              if (html) editor.insertContent(html);
+            }});
+            editor.ui.registry.addButton('mfbb_emoji', { text: '🙂', tooltip: 'Emoji / Smiley', onAction: function() {
+              var win = editor.windowManager.open({ title: 'Emoji', width: 340, height: 300, body: { type: 'panel', items: [{ type: 'htmlpanel', html: '<div id="mfbb-tinymce-smileys" style="padding:8px;min-height:200px;"></div>' }] }, buttons: [{ type: 'cancel', text: 'Kapat' }] });
+              var container = document.getElementById('mfbb-tinymce-smileys');
+              if (container) {
+                var apiUrl = baseUrl + '/api/smileys';
+                function insertSmileyCode(code) {
+                  if (!code) return;
+                  var esc = document.createElement('div');
+                  esc.textContent = code;
+                  editor.insertContent(esc.innerHTML);
+                }
+                fetch(apiUrl).then(function(r) { return r.json(); }).then(function(data) {
+                  container.innerHTML = '';
+                  if (data.unicode && data.unicode.length) {
+                    var g = document.createElement('div'); g.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;';
+                    data.unicode.slice(0, 80).forEach(function(item) {
+                      var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = item.char || item.unicode_char || ''; btn.style.cssText = 'font-size:18px;padding:4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;';
+                      btn.onclick = function() { editor.insertContent(btn.textContent); };
+                      g.appendChild(btn);
+                    });
+                    container.appendChild(g);
+                  }
+                  if (data.gifs && data.gifs.length) {
+                    var g2 = document.createElement('div'); g2.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+                    data.gifs.slice(0, 24).forEach(function(item) {
+                      var url = item.image_url || item.url || '';
+                      var btn = document.createElement('button'); btn.type = 'button'; btn.style.cssText = 'padding:2px;border:1px solid #ddd;border-radius:4px;cursor:pointer;background:#fff;';
+                      if (url) { var img = document.createElement('img'); img.src = url; img.style.cssText = 'width:24px;height:24px;'; btn.appendChild(img); }
+                      btn.onclick = function() { insertSmileyCode((item.code || '').trim()); };
+                      g2.appendChild(btn);
+                    });
+                    container.appendChild(g2);
+                  }
+                }).catch(function() { container.innerHTML = '<p>Yüklenemedi.</p>'; });
+              }
+            }});
+          },
+          init_instance_callback: function(ed) {
+            var el = ed.getElement();
+            if (el && el.nodeName === 'TEXTAREA') { el.removeAttribute('required'); }
+          }
+        });
+      }
+    })();
+  </script>
+  {% elseif editor_type|default('toast_ui') == 'ckeditor' %}
+  <style>
+    /* CKEditor 5 düzenleme alanı yüksekliği – tıklama/odak sonrası küçülmeyi önler */
+    .ck.ck-editor .ck-editor__editable.ck-editor__editable_inline {
+      min-height: 280px !important;
+    }
+  </style>
+  <script>
+    (function() {
+      document.querySelectorAll('textarea[data-editor][data-initial-base64]').forEach(function(ta) {
+        var raw = ta.getAttribute('data-initial-base64');
+        if (!raw) return;
+        try {
+          var bstr = atob(raw);
+          if (bstr) {
+            var decoded = decodeURIComponent(bstr.split('').map(function(c) { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join(''));
+            if (typeof decoded === 'string') ta.value = decoded;
+          }
+        } catch (e) {
+          try { ta.value = atob(raw) || ''; } catch (e2) {}
+        }
+      });
+    })();
+  </script>
+  <script src="{{ core_url('ui-vendor/ckeditor5/ckeditor.js') }}"></script>
+  <script>
+    (function() {
+      var uploadUrl = window.MEGAFORBB_UPLOAD_URL || {{ base_url('upload/image')|json_encode|raw }};
+      var fullUploadUrl = (typeof uploadUrl === 'string' && uploadUrl.indexOf('http') === 0) ? uploadUrl : (window.location.origin + (uploadUrl.charAt(0) === '/' ? uploadUrl : '/' + uploadUrl));
+      window.MEGAFORBB_CKEDITORS = window.MEGAFORBB_CKEDITORS || {};
+      function MfbbCkUploadAdapter(loader, url) {
+        this.loader = loader;
+        this.url = url || fullUploadUrl;
+      }
+      MfbbCkUploadAdapter.prototype.upload = function() {
+        var self = this;
+        return this.loader.file.then(function(file) {
+          return new Promise(function(resolve, reject) {
+            var fd = new FormData();
+            fd.append('file', file);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', self.url);
+            xhr.withCredentials = true;
+            xhr.onload = function() {
+              try {
+                var d = JSON.parse(xhr.responseText);
+                if (d && d.url) resolve({ default: d.url }); else reject(new Error(d && d.error && d.error.message ? d.error.message : 'Upload failed'));
+              } catch (e) { reject(e); }
+            };
+            xhr.onerror = function() { reject(new Error('Upload failed')); };
+            xhr.send(fd);
+          });
+        });
+      };
+      MfbbCkUploadAdapter.prototype.abort = function() {};
+      if (typeof ClassicEditor !== 'undefined') {
+        document.querySelectorAll('textarea[data-editor]').forEach(function(ta) {
+          if (ta.id && window.MEGAFORBB_CKEDITORS[ta.id]) return;
+          var id = ta.id || ('ckeditor-' + Math.random().toString(36).slice(2));
+          if (!ta.id) ta.id = id;
+          ta.removeAttribute('required');
+          ClassicEditor.create(ta, {
+            language: {{ (locale|default('tr')) == 'en' ? '"en"' : '"tr"' }},
+            placeholder: ta.getAttribute('placeholder') || 'İçerik yazın...',
+            toolbar: ['heading', '|', 'bold', 'italic', 'underline', 'strikethrough', '|', 'link', 'imageInsert', 'mediaEmbed', 'blockQuote', 'insertTable', '|', 'bulletedList', 'numberedList', 'alignment', '|', 'undo', 'redo', 'sourceEditing', 'codeBlock'],
+            image: { toolbar: ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side', 'linkImage'] },
+            table: { contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'] }
+          }).then(function(editor) {
+            var fileRepo = editor.plugins.get('FileRepository');
+            if (fileRepo) fileRepo.createUploadAdapter = function(loader) { return new MfbbCkUploadAdapter(loader); };
+            window.MEGAFORBB_CKEDITORS[id] = editor;
+            var editable = editor.ui.view.editable && editor.ui.view.editable.element;
+            if (editable) {
+              editable.style.setProperty('min-height', '280px', 'important');
+            }
+            editor.model.document.on('change:data', function() {
+              setTimeout(function() { editor.updateSourceElement(); }, 150);
+            });
+          }).catch(function(e) { console.error('CKEditor init error', e); });
+        });
+      }
+    })();
+  </script>
+  {% else %}
+  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+  {% endif %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script>window.MEGAFORBB_UPLOAD_URL = {{ base_url('upload/image')|json_encode|raw }}; window.MEGAFORBB_BASE_URL = {{ core_url('')|rtrim('/')|json_encode|raw }};</script>
+  <script>window.MEGAFORBB_EDITOR_LANG = { underline: {{ core__('editor.underline')|json_encode|raw }}, highlight: {{ core__('editor.highlight')|json_encode|raw }}, superscript: {{ core__('editor.superscript')|json_encode|raw }}, subscript: {{ core__('editor.subscript')|json_encode|raw }}, spoiler_tooltip: {{ core__('editor.spoiler_tooltip')|json_encode|raw }}, spoiler_placeholder: {{ core__('editor.spoiler_placeholder')|json_encode|raw }}, text_color: {{ core__('editor.text_color')|json_encode|raw }}, background_color: {{ core__('editor.background_color')|json_encode|raw }}, align_left: {{ core__('editor.align_left')|json_encode|raw }}, align_center: {{ core__('editor.align_center')|json_encode|raw }}, align_right: {{ core__('editor.align_right')|json_encode|raw }}, align_justify: {{ core__('editor.align_justify')|json_encode|raw }}, format_menu: {{ core__('editor.format_menu')|json_encode|raw }}, mention_choose_user: {{ core__('editor.mention_choose_user')|json_encode|raw }}, mention_no_users: {{ core__('editor.mention_no_users')|json_encode|raw }}, media_embed: {{ core__('editor.media_embed')|json_encode|raw }}, media_url_placeholder: {{ core__('editor.media_url_placeholder')|json_encode|raw }} };</script>
+  {% if lightbox_all_images_enabled|default(true) %}
+  <div id="mfbb-lightbox" class="fixed inset-0 z-[9998] hidden bg-black/80 backdrop-blur-sm items-center justify-center cursor-zoom-out" onclick="this.classList.add('hidden');this.classList.remove('flex')">
+    <img id="mfbb-lightbox-img" src="" alt="" class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-2xl object-contain">
+    <button onclick="event.stopPropagation();this.parentElement.classList.add('hidden');this.parentElement.classList.remove('flex')" class="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full text-white text-xl flex items-center justify-center">&times;</button>
+  </div>
+  {% endif %}
+  {% include 'partials/frontend_js_lang.html.twig' %}
+  <script src="{{ core_url('js/main.js') }}?v={{ core_config('app.version', '1.0.0') }}"></script>
+  <script src="{{ theme_asset_url('js/theme.js') }}?v={{ 'now'|date('U') }}"></script>
+  {% if custom_js is not empty %}
+  <script>
+    {{ custom_js|raw }}
+  </script>
+  {% endif %}
+  {% if footer_extra is defined and footer_extra is not empty %}{{ footer_extra|raw }}{% endif %}
+  {% if core_config('app.debug', false) %}
+  <div class="fixed bottom-0 right-0 z-[9999] px-3 py-1.5 bg-amber-500/95 text-black text-xs font-medium rounded-tl shadow-lg" title="Hatalar log dosyasına yazılır; Admin → Sistem Ayarları → Debug & Log">
+    <span>Debug: Açık</span>
+    <a href="{{ core_url('admin/settings/debug') }}" class="ml-2 underline">Log</a>
+  </div>
+  {% endif %}
+</body>
+</html>

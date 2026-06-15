@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+{% set def = def ?? null %}
+{% set isEdit = def is not null %}
+{% set ft = def ? (def.field_type ?? 'text') : 'text' %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ isEdit ? lang('admin.custom_fields.edit') : lang('admin.custom_fields.create') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/custom-fields') }}" class="btn">{{ lang('admin.common.back') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ isEdit ? core_url(adminPath ~ '/custom-fields/update/' ~ def.id) : core_url(adminPath ~ '/custom-fields/store') }}" method="post">
+                    {{ core_csrf_field('admin_custom_field')|raw }}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.custom_fields.display_name') }}</label>
+                            <input type="text" name="name" class="form-control" value="{{ def ? def.name|e : '' }}" required placeholder="{{ lang('admin.custom_fields.display_name_ph') }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.custom_fields.key_slug') }}</label>
+                            <input type="text" name="field_key" class="form-control" value="{{ def ? def.field_key|e : '' }}" placeholder="{{ lang('admin.custom_fields.key_slug_ph') }}" {{ isEdit ? 'readonly' : '' }}>
+                            <span class="text-muted small">{{ lang('admin.custom_fields.key_slug_hint') }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.custom_fields.field_type') }}</label>
+                        <select name="field_type" class="form-select">
+                            <option value="text" {{ ft == 'text' ? 'selected' : '' }}>{{ lang('admin.custom_fields.type_text') }}</option>
+                            <option value="number" {{ ft == 'number' ? 'selected' : '' }}>{{ lang('admin.custom_fields.type_number') }}</option>
+                            <option value="date" {{ ft == 'date' ? 'selected' : '' }}>{{ lang('admin.custom_fields.type_date') }}</option>
+                            <option value="textarea" {{ ft == 'textarea' ? 'selected' : '' }}>{{ lang('admin.custom_fields.type_textarea') }}</option>
+                            <option value="select" {{ ft == 'select' ? 'selected' : '' }}>{{ lang('admin.custom_fields.type_select') }}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.custom_fields.options') }}</label>
+                        <textarea name="field_options" class="form-control" rows="2" placeholder="{{ lang('admin.custom_fields.options_ph') }}">{{ def ? (def.field_options ?? '')|e : '' }}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-check">
+                                <input type="checkbox" name="is_required" value="1" class="form-check-input" {{ (def and def.is_required) ? 'checked' : '' }}>
+                                <span class="form-check-label">{{ lang('admin.custom_fields.required_field') }}</span>
+                            </label>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.common.sort_order') }}</label>
+                            <input type="number" name="sort_order" class="form-control" value="{{ def ? (def.sort_order ?? 0) : 0 }}" min="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <span class="form-label d-block">{{ lang('admin.custom_fields.where_show') }}</span>
+                        <label class="form-check">
+                            <input type="checkbox" name="show_on_registration" value="1" class="form-check-input" {{ (def and def.show_on_registration) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.custom_fields.show_registration') }}</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" name="show_on_profile" value="1" class="form-check-input" {{ (not def or def.show_on_profile) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.custom_fields.show_profile') }}</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" name="show_in_postbit" value="1" class="form-check-input" {{ (def and def.show_in_postbit) ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.custom_fields.show_postbit') }}</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ isEdit ? lang('admin.common.update') : lang('admin.common.create') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/custom-fields') }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

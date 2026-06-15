@@ -1,0 +1,26 @@
+{% set adminPath = env('ADMIN_PATH', 'admin') %}
+{% set pendingReports = staffPendingReports ?? 0 %}
+{% set pendingApprovals = staffPendingApprovals ?? 0 %}
+<div class="w-full bg-amber-600 text-white text-xs sm:text-sm py-1.5 border-b border-amber-700 overflow-x-auto">
+  <div class="flex items-center justify-between max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-8 min-w-max sm:min-w-0">
+    <span class="font-medium hidden sm:inline">{{ core__('mod.tools_title') }}</span>
+    <span class="font-medium sm:hidden"><i class="fa-solid fa-shield-halved"></i></span>
+    <div class="flex items-center gap-2 sm:gap-4">
+      <a href="{{ core_url(adminPath) }}" class="hover:bg-amber-500/50 rounded px-2 py-1 inline-flex items-center gap-1">
+        <i class="fa-solid fa-cog"></i> <span class="hidden sm:inline">{{ core__('mod.admin_panel') }}</span>
+      </a>
+      <a href="{{ core_url('moderation/approvals') }}" class="hover:bg-amber-500/50 rounded px-2 py-1 inline-flex items-center gap-1 relative">
+        <i class="fa-solid fa-user-check"></i> <span class="hidden sm:inline">{{ core__('mod.approvals_link') }}</span>
+        {% if pendingApprovals > 0 %}
+        <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full">{{ pendingApprovals }}</span>
+        {% endif %}
+      </a>
+      <a href="{{ core_url('moderation/reports') }}" class="hover:bg-amber-500/50 rounded px-2 py-1 inline-flex items-center gap-1 relative">
+        <i class="fa-solid fa-flag"></i> <span class="hidden sm:inline">{{ core__('mod.reports_link') }}</span>
+        {% if pendingReports > 0 %}
+        <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full">{{ pendingReports }}</span>
+        {% endif %}
+      </a>
+    </div>
+  </div>
+</div>

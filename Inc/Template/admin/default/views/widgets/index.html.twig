@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+{% set widgets = widgets ?? [] %}
+{% set typeLabels = typeLabels ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.widgets.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.widgets.description') }}</div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/widgets/create') }}" class="btn btn-primary">{{ lang('admin.widgets.add_title') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-sm card-table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 36px;"></th>
+                                <th>{{ lang('admin.widgets.col_title_type') }}</th>
+                                <th>{{ lang('admin.widgets.col_status') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="widget-tbody">
+                            {% for w in widgets %}
+                            <tr class="widget-row" data-id="{{ w.id }}">
+                                <td><span class="text-muted cursor-grab drag-handle"><i class="ti ti-grip-vertical"></i></span></td>
+                                <td>
+                                    <strong>{{ core_e(w.title ?: (typeLabels[w.type] ?? w.type)) }}</strong>
+                                    <span class="text-muted small ms-1">({{ core_e(typeLabels[w.type] ?? w.type) }})</span>
+                                </td>
+                                <td>{% if w.enabled %}<span class="badge bg-success">{{ lang('admin.widgets.status_on') }}</span>{% else %}<span class="badge bg-secondary">{{ lang('admin.widgets.status_off') }}</span>{% endif %}</td>
+                                <td>
+                                    <a href="{{ core_url(adminPath ~ '/widgets/edit/' ~ w.id) }}" class="btn btn-sm btn-ghost-secondary">{{ lang('admin.tags.btn_edit') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/widgets/delete/' ~ w.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.widgets.delete_confirm')|e('html_attr') }}');">
+                                        {{ core_csrf_field('admin_widget_delete')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-ghost-secondary text-danger">{{ lang('admin.tags.btn_delete') }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if widgets is empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">{{ lang('admin.widgets.no_widgets_yet') }} <a href="{{ core_url(adminPath ~ '/widgets/create') }}">{{ lang('admin.widgets.add_new_link') }}</a>.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% if widgets is not empty %}
+            <div class="card-footer">
+                <form id="widget-reorder-form" method="post" action="{{ core_url(adminPath ~ '/widgets/reorder') }}">
+                    {{ core_csrf_field('admin_widget_reorder')|raw }}
+                    <button type="button" id="widget-save-order" class="btn btn-primary">{{ lang('admin.widgets.save_order') }}</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if widgets is not empty %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function(){
+    var tbody = document.getElementById('widget-tbody');
+    var form = document.getElementById('widget-reorder-form');
+    var saveBtn = document.getElementById('widget-save-order');
+    if (!tbody || !form) return;
+    var sortable = new Sortable(tbody, { handle: '.drag-handle', animation: 150, draggable: 'tr.widget-row' });
+    saveBtn.addEventListener('click', function(){
+        var rows = tbody.querySelectorAll('tr.widget-row');
+        var ids = [];
+        rows.forEach(function(r){ var id = r.getAttribute('data-id'); if (id) ids.push(id); });
+        var fd = new FormData(form);
+        ids.forEach(function(id){ fd.append('order[]', id); });
+        fetch(form.action, { method: 'POST', body: fd, credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r){ return r.json(); })
+            .then(function(d){ if (d && d.ok) window.location.reload(); });
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

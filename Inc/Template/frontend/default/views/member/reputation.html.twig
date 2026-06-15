@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set profileUser = profileUser ?? null %}
+{% if not profileUser %}
+  <div class="ips-profile-page"><div class="ips-profile-content-card"><div class="ips-profile-empty"><p>{{ core_e(lang('error.not_found')) }}</p></div></div></div>
+{% else %}
+{% set baseUrl = core_url('member/' ~ member_url_path(profileUser)) %}
+{% set tab = tab ?? 'positive' %}
+{% set positive = positive ?? [] %}
+{% set negative = negative ?? [] %}
+{% set userStats = userStats ?? {} %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set isOwnProfile = user and profileUser and (user.id is defined) and (profileUser.id is defined) and user.id == profileUser.id %}
+{% set avatarUrl = profileUser.avatar_path is not empty ? asset_url(profileUser.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(profileUser.username ?? null)|url_encode %}
+
+<div class="ips-profile-page">
+{% include 'partials/profile_breadcrumb.html.twig' with { crumbs: [
+  { label: profileUser.username, href: baseUrl },
+  { label: core__('profile.reputation') }
+] } %}
+
+<div class="ips-profile-wrap">
+  {% include 'partials/profile_shell.html.twig' with {
+    profileUser: profileUser, isOwnProfile: isOwnProfile, coverUrl: null, avatarUrl: avatarUrl,
+    rewardLevel: null, userStats: userStats, activeTab: 'about', compact: true, reputationEnabled: reputationEnabled, idelistEnabled: idelistEnabled ?? false
+  } %}
+
+  <div class="ips-profile-layout ips-profile-layout--single">
+    <div class="ips-profile-layout__main">
+    <div class="ips-profile-panel__head">
+      <h2 class="ips-profile-panel__title"><i class="fa-solid fa-star"></i> {{ core__('profile.reputation') }}</h2>
+      <div class="ips-profile-rep-tabs">
+        <a href="{{ baseUrl }}/reputation?tab=positive" class="ips-profile-rep-tabs__item{% if tab == 'positive' %} is-active{% endif %}">+ Rep ({{ positive|length }})</a>
+        <a href="{{ baseUrl }}/reputation?tab=negative" class="ips-profile-rep-tabs__item{% if tab == 'negative' %} is-active{% endif %}">− Rep ({{ negative|length }})</a>
+      </div>
+    </div>
+    <div class="ips-profile-panel__body">
+    {% if tab == 'negative' %}
+      {% if negative is empty %}
+      <div class="ips-profile-empty"><i class="fa-solid fa-thumbs-down"></i><p>Negatif reputation kaydı yok.</p></div>
+      {% else %}
+      <ul class="ips-profile-feed">
+        {% for r in negative %}
+        <li class="ips-profile-feed__item">
+          <div class="flex gap-3">
+            <span class="ips-profile-rep-badge ips-profile-rep-badge--neg">−</span>
+            <div class="min-w-0 flex-1">
+              <div class="ips-profile-feed__meta">
+                <a href="{{ core_url('member/' ~ (r.from_username ?? '')|e('url')) }}">{{ core_e(r.from_username ?? '') }}</a>
+                <span>{{ core_e(r.created_at ?? '') }}</span>
+              </div>
+              {% if r.post_id ?? null and r.post_url ?? '' %}
+              <a href="{{ r.post_url }}" class="ips-profile-feed__link">{{ core__('member.rep_show_message') }}</a>
+              {% endif %}
+              {% if r.comment ?? '' %}<p class="ips-profile-feed__excerpt mt-1">{{ (r.comment ?? '')|nl2br }}</p>{% endif %}
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    {% else %}
+      {% if positive is empty %}
+      <div class="ips-profile-empty"><i class="fa-solid fa-thumbs-up"></i><p>Pozitif reputation kaydı yok.</p></div>
+      {% else %}
+      <ul class="ips-profile-feed">
+        {% for r in positive %}
+        <li class="ips-profile-feed__item">
+          <div class="flex gap-3">
+            <span class="ips-profile-rep-badge ips-profile-rep-badge--pos">+</span>
+            <div class="min-w-0 flex-1">
+              <div class="ips-profile-feed__meta">
+                <a href="{{ core_url('member/' ~ (r.from_username ?? '')|e('url')) }}">{{ core_e(r.from_username ?? '') }}</a>
+                <span>{{ core_e(r.created_at ?? '') }}</span>
+              </div>
+              {% if r.post_id ?? null and r.post_url ?? '' %}
+              <a href="{{ r.post_url }}" class="ips-profile-feed__link">{{ core__('member.rep_show_message') }}</a>
+              {% endif %}
+              {% if r.comment ?? '' %}<p class="ips-profile-feed__excerpt mt-1">{{ (r.comment ?? '')|nl2br }}</p>{% endif %}
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    {% endif %}
+    </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endif %}
+{% endblock %}

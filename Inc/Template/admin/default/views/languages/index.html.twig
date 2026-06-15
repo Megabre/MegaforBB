@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+{% set languages = languages ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.languages.title')|e }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.languages.index_description') }}</div>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/languages/create') }}" class="btn btn-primary"><i class="ti ti-plus me-1"></i> {{ lang('admin.languages.add_new')|e }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flash('success') %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            <div class="d-flex"><i class="ti ti-check me-2"></i><div>{{ flash('success')|e }}</div></div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="Close"></a>
+        </div>
+        {% endif %}
+        {% if flash('error') %}
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <div class="d-flex"><i class="ti ti-alert-circle me-2"></i><div>{{ flash('error')|e }}</div></div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="Close"></a>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.languages.title')|e }}</h3>
+            </div>
+            {% if languages is not empty %}
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.languages.code')|e }}</th>
+                            <th>{{ lang('admin.languages.name')|e }}</th>
+                            <th>{{ lang('admin.languages.native_name')|e }}</th>
+                            <th>{{ lang('admin.languages.direction')|e }}</th>
+                            <th>{{ lang('admin.languages.key_count') }}</th>
+                            <th>{{ lang('admin.common.status')|e }}</th>
+                            <th class="text-end">{{ lang('admin.common.actions')|e }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lang_item in languages %}
+                        <tr>
+                            <td>
+                                <strong>{{ (lang_item.code ?? '')|e }}</strong>
+                                {% if lang_item.is_default %}<span class="badge bg-blue-lt ms-1">{{ lang('admin.languages.badge_default') }}</span>{% endif %}
+                                {% if (lang_item.source ?? '') == 'file' %}<span class="badge bg-yellow-lt ms-1">{{ lang('admin.languages.badge_file') }}</span>{% endif %}
+                            </td>
+                            <td>{{ (lang_item.name ?? '')|e }}</td>
+                            <td>{{ (lang_item.native_name ?? '')|e }}</td>
+                            <td><span class="badge bg-azure-lt">{{ ((lang_item.direction ?? 'ltr')|upper)|e }}</span></td>
+                            <td><span class="badge bg-purple-lt">{{ (lang_item.key_count ?? 0)|number_format(0, '', ' ') }}</span></td>
+                            <td>
+                                {% if lang_item.is_active %}<span class="badge bg-success-lt">{{ lang('admin.common.active')|e }}</span>
+                                {% else %}<span class="badge bg-secondary-lt">{{ lang('admin.common.inactive')|e }}</span>{% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-list flex-nowrap justify-content-end">
+                                    <a href="{{ core_url(adminPath ~ '/languages/edit/' ~ (lang_item.code ?? '')|e('url')) }}" class="btn btn-sm btn-primary"><i class="ti ti-language me-1"></i> {{ lang('admin.languages.edit_translations')|e }}</a>
+                                    <a href="{{ core_url(adminPath ~ '/languages/export/' ~ (lang_item.code ?? '')|e('url')) }}" class="btn btn-sm btn-outline-secondary" title="{{ lang('admin.languages.export')|e }}"><i class="ti ti-download"></i></a>
+                                    {% if not lang_item.is_default %}
+                                    <form action="{{ core_url(adminPath ~ '/languages/set-default/' ~ (lang_item.code ?? '')|e('url')) }}" method="post" class="d-inline">
+                                        {{ core_csrf_field()|raw }}
+                                        <button type="submit" class="btn btn-sm btn-outline-info" title="{{ lang('admin.languages.set_default')|e }}"><i class="ti ti-star"></i></button>
+                                    </form>
+                                    <form action="{{ core_url(adminPath ~ '/languages/delete/' ~ (lang_item.code ?? '')|e('url')) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.languages.delete_confirm')|e('js') }}');">
+                                        {{ core_csrf_field()|raw }}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ lang('admin.common.delete')|e }}"><i class="ti ti-trash"></i></button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="card-body">
+                <div class="text-muted text-center py-4">
+                    <i class="ti ti-language-off mb-2" style="font-size:32px;display:block"></i>
+                    {{ lang('admin.languages.no_languages')|e }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-upload me-2"></i>{{ lang('admin.languages.import')|e }}</h3>
+            </div>
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/languages/import') }}" method="post" enctype="multipart/form-data">
+                    {{ core_csrf_field()|raw }}
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.languages.target_language')|e }}</label>
+                            <select name="target_locale" class="form-select" required>
+                                <option value="">{{ lang('admin.common.select')|e }}</option>
+                                {% for lang_item in languages %}
+                                <option value="{{ (lang_item.code ?? '')|e('html_attr') }}">{{ (lang_item.native_name ?? '')|e }} ({{ (lang_item.code ?? '')|e }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">{{ lang('admin.languages.import_file')|e }}</label>
+                            <input type="file" name="lang_file" class="form-control" accept=".php" required>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100"><i class="ti ti-upload me-1"></i> {{ lang('admin.languages.import')|e }}</button>
+                        </div>
+                    </div>
+                    <div class="text-muted mt-2" style="font-size: 12px">{{ lang('admin.languages.import_hint')|e }}</div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

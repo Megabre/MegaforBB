@@ -1,0 +1,117 @@
+{% extends 'base.html.twig' %}
+{% set frontendThemes = frontendThemes ?? [] %}
+{% set adminThemes = adminThemes ?? [] %}
+{% set activeFrontendTheme = activeFrontendTheme ?? 'default' %}
+{% set activeAdminTheme = activeAdminTheme ?? 'default' %}
+{% set previewPlaceholder = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNjAwIiBmaWxsPSIjZjhmOWZhIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIvPjx0ZXh0IHg9IjQwMCIgeT0iMzAwIiBmaWxsPSIjYWRiNWM1IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+T25pemxlbWUgeW9rPC90ZXh0Pjwvc3ZnPg==' %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">{{ lang('admin.themes.pretitle') }}</div>
+                <h2 class="page-title">{{ lang('admin.themes.title') }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ lang('admin.themes.frontend_themes') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">{{ lang('admin.themes.frontend_themes_desc') }}</p>
+                        <div class="row row-cards">
+                            {% for t in frontendThemes %}
+                            <div class="col-sm-6 col-lg-4">
+                                <div class="card card-sm">
+                                    <div class="relative">
+                                        <a href="#" class="d-block" style="height: 180px; overflow: hidden; background: #f4f6fa; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                            <img src="{{ core_url(adminPath ~ '/themes/preview/frontend/' ~ t.slug|e('url')) }}" alt="{{ t.name|e }}" class="card-img-top" style="object-fit: contain; width: 100%; height: 100%;" onerror="this.onerror=null; this.src='{{ previewPlaceholder }}';">
+                                        </a>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <div class="subheader">{{ lang('admin.themes.theme_label') }}</div>
+                                            <div class="ms-auto"><span class="badge bg-blue-lt">{{ (t.version ?? '')|e }}</span></div>
+                                        </div>
+                                        <h3 class="card-title h4 mb-1 mt-2">
+                                            {{ (t.name ?? '')|e }} <small class="text-muted fw-normal ms-1">({{ (t.slug ?? '')|e }})</small>
+                                        </h3>
+                                        <div class="text-muted mt-2 text-sm line-clamp-2" style="min-height: 40px;">{{ (t.description ?: lang('admin.themes.no_description'))|e }}</div>
+                                        <div class="text-muted mt-2 text-xs">{{ lang('admin.themes.author_label') }} {{ (t.author ?: lang('admin.themes.author_unknown'))|e }}</div>
+                                    </div>
+                                    <div class="card-footer d-flex gap-2">
+                                        {% if (t.slug ?? '') == activeFrontendTheme %}
+                                        <span class="btn btn-success fw-bold flex-fill"><i class="ti ti-check me-2"></i>{{ lang('admin.themes.active_theme') }}</span>
+                                        <a href="{{ core_url(adminPath ~ '/themes/settings') }}" class="btn btn-outline-primary" title="{{ lang('admin.themes.settings_title') }}"><i class="ti ti-settings"></i></a>
+                                        {% else %}
+                                        <a href="{{ core_url(adminPath ~ '/themes/activate-frontend/' ~ t.slug|e('url')) }}" class="btn btn-primary flex-fill">{{ lang('admin.themes.activate') }}</a>
+                                        {% endif %}
+                                        <a href="{{ core_url(adminPath ~ '/themes/editor/' ~ t.slug|e('url')) }}" class="btn btn-outline-secondary" title="{{ lang('admin.themes.edit_code') }}"><i class="ti ti-code"></i> {{ lang('admin.common.edit') }}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if frontendThemes is empty %}
+                        <p class="text-muted mb-0">{{ lang('admin.themes.no_frontend_themes') }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ lang('admin.themes.admin_themes') }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">{{ lang('admin.themes.admin_themes_desc') }}</p>
+                        <div class="table-responsive">
+                            <table class="table table-vcenter table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>{{ lang('admin.themes.theme_label') }}</th>
+                                        <th>{{ lang('admin.themes.version') }}</th>
+                                        <th>{{ lang('admin.themes.author_label')|trim(':') }}</th>
+                                        <th>{{ lang('admin.common.description') }}</th>
+                                        <th class="w-1"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for t in adminThemes %}
+                                    <tr>
+                                        <td><strong>{{ (t.name ?? '')|e }}</strong> <code>{{ (t.slug ?? '')|e }}</code></td>
+                                        <td>{{ (t.version ?? '')|e }}</td>
+                                        <td>{{ (t.author ?? '')|e }}</td>
+                                        <td class="text-muted">{{ (t.description ?? '')|e }}</td>
+                                        <td>
+                                            {% if (t.slug ?? '') == activeAdminTheme %}
+                                            <span class="badge bg-success">{{ lang('admin.common.active') }}</span>
+                                            {% else %}
+                                            <a href="{{ core_url(adminPath ~ '/themes/activate-admin/' ~ t.slug|e('url')) }}" class="btn btn-sm btn-primary">{{ lang('admin.themes.activate') }}</a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if adminThemes is empty %}
+                        <p class="text-muted mb-0">{{ lang('admin.themes.no_admin_themes') }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

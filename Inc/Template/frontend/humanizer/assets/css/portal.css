@@ -1,0 +1,411 @@
+/**
+ * Humanizer Portal — klasik geniş vitrin (2006–2015 forum dönemi)
+ */
+
+/* -------------------------------------------------------------------------
+   LANDING PAGE LAYOUT (full width, no sidebar)
+   ------------------------------------------------------------------------- */
+.mfbb-portal-body {
+  background-color: #dde4ef;
+  overflow-x: hidden;
+}
+
+.mfbb-portal-body .mfbb-page-container {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0;
+}
+
+.mfbb-portal-body main {
+  padding: 0;
+  max-width: 100%;
+}
+
+.mfbb-portal-page {
+  --portal-primary: var(--primary-color, #105289);
+  --portal-header-bg: #2d5580;
+  --portal-surface: #ffffff;
+  --portal-border: #b5c0cb;
+  --portal-muted: #536482;
+  --portal-text: #222222;
+  --portal-radius: 4px;
+  --portal-radius-sm: 3px;
+  --portal-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --portal-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.12);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1.5rem 3rem;
+}
+
+/* -------------------------------------------------------------------------
+   HERO (full-bleed, ay ışığı, yıldız, yansıma)
+   ------------------------------------------------------------------------- */
+.mfbb-portal-hero {
+  position: relative;
+  background: linear-gradient(to bottom, #5a7fa8 0%, #3d6494 40%, #1e3d5f 100%);
+  color: #fff;
+  padding: 4rem 1.5rem;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-bottom: 3rem;
+  width: 100vw;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-bottom: 1px solid #0d2138;
+}
+
+.mfbb-portal-hero__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Sıcak vurgu — altın tonlu ışık */
+.mfbb-portal-hero__moon {
+  position: absolute;
+  top: -18%;
+  right: 6%;
+  width: 26rem;
+  height: 26rem;
+  background: radial-gradient(circle, rgba(255, 248, 220, 0.09) 0%, rgba(201, 162, 39, 0.04) 35%, transparent 68%);
+  border-radius: 50%;
+  filter: blur(3px);
+}
+
+/* Derinlik — orman yeşili nefes */
+.mfbb-portal-hero__glow {
+  position: absolute;
+  top: -28%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 42rem);
+  height: 22rem;
+  background: radial-gradient(ellipse at center, rgba(45, 90, 72, 0.22) 0%, rgba(20, 40, 32, 0.08) 45%, transparent 72%);
+  border-radius: 50%;
+  filter: blur(48px);
+}
+
+/* Yıldızlar */
+.mfbb-portal-hero__stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.9), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 90px 40px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 160px 120px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 200px 50px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.5px 1.5px at 250px 90px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 300px 140px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 350px 60px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 80px 150px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.5px 1.5px at 180px 20px, rgba(255,255,255,0.6), transparent);
+  background-size: 400px 200px;
+  animation: mfbb-stars-twinkle 8s ease-in-out infinite;
+  opacity: 0.9;
+}
+
+@keyframes mfbb-stars-twinkle {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Alt yansıma – su/ay ışığı efekti */
+.mfbb-portal-hero__reflection {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, rgba(255,255,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.mfbb-portal-hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 42rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.mfbb-portal-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+.mfbb-portal-hero__badge-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #c9a227;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.35);
+}
+
+.mfbb-portal-hero__title {
+  font-family: var(--mfbb-font-display, "Fraunces", Georgia, serif);
+  font-size: clamp(2rem, 4.2vw, 3.15rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  margin: 0 0 1rem;
+  color: #fafaf8;
+  text-shadow: 0 1px 24px rgba(0, 0, 0, 0.25);
+}
+
+.mfbb-portal-hero__desc {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 1.75rem;
+}
+
+.mfbb-portal-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.mfbb-portal-hero__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  border-radius: var(--portal-radius-sm);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  min-width: 10rem;
+  justify-content: center;
+}
+
+.mfbb-portal-hero__btn--primary {
+  background: #f4e8c9;
+  color: #1a1612;
+  border: 1px solid rgba(201, 162, 39, 0.45);
+}
+
+.mfbb-portal-hero__btn--primary:hover {
+  background: #fff6e0;
+  color: #1a1612;
+}
+
+.mfbb-portal-hero__btn--secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mfbb-portal-hero__btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .mfbb-portal-hero {
+    padding: 4rem 2rem;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   FEATURES (vitrin – forum yazılımı tanıtımı)
+   ------------------------------------------------------------------------- */
+.mfbb-portal-features {
+  margin-bottom: 3rem;
+}
+
+.mfbb-portal-features__intro {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--portal-muted);
+  text-align: center;
+  margin: 0 0 2rem;
+  letter-spacing: -0.01em;
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.55;
+}
+
+.mfbb-portal-features__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mfbb-portal-features__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mfbb-portal-features__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+.mfbb-portal-feature {
+  background: var(--portal-surface);
+  border: 1px solid var(--portal-border);
+  border-radius: 14px;
+  padding: 1.75rem 1.5rem;
+  box-shadow: var(--portal-shadow);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.mfbb-portal-feature:nth-child(1) { border-left-color: #5c7f6a; }
+.mfbb-portal-feature:nth-child(2) { border-left-color: #8b7355; }
+.mfbb-portal-feature:nth-child(3) { border-left-color: #4a6fa5; }
+.mfbb-portal-feature:nth-child(4) { border-left-color: #b8860b; }
+.mfbb-portal-feature:nth-child(n+5) { border-left-color: #6b6560; }
+
+.mfbb-portal-feature__icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  margin: 0 0 1rem;
+  border: 1px solid rgba(92, 83, 70, 0.12);
+}
+
+.mfbb-portal-feature__icon--indigo {
+  background: linear-gradient(145deg, #eef4f0, #dfe8e3);
+  color: #2f4d3f;
+}
+
+.mfbb-portal-feature__icon--emerald {
+  background: linear-gradient(145deg, #f2efe8, #e5dfd4);
+  color: #5c4d3a;
+}
+
+.mfbb-portal-feature__icon--blue {
+  background: linear-gradient(145deg, #e8eef6, #d8e2ed);
+  color: #3a5580;
+}
+
+.mfbb-portal-feature__icon--amber {
+  background: linear-gradient(145deg, #faf3e6, #f0e4cc);
+  color: #8a6a1f;
+}
+
+.mfbb-portal-feature__title {
+  font-family: var(--mfbb-font-display, "Fraunces", Georgia, serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--portal-text);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.mfbb-portal-feature__text {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--portal-muted);
+  margin: 0;
+}
+
+/* -------------------------------------------------------------------------
+   CTA (vitrin – konu olmayan varsayılan durumda sayfa tamamlanır)
+   ------------------------------------------------------------------------- */
+.mfbb-portal-cta {
+  background:
+    radial-gradient(ellipse 70% 50% at 80% 20%, rgba(201, 162, 39, 0.12) 0%, transparent 50%),
+    linear-gradient(145deg, #1a2a22 0%, #0f1814 100%);
+  border-radius: var(--portal-radius);
+  padding: 3rem 2rem;
+  margin-bottom: 3rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mfbb-portal-cta::before {
+  content: '';
+  position: absolute;
+  top: -45%;
+  right: -15%;
+  width: 22rem;
+  height: 22rem;
+  background: radial-gradient(circle, rgba(45, 90, 72, 0.2) 0%, transparent 68%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mfbb-portal-cta__inner {
+  position: relative;
+  z-index: 1;
+}
+
+.mfbb-portal-cta__title {
+  font-family: var(--mfbb-font-display, "Fraunces", Georgia, serif);
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: #faf8f4;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.03em;
+}
+
+.mfbb-portal-cta__text {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.mfbb-portal-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  background: #f4e8c9;
+  color: #1a1612;
+  border-radius: var(--portal-radius-sm);
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  border: 1px solid rgba(201, 162, 39, 0.4);
+}
+
+.mfbb-portal-cta__btn:hover {
+  background: #fff6e0;
+  color: #1a1612;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .mfbb-portal-hero__btn {
+    transition: none;
+  }
+  .mfbb-portal-hero__stars {
+    animation: none;
+  }
+}

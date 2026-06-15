@@ -1,0 +1,11 @@
+{# Portal: Gündemdeki Gelişmeler – wrapper + Son Olaylar widget #}
+<section class="mfbb-trending">
+  <header class="mfbb-trending__header">
+    <span class="mfbb-trending__accent" aria-hidden="true"></span>
+    <h2 class="mfbb-trending__title">{{ core_e(core__('portal.trending_title')|default('Gündemdeki Gelişmeler')) }}</h2>
+  </header>
+  <p class="mfbb-trending__desc">{{ core_e(core__('portal.trending_desc')|default('Platformdaki en güncel etkileşimleri ve trend içerikleri buradan takip edebilirsiniz.')) }}</p>
+  <div class="mfbb-trending__widget">
+    {% include 'partials/son_olaylar.html.twig' %}
+  </div>
+</section>

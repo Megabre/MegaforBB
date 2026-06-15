@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set roles = roles ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle ?? admin__('menu.group_permissions')) }}</h2>
+                <div class="text-muted mt-1">{{ core_e(admin__('group_permissions.select_hint')) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ core_e(admin__('groups.name')) }}</th>
+                            <th>{{ core_e(admin__('groups.is_staff')) }}</th>
+                            <th class="w-1">{{ core_e(admin__('common.actions')) }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if roles is empty %}
+                        <tr><td colspan="3" class="text-center text-muted">{{ core_e(admin__('groups.no_groups')) }}</td></tr>
+                        {% else %}
+                        {% for r in roles %}
+                        <tr>
+                            <td class="font-weight-bold">
+                                <span class="badge" style="background-color: {{ core_e(r.color ?? '#6c757d') }};">{{ core_e(r.name) }}</span>
+                            </td>
+                            <td>
+                                {% if r.is_staff %}<span class="badge bg-success">{{ core_e(admin__('common.yes')) }}</span>
+                                {% else %}<span class="badge bg-secondary">{{ core_e(admin__('common.no')) }}</span>{% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ core_url(adminPath ~ '/group-permissions/edit/' ~ r.id) }}" class="btn btn-sm btn-primary">{{ core_e(admin__('group_permissions.edit_permissions')) }}</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

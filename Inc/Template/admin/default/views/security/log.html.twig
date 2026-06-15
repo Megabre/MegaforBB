@@ -1,0 +1,122 @@
+{% extends 'base.html.twig' %}
+{% set entries = entries ?? [] %}
+{% set retentionDays = retentionDays ?? 7 %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.security_log.title') }}</h2>
+                <div class="text-muted mt-1">Son {{ retentionDays }} {{ lang('admin.security.days') }}. {{ lang('admin.security_log.description') }}</div>
+            </div>
+            <div class="col-auto d-flex flex-wrap gap-2">
+                <a href="{{ core_url(adminPath ~ '/security') }}" class="btn btn-outline-primary">{{ lang('admin.analytics.back_security') }}</a>
+                <form action="{{ core_url(adminPath ~ '/security/log/purge') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.security_log.purge_confirm') }}');">
+                    {{ core_csrf_field('admin_security')|raw }}
+                    <button type="submit" class="btn btn-outline-warning">{{ lang('admin.security_log.purge_btn') }}</button>
+                </form>
+                <form action="{{ core_url(adminPath ~ '/security/log/delete-all') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.security_log.delete_confirm') }}');">
+                    {{ core_csrf_field('admin_security')|raw }}
+                    <button type="submit" class="btn btn-danger">{{ lang('admin.security_log.delete_all_btn') }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.security_log.events_title') }}</h3>
+            </div>
+            <div class="card-body p-0">
+                {% if entries is empty %}
+                <p class="text-muted p-4 mb-0">{{ lang('admin.security_log.no_records') }}</p>
+                {% else %}
+                <div class="table-responsive security-log-table-wrap">
+                    <table class="table table-vcenter table-hover card-table">
+                        <thead>
+                            <tr>
+                                <th>{{ lang('admin.security_log.date') }}</th>
+                                <th>{{ lang('admin.security_log.event') }}</th>
+                                <th>{{ lang('admin.security_log.user') }}</th>
+                                <th>IP</th>
+                                <th>{{ lang('admin.security_log.detail') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for idx, e in entries %}
+                            <tr>
+                                <td class="text-nowrap">{{ e.date_formatted|default('') }}</td>
+                                <td><span class="badge bg-{{ (e.event ?? '') in ['rate_limit_exceeded', 'block_applied', 'xss_attempt'] ? 'danger' : 'warning' }}">{{ e.event_label|default(e.event)|e }}</span></td>
+                                <td>{% if e.username is defined and e.username != '' %}{{ e.username|e }}{% elseif e.resolved_ip_users is defined and e.resolved_ip_users != '' %}{{ e.resolved_ip_users|e }}{% elseif e.user_id is defined %}ID:{{ e.user_id }}{% else %}—{% endif %}</td>
+                                <td><code>{{ (e.ip ?? '')|e }}</code></td>
+                                <td class="small text-muted">{{ (e.event_summary ?? '')|e }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-ghost-secondary log-detail-btn" data-index="{{ idx }}">{{ lang('admin.security_log.raw_json') }}</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.security-log-table-wrap { max-height: 70vh; overflow: auto; border: 1px solid var(--tblr-border-color, #e6e7e9); border-radius: 4px; }
+.security-log-table-wrap .card-table { margin-bottom: 0; }
+.security-log-table-wrap thead th { position: sticky; top: 0; background: var(--tblr-bg-surface-secondary, #fff); z-index: 1; box-shadow: 0 1px 0 0 var(--tblr-border-color, #e6e7e9); }
+#logDetailModal .modal-content { background: #0d1117; border: 1px solid #21262d; color: #00ff41; }
+#logDetailModal .modal-header { border-color: #21262d; color: #00ff41; }
+#logDetailModal .modal-body pre { background: #0a0e14; color: #00ff41; border: 1px solid #21262d; font-family: Consolas, Monaco, monospace; }
+#logDetailModal .btn-close { filter: invert(1); }
+</style>
+<div class="modal modal-blur fade" id="logDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ lang('admin.security_log.raw_json') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre class="mb-0 p-3 small" id="logDetailJson" style="max-height: 60vh; overflow: auto;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="application/json" id="security-log-entries">{% if entries_json is defined %}{{ entries_json|raw }}{% else %}[]{% endif %}</script>
+<script>
+(function(){
+    var el = document.getElementById('security-log-entries');
+    var entries = [];
+    try {
+        if (el && el.textContent) {
+            entries = JSON.parse(el.textContent);
+        }
+    } catch (err) {
+        entries = [];
+    }
+    var modal = document.getElementById('logDetailModal');
+    var pre = document.getElementById('logDetailJson');
+    document.querySelectorAll('.log-detail-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var idx = parseInt(this.getAttribute('data-index'), 10);
+            if (pre && entries[idx] !== undefined) {
+                pre.textContent = JSON.stringify(entries[idx], null, 2);
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    new bootstrap.Modal(modal).show();
+                }
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

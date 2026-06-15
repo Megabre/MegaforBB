@@ -1,0 +1,194 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set settings = settings ?? [] %}
+{% set updated = updated ?? false %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.hero.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.hero.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if updated %}
+        <div class="alert alert-success alert-dismissible mb-3">
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            {{ lang('admin.hero.saved') }}
+        </div>
+        {% endif %}
+        <form action="{{ core_url(adminPath ~ '/hero/update') }}" method="post">
+            {{ core_csrf_field('admin_hero')|raw }}
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">{{ lang('admin.hero.label_title') }} / {{ lang('admin.hero.label_desc') }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.hero.label_title') }}</label>
+                        <input type="text" name="hero_title" class="form-control" value="{{ core_e(settings.hero_title ?? '') }}" placeholder="{{ core_e(core__('stats.forums')) }}">
+                        <small class="form-hint">{{ lang('admin.hero.title_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.hero.label_desc') }}</label>
+                        <input type="text" name="hero_description" class="form-control" value="{{ core_e(settings.hero_description ?? '') }}" placeholder="{{ core_e(core__('stats.forums_desc')) }}">
+                        <small class="form-hint">{{ lang('admin.hero.desc_hint') }}</small>
+                    </div>
+                    <div class="mb-0">
+                        <input type="hidden" name="hero_visible" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="hero_visible" value="1" class="form-check-input" {{ settings.hero_visible ?? true ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.hero.visible') }}</span>
+                        </label>
+                        <small class="form-hint">{{ lang('admin.hero.visible_hint') }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">{{ lang('admin.hero.portal_section') }}</h3>
+                    <div class="card-subtitle text-muted">{{ lang('admin.hero.portal_section_hint') }}</div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.hero.portal_badge') }}</label>
+                        <input type="text" name="portal_hero_badge" class="form-control" value="{{ core_e(settings.portal_hero_badge ?? '') }}" placeholder="{{ core_e(core__('portal.hero_badge', {site_name: site_name|default('MegaforBB')})) }}">
+                        <small class="form-hint">{{ lang('admin.hero.portal_badge_hint') }}</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.hero.portal_title') }}</label>
+                            <input type="text" name="portal_hero_title" class="form-control" value="{{ core_e(settings.portal_hero_title ?? '') }}" placeholder="{{ core_e(core__('portal.default_hero_title')) }}">
+                            <small class="form-hint">{{ lang('admin.hero.portal_title_hint') }}</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.hero.portal_desc') }}</label>
+                            <input type="text" name="portal_hero_description" class="form-control" value="{{ core_e(settings.portal_hero_description ?? '') }}" placeholder="{{ core_e(core__('portal.default_hero_desc')) }}">
+                            <small class="form-hint">{{ lang('admin.hero.portal_desc_hint') }}</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="mb-3">{{ lang('admin.hero.portal_btn_primary') }}</h4>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.hero.portal_btn_label') }}</label>
+                                <input type="text" name="portal_hero_btn_primary_label" class="form-control" value="{{ core_e(settings.portal_hero_btn_primary_label ?? '') }}" placeholder="{{ core_e(core__('portal.btn_join')) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.hero.portal_btn_url') }}</label>
+                                <input type="text" name="portal_hero_btn_primary_url" class="form-control" value="{{ core_e(settings.portal_hero_btn_primary_url ?? '') }}" placeholder="register">
+                                <small class="form-hint">{{ lang('admin.hero.portal_btn_url_hint') }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="mb-3">{{ lang('admin.hero.portal_btn_secondary') }}</h4>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.hero.portal_btn_label') }}</label>
+                                <input type="text" name="portal_hero_btn_secondary_label" class="form-control" value="{{ core_e(settings.portal_hero_btn_secondary_label ?? '') }}" placeholder="{{ core_e(core__('portal.btn_explore')) }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.hero.portal_btn_url') }}</label>
+                                <input type="text" name="portal_hero_btn_secondary_url" class="form-control" value="{{ core_e(settings.portal_hero_btn_secondary_url ?? '') }}" placeholder="forum">
+                                <small class="form-hint">{{ lang('admin.hero.portal_btn_url_hint') }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label">{{ lang('admin.hero.portal_features_intro') }}</label>
+                        <input type="text" name="portal_features_intro" class="form-control" value="{{ core_e(settings.portal_features_intro ?? '') }}" placeholder="{{ core_e(core__('portal.features_intro', {site_name: site_name|default('MegaforBB')})) }}">
+                        <small class="form-hint">{{ lang('admin.hero.portal_features_intro_hint') }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">{{ lang('admin.hero.portal_cta_section') }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.hero.portal_cta_title') }}</label>
+                            <input type="text" name="portal_cta_title" class="form-control" value="{{ core_e(settings.portal_cta_title ?? '') }}" placeholder="{{ core_e(core__('portal.cta_title')) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.hero.portal_cta_text') }}</label>
+                            <input type="text" name="portal_cta_text" class="form-control" value="{{ core_e(settings.portal_cta_text ?? '') }}" placeholder="{{ core_e(core__('portal.cta_text')) }}">
+                        </div>
+                    </div>
+                    <div class="row mb-0">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.hero.portal_btn_label') }}</label>
+                            <input type="text" name="portal_cta_btn_label" class="form-control" value="{{ core_e(settings.portal_cta_btn_label ?? '') }}" placeholder="{{ core_e(core__('portal.cta_btn')) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.hero.portal_btn_url') }}</label>
+                            <input type="text" name="portal_cta_btn_url" class="form-control" value="{{ core_e(settings.portal_cta_btn_url ?? '') }}" placeholder="forum">
+                            <small class="form-hint">{{ lang('admin.hero.portal_btn_url_hint') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">{{ lang('admin.hero.portal_cards_section') }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label">{{ lang('admin.hero.portal_card_view_all') }}</label>
+                            <input type="text" name="portal_card_view_all_label" class="form-control" value="{{ core_e(settings.portal_card_view_all_label ?? '') }}" placeholder="{{ core_e(core__('portal.card_view_all')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ lang('admin.hero.portal_block_empty') }}</label>
+                            <input type="text" name="portal_block_empty_text" class="form-control" value="{{ core_e(settings.portal_block_empty_text ?? '') }}" placeholder="{{ core_e(core__('portal.block_empty')) }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">{{ lang('admin.hero.features_section') }}</h3>
+                </div>
+                <div class="card-body">
+                    {% for i in 1..4 %}
+                    <div class="row mb-4 bg-light p-3 border rounded">
+                        <div class="col-md-2">
+                            <label class="form-label">{{ lang('admin.hero.feature_card', {num: i}) }} — {{ lang('admin.hero.feature_icon') }}</label>
+                            {% set iconVar = 'hero_f' ~ i ~ '_icon' %}
+                            <input type="text" name="hero_f{{ i }}_icon" class="form-control" value="{{ core_e(settings[iconVar] ?? '') }}">
+                            <small class="text-muted mt-1 d-block">{{ lang('admin.hero.feature_icon_hint') }}</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ lang('admin.hero.feature_title') }}</label>
+                            {% set titleVar = 'hero_f' ~ i ~ '_title' %}
+                            <input type="text" name="hero_f{{ i }}_title" class="form-control" value="{{ core_e(settings[titleVar] ?? '') }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ lang('admin.hero.feature_desc') }}</label>
+                            {% set descVar = 'hero_f' ~ i ~ '_desc' %}
+                            <input type="text" name="hero_f{{ i }}_desc" class="form-control" value="{{ core_e(settings[descVar] ?? '') }}">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                    <a href="{{ core_url(adminPath) }}" class="btn">{{ lang('admin.common.cancel') }}</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

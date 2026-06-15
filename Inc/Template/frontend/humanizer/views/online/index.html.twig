@@ -1,0 +1,168 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set online = online ?? null %}
+{% set stats = stats ?? null %}
+{% set members = online.members ?? [] %}
+{% set guestsList = online.guests_list ?? [] %}
+{% set botsList = online.bots_list ?? [] %}
+{% set totalOnline = online.total_online ?? 0 %}
+{% set membersCount = online.members_count ?? 0 %}
+{% set guestsCount = online.guests_count ?? 0 %}
+{% set botsCount = online.bots_count ?? 0 %}
+{% set recordOnlineUsers = online.record_online_users ?? 0 %}
+{% set recordOnlineDate = online.record_online_date ?? null %}
+
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-2.5">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#105289] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li class="text-gray-400">›</li>
+      <li class="text-gray-700 font-medium">{{ core__('online.page_title') }}</li>
+    </ol>
+  </nav>
+</div>
+
+<p class="mt-4 text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
+  {{ core__('online.list_note') }}
+</p>
+
+{# Üst özet — tek satır tablo benzeri veya grid #}
+<div class="mt-6 overflow-hidden bg-white border border-gray-200 rounded-lg shadow-sm">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="bg-gray-50 border-b border-gray-200">
+        <th class="text-left py-3 px-4 font-semibold text-gray-700">{{ core__('online.active_users_label') }}</th>
+        <th class="text-left py-3 px-4 font-semibold text-gray-700">{{ core__('footer.topics') }}</th>
+        <th class="text-left py-3 px-4 font-semibold text-gray-700">{{ core__('footer.posts') }}</th>
+        <th class="text-left py-3 px-4 font-semibold text-gray-700">{{ core__('common.members') }}</th>
+        <th class="text-left py-3 px-4 font-semibold text-gray-700">{{ core__('footer.last_registered') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-b border-gray-100 last:border-b-0">
+        <td class="py-3 px-4">
+          <span class="font-bold text-[#105289]">{{ totalOnline|number_format(0) }}</span>
+          {% if recordOnlineUsers > 0 %}
+          <span class="text-xs text-gray-500 ml-1">({{ core__('footer.record_online', { count: recordOnlineUsers, date: recordOnlineDate ? (recordOnlineDate|date('d.m.Y H:i')) : '' }) }})</span>
+          {% endif %}
+        </td>
+        <td class="py-3 px-4">{{ (stats.total_topics ?? 0)|number_format(0) }}</td>
+        <td class="py-3 px-4">{{ (stats.total_posts ?? 0)|number_format(0) }}</td>
+        <td class="py-3 px-4">{{ (stats.total_members ?? 0)|number_format(0) }}</td>
+        <td class="py-3 px-4">
+          {% if stats.last_member_username is defined and stats.last_member_username is not empty %}
+          <a href="{{ core_url('member/' ~ stats.last_member_username|e('url')) }}" class="text-blue-600 hover:text-blue-700 font-medium">{{ core_e(stats.last_member_username) }}</a>
+          {% else %}
+          <span class="text-gray-400">—</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+{# Çevrimiçi listeler — 3 tablo (Üyeler, Ziyaretçiler, Botlar) #}
+<div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    <div class="bg-[#105289] text-white px-4 py-3 flex items-center justify-between">
+      <span class="font-semibold text-sm">{{ core__('online.members') }}</span>
+      <span class="bg-white/20 text-xs font-bold px-2 py-0.5 rounded">{{ membersCount|number_format(0) }}</span>
+    </div>
+    <p class="text-xs text-gray-500 px-4 py-1 border-b border-gray-100">{{ core__('online.sample_members')|replace({':shown': members|length, ':total': membersCount|number_format(0)}) }}</p>
+    <div class="overflow-x-auto max-h-[320px] overflow-y-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 sticky top-0">
+          <tr>
+            <th class="text-left py-2 px-3 w-12"></th>
+            <th class="text-left py-2 px-3 font-medium text-gray-600">{{ core__('online.members') }}</th>
+            <th class="w-10"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if members is empty %}
+          <tr><td colspan="3" class="py-8 text-center text-gray-500">{{ core__('online.no_members') }}</td></tr>
+          {% else %}
+          {% for u in members %}
+          {% set memberUrl = core_url('member/' ~ (u.username|e('url'))) %}
+          {% set avatarUrl = (u.avatar_path|default('')) != '' ? asset_url(u.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(u.username|default(''))|url_encode) ~ '&size=40&bold=true&background=1a252f&color=ffffff') %}
+          <tr class="border-t border-gray-100 hover:bg-gray-50">
+            <td class="py-2 px-3"><a href="{{ memberUrl }}"><img src="{{ core_e(avatarUrl) }}" alt="" class="w-8 h-8 rounded-full object-cover"></a></td>
+            <td class="py-2 px-3"><a href="{{ memberUrl }}" class="font-medium text-[#105289] hover:text-blue-600">{{ core_e(u.username|default('')) }}</a></td>
+            <td class="py-2 px-3"><a href="{{ memberUrl }}" class="text-gray-400 hover:text-blue-600"><i class="fa-solid fa-chevron-right text-xs"></i></a></td>
+          </tr>
+          {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    <div class="bg-[#105289] text-white px-4 py-3 flex items-center justify-between">
+      <span class="font-semibold text-sm">{{ core__('online.guests') }}</span>
+      <span class="bg-white/20 text-xs font-bold px-2 py-0.5 rounded">{{ guestsCount|number_format(0) }}</span>
+    </div>
+    <p class="text-xs text-gray-500 px-4 py-1 border-b border-gray-100">{{ core__('online.sample_guests')|replace({':shown': guestsList|length, ':total': guestsCount|number_format(0)}) }}</p>
+    <div class="overflow-x-auto max-h-[320px] overflow-y-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 sticky top-0">
+          <tr>
+            <th class="text-left py-2 px-3 font-medium text-gray-600">{{ core__('online.guests') }}</th>
+            <th class="text-right py-2 px-3 font-medium text-gray-600 w-14">{{ core__('online.last_seen') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if guestsList is empty %}
+          <tr><td colspan="2" class="py-8 text-center text-gray-500">{{ core__('online.no_guests') }}</td></tr>
+          {% else %}
+          {% for g in guestsList %}
+          <tr class="border-t border-gray-100 hover:bg-gray-50">
+            <td class="py-2 px-3">{{ g.display_name|default('Ziyaretçi') }} <span class="text-gray-400">({% if isStaff|default(false) and g.ip|default('') != '' %}{{ g.ip|e('html') }}{% else %}{{ g.ip_masked|default('') }}{% endif %})</span></td>
+            <td class="py-2 px-3 text-right text-gray-500">{{ g.last_seen_formatted|default('') }}</td>
+          </tr>
+          {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    <div class="bg-[#105289] text-white px-4 py-3 flex items-center justify-between">
+      <span class="font-semibold text-sm">{{ core__('online.bots') }}</span>
+      <span class="bg-white/20 text-xs font-bold px-2 py-0.5 rounded">{{ botsCount|number_format(0) }}</span>
+    </div>
+    <p class="text-xs text-gray-500 px-4 py-1 border-b border-gray-100">{{ core__('online.sample_bots')|replace({':shown': botsList|length, ':total': botsCount|number_format(0)}) }}</p>
+    <div class="overflow-x-auto max-h-[320px] overflow-y-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 sticky top-0">
+          <tr>
+            <th class="text-left py-2 px-3 font-medium text-gray-600">{{ core__('online.bots') }}</th>
+            {% if isStaff|default(false) %}<th class="text-left py-2 px-3 font-medium text-gray-600">{{ core__('online.ip')|default('IP') }}</th>{% endif %}
+            <th class="text-right py-2 px-3 font-medium text-gray-600 w-14">{{ core__('online.last_seen') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if botsList is empty %}
+          <tr><td colspan="{{ isStaff|default(false) ? 3 : 2 }}" class="py-8 text-center text-gray-500">{{ core__('online.no_bots') }}</td></tr>
+          {% else %}
+          {% for b in botsList %}
+          <tr class="border-t border-gray-100 hover:bg-gray-50">
+            <td class="py-2 px-3 capitalize">{{ core_e(b.bot_name|default('Bot')) }}</td>
+            {% if isStaff|default(false) %}<td class="py-2 px-3 text-gray-500 font-mono text-xs">{{ b.ip|default('')|e('html') }}</td>{% endif %}
+            <td class="py-2 px-3 text-right text-gray-500">{{ b.last_seen_formatted|default('') }}</td>
+          </tr>
+          {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<p class="mt-6 text-center text-xs text-gray-400">
+  {{ core__('online.active_now')|replace({':count': totalOnline|number_format(0)}) }}
+  — {{ core__('footer.online_members') }}: {{ membersCount|number_format(0) }}, {{ core__('footer.online_guests') }}: {{ guestsCount|number_format(0) }}, {{ core__('footer.online_bots') }}: {{ botsCount|number_format(0) }}.
+</p>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% set crumbs = crumbs ?? [] %}
+<nav aria-label="Breadcrumb" class="ips-profile-breadcrumb">
+  <ol class="ips-profile-breadcrumb__list">
+    <li><a href="{{ core_url('') }}">{{ core__('common.home') }}</a></li>
+    {% for crumb in crumbs %}
+    <li class="ips-profile-breadcrumb__sep" aria-hidden="true">/</li>
+    <li>
+      {% if crumb.href is defined and crumb.href %}
+        <a href="{{ crumb.href }}">{{ core_e(crumb.label) }}</a>
+      {% else %}
+        <span class="ips-profile-breadcrumb__current">{{ core_e(crumb.label) }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>

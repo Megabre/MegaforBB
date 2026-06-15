@@ -1,0 +1,238 @@
+/**
+ * Humanizer — klasik forum kabuğu (phpBB3 / vBulletin 4 çağı estetiği)
+ * Tailwind yardımcı sınıflarının üzerine son katman olarak yüklenir.
+ */
+
+html.humanizer-theme {
+  --hz-classic-link: #105289;
+  --hz-classic-link-hover: #bc2a4d;
+  --hz-header-top: #5a7fa8;
+  --hz-header-mid: #3d6494;
+  --hz-header-deep: #1e3d5f;
+  --hz-menu: #35608c;
+  --hz-menu-border: #1a3350;
+  --hz-page: #e1e6ee;
+  --hz-panel: #ffffff;
+  --hz-panel-border: #b5c0cb;
+  --hz-table-head: #cadceb;
+  --hz-footer: #2a3f55;
+  --hz-footer-border: #1a2f42;
+  --hz-btn-top: #e8edf4;
+  --hz-btn-bottom: #c8d4e4;
+  --hz-btn-border: #7a8fa8;
+}
+
+html.humanizer-theme body {
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #222222;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Üst çubuk — parlak mavi degrade (dönem tipik) */
+html.humanizer-theme #site-header,
+html.humanizer-theme #header-bar {
+  background: linear-gradient(
+    to bottom,
+    var(--hz-header-top) 0%,
+    var(--hz-header-mid) 38%,
+    var(--hz-header-deep) 100%
+  ) !important;
+  border-bottom: 1px solid #0d2138 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+html.humanizer-theme #main-menu-bar,
+html.humanizer-theme #mobile-menu-panel {
+  background: linear-gradient(to bottom, #3f6a96 0%, var(--hz-menu) 100%) !important;
+  border-color: #2a4a6e !important;
+  border-bottom: 1px solid var(--hz-menu-border) !important;
+}
+
+html.humanizer-theme #site-header a:hover,
+html.humanizer-theme #header-bar a:hover {
+  text-decoration: underline !important;
+}
+
+/* İlerleme çubuğu */
+html.humanizer-theme .mfbb-top-progress__bar {
+  background: linear-gradient(90deg, #6eb3ff, #3d7fc4) !important;
+}
+
+/* Footer */
+html.humanizer-theme #site-footer > div.w-full {
+  background: linear-gradient(to bottom, #3d5570 0%, var(--hz-footer) 55%, #1e2f42 100%) !important;
+  border-top: 1px solid var(--hz-footer-border) !important;
+}
+
+html.humanizer-theme footer .bg-\[\#105289\],
+html.humanizer-theme footer [class*="bg-[#105289]"] {
+  background: linear-gradient(to bottom, #3d5570 0%, var(--hz-footer) 55%, #1e2f42 100%) !important;
+}
+
+/* Genel bağlantı rengi (sayfa gövdesi) */
+html.humanizer-theme .mfbb-page-container a.text-\[\#105289\],
+html.humanizer-theme main a.text-\[\#105289\] {
+  color: var(--hz-classic-link) !important;
+}
+
+html.humanizer-theme .mfbb-page-container a.text-\[\#105289\]:hover {
+  color: var(--hz-classic-link-hover) !important;
+}
+
+/* Yuvarlak “kart” aşırılığını yumuşat */
+html.humanizer-theme .rounded-xl {
+  border-radius: 4px !important;
+}
+
+html.humanizer-theme .rounded-lg {
+  border-radius: 3px !important;
+}
+
+/* Forum / konu tabloları — başlık satırı */
+html.humanizer-theme table thead tr.border-b.border-gray-200,
+html.humanizer-theme .border-b.border-gray-200.bg-gray-50 {
+  background: linear-gradient(to bottom, #dfe8f2 0%, var(--hz-table-head) 100%) !important;
+  border-color: var(--hz-panel-border) !important;
+}
+
+/* İnsan eli: ince gölgeler yerine çerçeve */
+html.humanizer-theme .ring-1.ring-gray-200 {
+  box-shadow: none !important;
+  border: 1px solid var(--hz-panel-border) !important;
+  --tw-ring-width: 0 !important;
+  background: var(--hz-panel) !important;
+}
+
+/* Portal vitrin — yıldız / ay efektlerini kapat, düz mavi şerit */
+html.humanizer-theme .mfbb-portal-hero__stars,
+html.humanizer-theme .mfbb-portal-hero__moon,
+html.humanizer-theme .mfbb-portal-hero__reflection {
+  display: none !important;
+}
+
+html.humanizer-theme .mfbb-portal-hero {
+  background: linear-gradient(
+    to bottom,
+    #4b77a5 0%,
+    #2d5580 45%,
+    #1e3d5c 100%
+  ) !important;
+  border-bottom: 2px solid #0f2840 !important;
+}
+
+html.humanizer-theme .mfbb-portal-hero__glow {
+  opacity: 0.35;
+  filter: blur(60px);
+}
+
+html.humanizer-theme .mfbb-portal-hero__title {
+  font-family: Verdana, Helvetica, Arial, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+html.humanizer-theme .mfbb-portal-hero__btn--primary {
+  background: linear-gradient(to bottom, #f6f8fb 0%, #d2dce8 100%) !important;
+  color: #1a2f42 !important;
+  border: 1px solid var(--hz-btn-border) !important;
+  border-radius: 4px !important;
+}
+
+html.humanizer-theme .mfbb-portal-hero__btn--secondary {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 4px !important;
+}
+
+html.humanizer-theme .mfbb-portal-cta {
+  background: linear-gradient(to bottom, #3a5a78 0%, #243d52 100%) !important;
+  border: 1px solid #1a2f42 !important;
+  border-radius: 4px !important;
+}
+
+html.humanizer-theme .mfbb-portal-cta__title {
+  font-family: Verdana, Helvetica, Arial, sans-serif !important;
+}
+
+html.humanizer-theme .mfbb-portal-cta__btn {
+  background: linear-gradient(to bottom, #f0f4f9 0%, #c5d3e5 100%) !important;
+  border-radius: 4px !important;
+}
+
+html.humanizer-theme .mfbb-block__title {
+  font-family: Verdana, Helvetica, Arial, sans-serif !important;
+  /* Inline’daki açık kategori rengi yerine koyu, okunaklı ton (--block-accent üzerinden) */
+  color: color-mix(in srgb, var(--block-accent, #35608c) 42%, #070f18) !important;
+}
+
+html.humanizer-theme .mfbb-showcase__title {
+  font-family: Verdana, Helvetica, Arial, sans-serif !important;
+  color: #1c1917 !important;
+}
+
+html.humanizer-theme body.mfbb-portal-body .mfbb-trending__title {
+  color: #0f172a !important;
+}
+
+/* OS karanlık mod: portal vitrin zemini Humanizer’da açık kalır; eski portal kuralları açık başlık vermesin */
+@media (prefers-color-scheme: dark) {
+  html.humanizer-theme body.mfbb-portal-body .mfbb-trending__title {
+    color: #0f172a !important;
+  }
+
+  html.humanizer-theme body.mfbb-portal-body .mfbb-trending__desc {
+    color: #64748b !important;
+  }
+
+  html.humanizer-theme body.mfbb-portal-body .mfbb-showcase__title {
+    color: #1c1917 !important;
+  }
+
+  html.humanizer-theme body.mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-block__title {
+    color: color-mix(in srgb, var(--block-accent, #35608c) 42%, #070f18) !important;
+  }
+}
+
+/* Kenar çubuğu widget şeritleri — Tailwind arbitrary sınıflarına güvenmeden kontrast */
+html.humanizer-theme aside .hz-widget-head {
+  background: linear-gradient(to bottom, #4d7399 0%, #1a3350 100%) !important;
+  color: #fff !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Son Olaylar — forum ana sayfa ile aynı “klasik tablo” hissi */
+html.humanizer-theme .son-olaylar-card--hz {
+  border-radius: 3px !important;
+  border: 1px solid var(--hz-panel-border) !important;
+  background: var(--hz-panel) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+html.humanizer-theme .son-olaylar-card--hz > div:first-child {
+  background: linear-gradient(to bottom, #e8eef6 0%, #cadceb 100%) !important;
+  border-color: var(--hz-panel-border) !important;
+  padding-top: 0.2rem !important;
+}
+
+html.humanizer-theme .son-olaylar-card--hz .portal-tab-btn {
+  font-family: Verdana, Helvetica, Arial, sans-serif !important;
+}
+
+html.humanizer-theme .son-olaylar-card--hz .portal-tab-panels {
+  background: #fafcfe !important;
+}
+
+html.humanizer-theme .son-olaylar-card--hz .hz-son-thead th,
+html.humanizer-theme .son-olaylar-card--hz thead th {
+  background: linear-gradient(to bottom, #dfe8f2 0%, var(--hz-table-head) 100%) !important;
+  border-bottom: 1px solid #a9b8c7 !important;
+  color: #105289 !important;
+  font-size: 11px !important;
+}
+
+html.humanizer-theme .son-olaylar-card--hz .hz-son-footer {
+  background: linear-gradient(to bottom, #f4f7fb 0%, #e8eef4 100%) !important;
+  border-color: var(--hz-panel-border) !important;
+}

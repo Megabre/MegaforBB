@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set role = role ?? null %}
+{% set groupedDefinitions = groupedDefinitions ?? [] %}
+{% set currentPermissions = currentPermissions ?? [] %}
+{% set permissionDescriptions = permissionDescriptions|default({}) %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">
+                    <a href="{{ core_url(adminPath ~ '/group-permissions') }}">{{ core_e(admin__('menu.group_permissions')) }}</a>
+                </div>
+                <h2 class="page-title">
+                    <span class="badge me-2" style="background-color: {{ core_e(role.color ?? '#6c757d') }};">{{ core_e(role.name) }}</span>
+                    {{ core_e(admin__('group_permissions.edit_permissions_title')) }}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <form action="{{ core_url(adminPath ~ '/group-permissions/update/' ~ role.id) }}" method="post">
+            {{ core_csrf_field()|raw }}
+
+            <div class="accordion" id="accordion-permissions">
+                {% set i = 0 %}
+                {% for groupName, defs in groupedDefinitions %}
+                {% set i = i + 1 %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-{{ i }}">
+                        <button class="accordion-button{{ i == 1 ? '' : ' collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ i }}" aria-expanded="{{ i == 1 ? 'true' : 'false' }}">
+                            {{ groupName|capitalize }} {{ core_e(admin__('group_permissions.permissions_of')) }}
+                        </button>
+                    </h2>
+                    <div id="collapse-{{ i }}" class="accordion-collapse collapse{{ i == 1 ? ' show' : '' }}" data-bs-parent="#accordion-permissions">
+                        <div class="accordion-body p-0">
+                            <table class="table table-vcenter table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{{ core_e(admin__('permissions.key')) }}</th>
+                                        <th>{{ core_e(admin__('permissions.description')) }}</th>
+                                        <th class="w-25 text-center">{{ core_e(admin__('permissions.status')) }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for def in defs %}
+                                    {% set hasOverride = currentPermissions[def.id] is defined %}
+                                    {% set currentVal = hasOverride ? currentPermissions[def.id].value : def.default_value %}
+                                    <tr>
+                                        <td class="font-weight-bold">
+                                            {{ core_e(def.key) }}
+                                            {% if not hasOverride %}
+                                            <span class="badge bg-secondary ms-1" title="{{ core_e(admin__('permissions.default_hint')) }}">{{ core_e(admin__('permissions.default')) }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-muted">{{ core_e(permissionDescriptions[def.id] ?? def.description ?? def.key) }}</td>
+                                        <td class="text-center">
+                                            <div class="btn-group w-100" role="group">
+                                                <input type="radio" class="btn-check" name="permissions[{{ def.id }}]" value="1" id="perm-{{ def.id }}-yes" {{ currentVal ? 'checked' : '' }}>
+                                                <label class="btn btn-outline-success w-50" for="perm-{{ def.id }}-yes">{{ core_e(admin__('common.yes')) }}</label>
+                                                <input type="radio" class="btn-check" name="permissions[{{ def.id }}]" value="0" id="perm-{{ def.id }}-no" {{ not currentVal ? 'checked' : '' }}>
+                                                <label class="btn btn-outline-danger w-50" for="perm-{{ def.id }}-no">{{ core_e(admin__('common.no')) }}</label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if groupedDefinitions is empty %}
+                <div class="alert alert-info mt-3">{{ core_e(admin__('group_permissions.no_definitions')) }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mt-4 text-end">
+                <a href="{{ core_url(adminPath ~ '/group-permissions') }}" class="btn btn-link link-secondary">{{ core_e(admin__('common.cancel')) }}</a>
+                <button type="submit" class="btn btn-primary{{ groupedDefinitions is empty ? ' disabled' : '' }}">{{ core_e(admin__('group_permissions.save_permissions')) }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

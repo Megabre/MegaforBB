@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set profileUser = profileUser ?? null %}
+{% if not profileUser %}
+  <div class="ips-profile-page"><div class="ips-profile-content-card"><div class="ips-profile-empty"><p>{{ core_e(lang('error.not_found')) }}</p></div></div></div>
+{% else %}
+{% set baseUrl = core_url('member/' ~ member_url_path(profileUser)) %}
+{% set subscriptions = subscriptions ?? [] %}
+{% set userStats = userStats ?? {} %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set isOwnProfile = user and profileUser and (user.id is defined) and (profileUser.id is defined) and user.id == profileUser.id %}
+{% set redirectPath = '/member/' ~ member_url_path(profileUser) ~ '/subscriptions' %}
+{% set avatarUrl = profileUser.avatar_path is not empty ? asset_url(profileUser.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(profileUser.username ?? null)|url_encode %}
+
+<div class="ips-profile-page">
+{% include 'partials/profile_breadcrumb.html.twig' with { crumbs: [
+  { label: profileUser.username, href: baseUrl },
+  { label: core__('profile.subscriptions') }
+] } %}
+
+<div class="ips-profile-wrap">
+  {% include 'partials/profile_shell.html.twig' with {
+    profileUser: profileUser, isOwnProfile: isOwnProfile, coverUrl: null, avatarUrl: avatarUrl,
+    rewardLevel: null, userStats: userStats, activeTab: 'subscriptions', compact: true, reputationEnabled: reputationEnabled, idelistEnabled: idelistEnabled ?? false
+  } %}
+
+  <div class="ips-profile-layout ips-profile-layout--single">
+    <div class="ips-profile-layout__main">
+    <div class="ips-profile-panel__head">
+      <h2 class="ips-profile-panel__title"><i class="fa-solid fa-bell"></i> {{ core__('profile.subscriptions') }}</h2>
+    </div>
+    <div class="ips-profile-panel__body">
+    <p class="ips-profile-content__desc">Takip ettiğiniz konulara yeni cevap yazıldığında bildirim alırsınız.</p>
+    {% if subscriptions is empty %}
+    <div class="ips-profile-empty"><i class="fa-solid fa-bell-slash"></i><p>Henüz abone olduğunuz konu yok.</p></div>
+    {% else %}
+    <ul class="ips-profile-feed">
+      {% for sub in subscriptions %}
+      <li class="ips-profile-feed__item ips-profile-feed__item--action">
+        <div class="min-w-0 flex-1">
+          <div class="ips-profile-feed__meta">
+            <a href="{{ core_url('forum/' ~ (sub.forum_slug ?? '')|e('url')) }}">{{ core_e(sub.forum_name ?? '') }}</a>
+            <span>{{ sub.reply_count ?? 0 }} cevap</span>
+            <span>Son: {{ core_e(sub.last_post_at ?? '') }}</span>
+          </div>
+          <a href="{{ core_url('topic/' ~ topic_url_path_by_id(sub.id ?? 0)) }}" class="ips-profile-feed__title">{{ core_e(sub.title ?? '') }}</a>
+        </div>
+        <form action="{{ core_url('topic/' ~ topic_url_path_by_id(sub.id ?? 0) ~ '/unsubscribe') }}" method="post" class="flex-shrink-0" onsubmit="return confirm('Bu konudan abonelikten çıkmak istediğinize emin misiniz?');">
+          {{ core_csrf_field('topic_subscribe')|raw }}
+          <input type="hidden" name="redirect" value="{{ core_e(redirectPath) }}">
+          <button type="submit" class="ips-profile__action-btn ips-profile__action-btn--danger"><i class="fa-solid fa-bell-slash"></i></button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endif %}
+{% endblock %}

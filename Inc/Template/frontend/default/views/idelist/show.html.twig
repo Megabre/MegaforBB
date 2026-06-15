@@ -1,0 +1,176 @@
+{% extends "base.html.twig" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/idelist.css') }}?v={{ core_config('app.version', '1.0.0') }}&idelist=20260422r">
+{% endblock %}
+
+{% block content %}
+<div class="idelist-wrap">
+  <section class="idelist-hero" style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;flex-wrap:wrap;">
+    <div style="min-width:0;flex:1">
+      <div style="margin-bottom:.45rem">
+        <a href="{{ core_url('idelist') }}" class="idelist-back-link">
+          <i class="fa-solid fa-arrow-left"></i> {{ core_e(core__('idelist.back_to_list')) }}
+        </a>
+      </div>
+      <h1>{{ core_e(idea.title) }}</h1>
+      <p>{{ core_e(idea.user.username ?? '') }} • {{ idea.created_at ? idea.created_at.diffForHumans() : '' }}</p>
+    </div>
+    {% include 'idelist/partials/status_badge.html.twig' with { status: idea.status, statusDefinition: idea.statusDefinition|default(null) } %}
+  </section>
+
+  <section class="idelist-detail">
+    <div class="idelist-detail-toolbar">
+      <div class="idelist-detail-toolbar__author">
+        <aside class="idelist-author-card idelist-author-card--toolbar">
+          {% set authorAvatarUrl = (idea.user.avatar_path|default('')) != '' ? asset_url(idea.user.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ avatar_display_name(idea.user.username|default('User'))|url_encode ~ '&size=96') %}
+          <button type="button" class="idelist-author-toggle" onclick="document.getElementById('idelistAuthorBody').toggleAttribute('data-open');this.querySelector('.idelist-author-chevron').classList.toggle('idelist-author-chevron--open')">
+            <div class="idelist-author-head">
+              <img src="{{ core_e(authorAvatarUrl) }}" alt="{{ core_e(idea.user.username|default('-')) }}" loading="lazy">
+              <div>
+                <strong>{{ core_e(idea.user.username|default('-')) }}</strong>
+                <div class="text-muted small">{{ core_e(core__('idelist.idea_owner')) }}</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-down idelist-author-chevron"></i>
+          </button>
+
+          <div class="idelist-author-body" id="idelistAuthorBody">
+            <div class="idelist-author-body__inner">
+              <div class="idelist-author-stats">
+                <div><span>{{ core_e(core__('idelist.stat_ideas_total')) }}</span><strong>{{ authorStats.ideas_total|default(0) }}</strong></div>
+                <div><span>{{ core_e(core__('idelist.stat_completed')) }}</span><strong>{{ authorStats.ideas_completed|default(0) }}</strong></div>
+                <div><span>{{ core_e(core__('idelist.stat_comments')) }}</span><strong>{{ authorStats.comments_count|default(0) }}</strong></div>
+                <div><span>{{ core_e(core__('idelist.stat_votes_cast')) }}</span><strong>{{ authorStats.votes_cast|default(0) }}</strong></div>
+                <div><span>{{ core_e(core__('idelist.stat_votes_up')) }}</span><strong>{{ authorStats.votes_up|default(0) }}</strong></div>
+                <div><span>{{ core_e(core__('idelist.stat_votes_down')) }}</span><strong>{{ authorStats.votes_down|default(0) }}</strong></div>
+                <div><span>{{ core_e(core__('idelist.stat_votes_received')) }}</span><strong>{{ authorStats.votes_received|default(0) }}</strong></div>
+              </div>
+
+              <div class="idelist-author-list">
+                <div class="idelist-author-list__title">{{ core_e(core__('idelist.other_ideas')) }}</div>
+                <a href="{{ core_url('idelist/user/' ~ (idea.user.username|default('')|url_encode)) }}" class="idelist-author-list__more">
+                  {{ core_e(core__('idelist.view_all_ideas')) }} <i class="fa-solid fa-arrow-right" style="font-size:.7rem"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+      {% if user and ((user.id == idea.user_id) or (user.role_id|default(99) <= 2)) %}
+      <div class="idelist-detail-toolbar__actions" x-data="{ open: false }">
+        <button type="button" class="btn--idelist-menu" @click="open = !open" :aria-expanded="open">
+          <i class="fa-solid fa-gear" style="font-size:.8rem"></i> {{ core_e(core__('idelist.actions_label')) }} <i class="fa-solid fa-chevron-down" style="font-size:.65rem;opacity:.7"></i>
+        </button>
+        <div class="idelist-dropdown-panel" x-show="open" @click.outside="open = false" x-cloak x-transition>
+          <a class="btn btn-sm btn-primary idelist-btn" href="{{ core_url('idelist/' ~ idea.slug ~ '/edit') }}">{{ core_e(core__('idelist.edit_action')) }}</a>
+          <form method="post" action="{{ core_url('idelist/' ~ idea.slug ~ '/delete') }}" onsubmit="return confirm(this.dataset.msg)" data-msg="{{ core_e(core__('idelist.confirm_delete_idea')) }}">
+            {{ core_csrf_field('idelist_delete')|raw }}
+            <button class="btn btn-sm btn-danger idelist-btn" type="submit">{{ core_e(core__('idelist.delete_action')) }}</button>
+          </form>
+          {% if user.role_id|default(99) <= 2 %}
+            <a class="btn btn-sm btn-warning idelist-btn" href="{{ core_url(env('ADMIN_PATH', 'admin') ~ '/idelist/' ~ idea.id ~ '/status') }}">{{ core_e(core__('idelist.update_status')) }}</a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="idelist-detail-grid idelist-detail-grid--full">
+      <div class="idelist-detail-main">
+        <div class="idelist-idea-frame idelist-idea-frame--content" style="{{ idea.category.color|default('') ? '--idea-color:' ~ idea.category.color ~ ';' : '' }}">
+          <article class="idelist-content">{{ core_sanitize_html(idea.description ?? '')|raw }}</article>
+        </div>
+
+        {% if idea.statusDefinition and idea.statusDefinition.requires_completion %}
+          {% include 'idelist/partials/completion_box.html.twig' with { idea: idea } %}
+        {% endif %}
+
+        {# ── Oy Ver + Yanıtla Butonları ── #}
+        <div class="idelist-cta-bar">
+          <div class="idelist-cta-bar__vote">
+            {% include 'idelist/partials/vote_button.html.twig' with { idea: idea, userVotes: userVotes|default({}), showVoteCounts: true, allowDownvotes: allowDownvotes|default(true) } %}
+          </div>
+          {% if user %}
+          <button type="button" class="idelist-cta-btn idelist-cta-btn--reply" onclick="document.getElementById('idelistReplyPanel').toggleAttribute('data-open');this.querySelector('.idelist-cta-chevron').classList.toggle('idelist-cta-chevron--open')">
+            <i class="fa-solid fa-reply"></i> {{ core_e(core__('idelist.reply_action')) }}
+            <i class="fa-solid fa-chevron-down idelist-cta-chevron"></i>
+          </button>
+          {% else %}
+          <a href="{{ core_url('login') }}" class="idelist-cta-btn idelist-cta-btn--reply">
+            <i class="fa-solid fa-reply"></i> {{ core_e(core__('idelist.reply_action')) }}
+          </a>
+          {% endif %}
+        </div>
+
+        {# ── Collapsible Editör ── #}
+        <div class="idelist-reply-panel" id="idelistReplyPanel" style="margin-bottom: 1rem;">
+          <form method="post" action="{{ core_url('idelist/' ~ idea.id ~ '/comments') }}" class="idelist-comment-form" style="padding: 10px 0;">
+            {{ core_csrf_field('idelist_comment')|raw }}
+            <label class="idelist-form__label" style="margin-bottom:.35rem">{{ core_e(core__('common.messages')) }}</label>
+            <div class="idelist-editor-wrap">
+              <textarea name="body" class="form-control" rows="4" data-editor placeholder="{{ core_e(core__('common.messages')) }}..."></textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:.65rem">
+              <button class="idelist-filter-btn idelist-filter-btn--primary" type="submit">
+                <i class="fa-solid fa-paper-plane"></i> {{ core_e(core__('idelist.save_action')) }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="idelist-comment-list">
+          {% for comment in idea.comments %}
+            <div class="idelist-comment" x-data="{ editing: false }">
+              <div class="idelist-comment__meta">{{ core_e(comment.user.username ?? '') }}</div>
+              <div class="idelist-content">{{ core_sanitize_html(comment.body ?? '')|raw }}</div>
+              {% if user and ((user.id == comment.user_id) or (user.role_id|default(99) <= 2)) %}
+              <div class="idelist-actions" style="margin-top:.5rem">
+                <button class="btn btn-sm btn-secondary idelist-btn" type="button" @click="editing = !editing">{{ core_e(core__('idelist.comment_edit')) }}</button>
+                <form method="post" action="{{ core_url('idelist/comments/' ~ comment.id ~ '/delete') }}" onsubmit="return confirm('{{ core__('admin.common.confirm_delete')|e('js') }}');">
+                  {{ core_csrf_field('idelist_comment_delete')|raw }}
+                  <button class="btn btn-sm btn-danger idelist-btn" type="submit">{{ core_e(core__('idelist.delete_action')) }}</button>
+                </form>
+              </div>
+              <form method="post" action="{{ core_url('idelist/comments/' ~ comment.id ~ '/edit') }}" x-show="editing" x-cloak style="margin-top:.6rem">
+                {{ core_csrf_field('idelist_comment_edit')|raw }}
+                <div class="idelist-editor-wrap">
+                  <textarea name="body" class="form-control" rows="4" data-editor required>{{ comment.body ?? '' }}</textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.5rem">
+                  <button class="btn btn-sm btn-secondary idelist-btn" type="button" @click="editing = false">{{ core_e(core__('common.cancel')) }}</button>
+                  <button class="btn btn-sm btn-primary idelist-btn" type="submit">{{ core_e(core__('idelist.save_action')) }}</button>
+                </div>
+              </form>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('submit', async function (e) {
+  var form = e.target;
+  if (!form.matches('form[data-vote-form="1"]')) return;
+  e.preventDefault();
+  var wrapper = form.closest('[data-idea-vote]');
+  if (!wrapper) return form.submit();
+  var countEl = wrapper.querySelector('[data-vote-count]');
+  try {
+    var fd = new FormData(form);
+    var res = await fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+    var data = await res.json();
+    if (data && data.ok && countEl && typeof data.vote_count !== 'undefined') {
+      countEl.textContent = String(data.vote_count);
+    } else {
+      form.submit();
+    }
+  } catch (err) {
+    form.submit();
+  }
+});
+</script>
+{% endblock %}

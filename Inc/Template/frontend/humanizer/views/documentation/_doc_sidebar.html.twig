@@ -1,0 +1,30 @@
+{# Recursive sidebar: tree with depth-based indent (depth 0 = root) #}
+{% set depth = depth|default(0) %}
+<ul class="doc-sidebar-menu doc-sidebar-level-{{ depth }}">
+{% for node in sectionTree %}
+  {% set section = node.section %}
+  {% set path = node.path %}
+  {% set children = node.children ?? [] %}
+  {% set pages = node.pages ?? [] %}
+  <li class="doc-sidebar-node">
+    <a href="{{ core_url('documentation/' ~ path) }}" class="doc-sidebar-section-link {{ currentSection and currentSection.id == section.id and not currentPage ? 'doc-sidebar-section-link--active' : '' }}">
+      {{ section.title|e }}
+    </a>
+    {% if pages is not empty %}
+    <ul class="doc-sidebar-menu doc-sidebar-pages">
+      {% for page in pages %}
+      {% set pageHref = path ~ '/' ~ page.slug %}
+      <li>
+        <a href="{{ core_url('documentation/' ~ pageHref) }}" class="doc-sidebar-page-link {{ currentPage and currentPage.id == page.id ? 'doc-sidebar-page-link--active' : '' }}">
+          {{ page.title|e }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if children is not empty %}
+      {% include 'documentation/_doc_sidebar.html.twig' with { sectionTree: children, currentSection: currentSection, currentPage: currentPage, depth: depth + 1 } only %}
+    {% endif %}
+  </li>
+{% endfor %}
+</ul>

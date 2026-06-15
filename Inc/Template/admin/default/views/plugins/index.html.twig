@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set plugins = plugins ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.plugins.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.plugins.description') }} {{ lang('admin.plugins.desc_hint') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('admin_success', []) %}
+        <div class="alert alert-success alert-dismissible" role="alert"><div class="d-flex"><div>{{ core_e(msg) }}</div></div></div>
+        {% endfor %}
+        {% for msg in app.session.getFlashBag().get('admin_error', []) %}
+        <div class="alert alert-danger alert-dismissible" role="alert"><div class="d-flex"><div>{{ core_e(msg) }}</div></div></div>
+        {% endfor %}
+        {% for msg in app.session.getFlashBag().get('error', []) %}
+        <div class="alert alert-danger alert-dismissible" role="alert"><div class="d-flex"><div>{{ core_e(msg) }}</div></div></div>
+        {% endfor %}
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-sm card-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ lang('admin.plugins.plugin') }}</th>
+                                <th>{{ lang('admin.plugins.version') }}</th>
+                                <th>{{ lang('admin.plugins.directory') }}</th>
+                                <th>{{ lang('admin.common.status') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in plugins %}
+                            <tr>
+                                <td>
+                                    <strong>{{ core_e(p.name) }}</strong>
+                                    {% if p.description is not empty %}
+                                    <div class="text-muted small mt-0">{{ core_e(p.description) }}</div>
+                                    {% endif %}
+                                    {% if (p.has_install ?? false) and (p.installed ?? true) == false %}
+                                    <div class="text-warning small mt-0">{{ lang('admin.plugins.install_note') }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ core_e(p.version ?? '') ?: '—' }}</td>
+                                <td><code class="small">{{ core_e(p.path) }}</code></td>
+                                <td>
+                                    {% if p.enabled and p.installed %}
+                                        <span class="badge bg-success">{{ lang('admin.plugins.summary_active') }}</span>
+                                    {% elseif not p.enabled and p.installed %}
+                                        <span class="badge bg-secondary">{{ lang('admin.plugins.summary_disabled') }}</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">{{ lang('admin.plugins.summary_removed') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form action="{{ core_url(adminPath ~ '/plugins/toggle') }}" method="post" class="d-inline">
+                                        {{ core_csrf_field('admin_plugins_toggle')|raw }}
+                                        <input type="hidden" name="id" value="{{ core_e(p.id) }}">
+                                        {% if p.enabled %}
+                                        <button type="submit" class="btn btn-sm btn-ghost-secondary">{{ lang('admin.plugins.disable') }}</button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-sm btn-primary">{{ lang('admin.plugins.enable') }}</button>
+                                        {% endif %}
+                                    </form>
+                                    {% if p.has_uninstall is not empty %}
+                                    <form action="{{ core_url(adminPath ~ '/plugins/uninstall') }}" method="post" class="d-inline ms-1" onsubmit="return confirm('{{ lang('admin.plugins.uninstall_confirm') }}');">
+                                        {{ core_csrf_field('admin_plugins_uninstall')|raw }}
+                                        <input type="hidden" name="id" value="{{ core_e(p.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-ghost-secondary text-danger">{{ lang('admin.plugins.uninstall') }}</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if plugins is empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    {{ lang('admin.plugins.no_plugins') }}
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

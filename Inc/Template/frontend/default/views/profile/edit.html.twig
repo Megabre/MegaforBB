@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set profile = profile ?? null %}
+{% if not profile %}
+  <div class="ips-profile-page"><div class="ips-profile-content-card"><div class="ips-profile-empty"><p>{{ core__('profile.not_found') }}</p></div></div></div>
+{% else %}
+{% set error = error ?? '' %}
+{% set success = success ?? '' %}
+{% set customDefinitions = customDefinitions ?? [] %}
+{% set customValues = customValues ?? [] %}
+{% set coverUrl = profile.cover_photo_path is not empty ? asset_url(profile.cover_photo_path) : null %}
+{% set avatarUrl = profile.avatar_path is not empty ? asset_url(profile.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ (avatar_display_name(profile.username ?? '')|url_encode) ~ '&size=256' %}
+
+<div class="ips-profile-page">
+{% include 'partials/profile_breadcrumb.html.twig' with { crumbs: [
+  { label: profile.username, href: core_url('member/' ~ (profile.username|e('url'))) },
+  { label: core__('profile.edit_page_title') }
+] } %}
+
+{% include 'partials/profile_settings_shell.html.twig' with { user: profile, active: 'edit', coverUrl: coverUrl, avatarUrl: avatarUrl } %}
+
+<div class="ips-profile-settings-body">
+  <div class="ips-profile-content-card">
+    <div class="ips-profile-content-card__body">
+      {% if success %}<div class="ips-profile-alert ips-profile-alert--success">{{ core_e(success) }}</div>{% endif %}
+      {% if error %}<div class="ips-profile-alert ips-profile-alert--error">{{ core_e(error) }}</div>{% endif %}
+
+      <form action="{{ core_url('profile/update') }}" method="post">
+        {{ core_csrf_field('profile_edit')|raw }}
+
+        <div class="ips-form-section">
+          <h2 class="ips-form-section__title"><i class="fa-regular fa-id-card"></i> {{ core__('profile.edit_section_account') }}</h2>
+          <div class="ips-form-grid">
+            <div class="ips-form-field"><label>{{ core__('profile.edit_username') }}</label><input type="text" value="{{ core_e(profile.username) }}" disabled><p class="ips-form-field__hint">{{ core__('profile.edit_username_readonly') }}</p></div>
+            <div class="ips-form-field"><label>{{ core__('profile.edit_email') }}</label><input type="text" value="{{ core_e(profile.email ?? '') }}" disabled><p class="ips-form-field__hint">{{ core__('profile.edit_email_readonly') }}</p></div>
+          </div>
+        </div>
+
+        <div class="ips-form-section">
+          <h2 class="ips-form-section__title"><i class="fa-regular fa-user"></i> {{ core__('profile.edit_section_personal') }}</h2>
+          <div class="ips-form-grid">
+            <div class="ips-form-field"><label for="first_name">{{ core__('profile.edit_first_name') }}</label><input type="text" name="first_name" id="first_name" value="{{ core_e(profile.first_name ?? '') }}" maxlength="128"></div>
+            <div class="ips-form-field"><label for="last_name">{{ core__('profile.edit_last_name') }}</label><input type="text" name="last_name" id="last_name" value="{{ core_e(profile.last_name ?? '') }}" maxlength="128"></div>
+          </div>
+          <div class="ips-form-field ips-form-field--check"><input type="hidden" name="show_name" value="0"><input type="checkbox" name="show_name" id="show_name" value="1"{% if profile.show_name %} checked{% endif %}><label for="show_name">{{ core__('profile.edit_show_name_label') }}</label></div>
+          <div class="ips-form-grid">
+            <div class="ips-form-field"><label for="birthday">{{ core__('profile.birthday') }}</label><input type="date" name="birthday" id="birthday" value="{{ core_e(profile.birthday ?? '') }}"></div>
+            <div class="ips-form-field"><label for="location">{{ core__('profile.location') }}</label><input type="text" name="location" id="location" value="{{ core_e(profile.location ?? '') }}" maxlength="128"></div>
+          </div>
+          <div class="ips-form-field"><label for="website">{{ core__('profile.website') }}</label><input type="url" name="website" id="website" value="{{ core_e(profile.website ?? '') }}" maxlength="255"></div>
+          <div class="ips-form-field"><label for="bio">{{ core__('profile.about') }}</label><textarea name="bio" id="bio" rows="4">{{ core_e(profile.bio ?? '') }}</textarea></div>
+        </div>
+
+        <div class="ips-form-section">
+          <h2 class="ips-form-section__title"><i class="fa-solid fa-signature"></i> {{ core__('profile.edit_section_signature') }}</h2>
+          <div class="ips-form-field"><label for="signature">{{ core__('profile.edit_signature_label') }}</label><textarea name="signature" id="signature" rows="3" maxlength="500">{{ core_e(profile.signature ?? '') }}</textarea><p class="ips-form-field__hint">{{ core__('profile.edit_signature_hint') }}</p></div>
+        </div>
+
+        {% if customDefinitions is not empty %}
+        <div class="ips-form-section">
+          <h2 class="ips-form-section__title"><i class="fa-solid fa-list"></i> {{ core__('profile.edit_section_personal') }}</h2>
+          {% for def in customDefinitions %}
+          {% set fieldKey = def.field_key ?? '' %}
+          {% set val = customValues[fieldKey] ?? '' %}
+          <div class="ips-form-field">
+            <label for="custom_{{ fieldKey|e }}">{{ core_e(def.name ?? '') }}{% if def.is_required %} *{% endif %}</label>
+            {% if (def.field_type ?? 'text') == 'textarea' %}
+              <textarea name="custom_{{ fieldKey|e }}" id="custom_{{ fieldKey|e }}" rows="3"{% if def.is_required %} required{% endif %}>{{ core_e(val) }}</textarea>
+            {% elseif (def.field_type ?? '') == 'select' %}
+              {% set optsArr = (def.field_options ?? '[]')|json_decode_array %}
+              <select name="custom_{{ fieldKey|e }}" id="custom_{{ fieldKey|e }}"{% if def.is_required %} required{% endif %}><option value="">{{ core__('common.select_option') }}</option>{% for opt in optsArr %}<option value="{{ core_e(opt) }}"{% if val == opt %} selected{% endif %}>{{ core_e(opt) }}</option>{% endfor %}</select>
+            {% else %}
+              {% set inputType = (def.field_type ?? '') == 'number' ? 'number' : ((def.field_type ?? '') == 'date' ? 'date' : 'text') %}
+              <input type="{{ inputType }}" name="custom_{{ fieldKey|e }}" id="custom_{{ fieldKey|e }}" value="{{ core_e(val) }}"{% if def.is_required %} required{% endif %}>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="ips-form-actions">
+          <button type="submit" class="ips-profile__action-btn ips-profile__action-btn--primary"><i class="fa-solid fa-check"></i> {{ core__('profile.edit_save') }}</button>
+          <a href="{{ core_url('member/' ~ (profile.username|e('url'))) }}" class="ips-profile__action-btn">{{ core__('common.cancel') }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<p id="avatar-upload-status" class="mt-2 text-sm text-gray-500 hidden"></p>
+</div>
+{% endif %}
+{% endblock %}

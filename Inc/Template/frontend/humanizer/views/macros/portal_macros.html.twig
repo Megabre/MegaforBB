@@ -1,0 +1,16 @@
+{% macro extract_first_image(html) %}
+{% if '<img' in html|lower %}
+  {% set parts = (html|lower)|split('<img') %}
+  {% if parts|length > 1 %}
+    {% set afterImg = parts[1] %}
+    {% if 'src="' in afterImg %}
+      {% set srcParts = afterImg|split('src="') %}
+      {% if srcParts|length > 1 %}
+        {% set afterSrc = srcParts[1] %}
+        {% set urlParts = afterSrc|split('"') %}
+        {{ urlParts[0]|trim }}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endif %}
+{% endmacro %}

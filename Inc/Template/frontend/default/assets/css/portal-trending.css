@@ -1,0 +1,261 @@
+/**
+ * MegaforBB Portal – Gündemdeki Gelişmeler (Trending / Son Olaylar)
+ * Sadece portal sayfasında kullanılır. portal.css'ten sonra yükleyin.
+ */
+
+/* -------------------------------------------------------------------------
+   TRENDING SECTION
+   ------------------------------------------------------------------------- */
+.mfbb-trending {
+  margin-bottom: 2.5rem;
+}
+
+.mfbb-trending__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.mfbb-trending__accent {
+  width: 4px;
+  height: 1.5rem;
+  background: var(--primary-color, #206bc4);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.mfbb-trending__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.mfbb-trending__desc {
+  font-size: 0.9375rem;
+  color: #64748b;
+  margin: 0 0 1.25rem;
+  padding-left: 1rem;
+  line-height: 1.5;
+}
+
+.mfbb-trending__widget {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+/* -------------------------------------------------------------------------
+   SON OLAYLAR CARD (widget içi)
+   ------------------------------------------------------------------------- */
+.mfbb-trending__widget .son-olaylar-card {
+  height: auto !important;
+  min-height: 400px;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  background: transparent !important;
+}
+
+/* Tabs – pill / underline style */
+.mfbb-trending__widget .son-olaylar-card > div:first-child {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 0.5rem 1rem !important;
+  flex-shrink: 0;
+}
+
+.mfbb-trending__widget .son-olaylar-card nav {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.mfbb-trending__widget .son-olaylar-card .portal-tab-btn {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  margin-bottom: 0 !important;
+  background: transparent !important;
+  color: #64748b !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mfbb-trending__widget .son-olaylar-card .portal-tab-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.mfbb-trending__widget .son-olaylar-card .portal-tab-btn[data-active="true"] {
+  background: var(--primary-color, #206bc4) !important;
+  color: #fff !important;
+}
+
+/* Panels */
+.mfbb-trending__widget .portal-tab-panels {
+  flex: 1;
+  min-height: 320px;
+  background: #fff !important;
+}
+
+.mfbb-trending__widget .portal-tab-panel {
+  background: #fff !important;
+}
+
+/* Table – modern compact */
+.mfbb-trending__widget .son-olaylar-card table {
+  font-size: 0.875rem;
+}
+
+.mfbb-trending__widget .son-olaylar-card thead {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.mfbb-trending__widget .son-olaylar-card thead th {
+  padding: 0.75rem 1rem !important;
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #64748b !important;
+}
+
+.mfbb-trending__widget .son-olaylar-card tbody tr {
+  border-bottom: 1px solid #f1f5f9 !important;
+  transition: background-color 0.15s ease;
+}
+
+.mfbb-trending__widget .son-olaylar-card tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+.mfbb-trending__widget .son-olaylar-card tbody td {
+  padding: 0.75rem 1rem !important;
+  vertical-align: middle !important;
+}
+
+/* Konu başlığı + avatar */
+.mfbb-trending__widget .son-olaylar-card tbody td a[href*="/topic/"] {
+  font-weight: 600 !important;
+  font-size: 0.9375rem !important;
+  color: var(--primary-color, #206bc4) !important;
+  text-decoration: none !important;
+}
+
+.mfbb-trending__widget .son-olaylar-card tbody td a[href*="/topic/"]:hover {
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
+}
+
+.mfbb-trending__widget .son-olaylar-card tbody img[alt=""] {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: 8px !important;
+  object-fit: cover !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Kategori etiketleri */
+.mfbb-trending__widget .son-olaylar-card tbody span.bg-slate-100 {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  font-size: 0.6875rem !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 6px !important;
+}
+
+/* Footer strip */
+.mfbb-trending__widget .son-olaylar-card > div:last-child {
+  background: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.75rem !important;
+  color: #64748b !important;
+}
+
+.mfbb-trending__widget .son-olaylar-card .portal-load-more-btn {
+  font-size: 0.75rem !important;
+  color: var(--primary-color, #206bc4) !important;
+}
+
+/* Popular users tab – avatar + username */
+.mfbb-trending__widget .son-olaylar-card tbody a[href*="/member/"] {
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+.mfbb-trending__widget .son-olaylar-card tbody a[href*="/member/"]:hover {
+  color: var(--primary-color, #206bc4) !important;
+}
+
+/* Boş satır */
+.mfbb-trending__widget .son-olaylar-card tbody td[colspan] {
+  padding: 2.5rem 1rem !important;
+  text-align: center !important;
+  color: #94a3b8 !important;
+  font-size: 0.875rem !important;
+}
+
+/* Scrollbar panel içi */
+.mfbb-trending__widget .portal-tab-panel {
+  border-radius: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__title {
+    color: #f8fafc;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__desc {
+    color: #94a3b8;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget .son-olaylar-card > div:first-child {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget .portal-tab-btn {
+    color: #94a3b8 !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget .portal-tab-btn:hover {
+    background: #334155 !important;
+    color: #f8fafc !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget .portal-tab-panels,
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget .portal-tab-panel {
+    background: #1e293b !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget thead {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget thead th {
+    color: #94a3b8 !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget tbody tr {
+    border-color: #334155 !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget tbody tr:hover {
+    background: #0f172a !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget .son-olaylar-card tbody td a[href*="/topic/"] {
+    color: #93c5fd !important;
+  }
+  .mfbb-portal-body:not(.mfbb-portal-body--light) .mfbb-trending__widget .son-olaylar-card > div:last-child {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+  }
+}

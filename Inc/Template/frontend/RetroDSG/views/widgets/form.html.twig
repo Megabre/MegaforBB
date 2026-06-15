@@ -1,0 +1,72 @@
+﻿{% extends 'base.html.twig' %}
+{% set widget = widget ?? null %}
+{% set typeLabels = typeLabels ?? [] %}
+{% set isEdit = widget is not null %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ isEdit ? 'Widget düzenle' : 'Yeni widget' }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/widgets') }}" class="btn">Listeye dön</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <form action="{{ isEdit ? core_url(adminPath ~ '/widgets/update/' ~ widget.id) : core_url(adminPath ~ '/widgets/store') }}" method="post">
+                {{ core_csrf_field(isEdit ? 'admin_widget_update' : 'admin_widget_store')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tür</label>
+                        <select name="type" id="widget-type" class="form-select">
+                            {% for k, v in typeLabels %}
+                            <option value="{{ core_e(k) }}" {{ (widget and widget.type == k) ? 'selected' : '' }}>{{ core_e(v) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Başlık (admin listesinde görünür)</label>
+                        <input type="text" name="title" class="form-control" value="{{ widget ? core_e(widget.title) : '' }}" placeholder="Örn. Reklam alanı">
+                    </div>
+                    <div class="mb-3" id="widget-content-wrap" style="{{ (widget and widget.type != 'html') ? 'display:none' : '' }}">
+                        <label class="form-label">İçerik (HTML)</label>
+                        <textarea name="content" class="form-control font-monospace" rows="10" placeholder="<div>Reklam kodu veya özel HTML...</div>">{{ (widget and widget.type == 'html') ? core_e(widget.content ?? '') : '' }}</textarea>
+                        <small class="form-hint">Sadece HTML widget türünde kullanılır. Reklam scripti veya özel HTML girebilirsiniz.</small>
+                    </div>
+                    <div class="mb-3" id="widget-tag-limit-wrap" style="{{ (widget and widget.type == 'tag_cloud') ? '' : 'display:none' }}">
+                        <label class="form-label">{{ lang('admin.widgets.tag_cloud_limit_label') }}</label>
+                        <input type="number" name="tag_limit" class="form-control" min="1" max="50" value="{{ (widget and widget.type == 'tag_cloud' and widget.content is not empty) ? (widget.content|round) : '10' }}" placeholder="10">
+                        <small class="form-hint">{{ lang('admin.widgets.tag_cloud_limit_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="enabled" value="1" class="form-check-input" {{ (not widget or widget.enabled) ? 'checked' : '' }}>
+                            <span class="form-check-label">Aktif</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ isEdit ? 'Güncelle' : 'Ekle' }}</button>
+                    <a href="{{ core_url(adminPath ~ '/widgets') }}" class="btn">{{ core__('common.cancel') }}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('widget-type').addEventListener('change', function(){
+    var v = this.value;
+    document.getElementById('widget-content-wrap').style.display = v === 'html' ? 'block' : 'none';
+    document.getElementById('widget-tag-limit-wrap').style.display = v === 'tag_cloud' ? 'block' : 'none';
+});
+</script>
+{% endblock %}

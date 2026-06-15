@@ -1,0 +1,210 @@
+{% extends 'base.html.twig' %}
+{% set s = settings ?? {} %}
+{% set categories = categories ?? [] %}
+{% set allForums = allForums ?? [] %}
+{% set portalForumIds = s.portal_forum_ids ?? [] %}
+{% set card1 = s.portal_card_1 ?? {} %}
+{% set card2 = s.portal_card_2 ?? {} %}
+{% set card3 = s.portal_card_3 ?? {} %}
+{% set cards = { 1: card1, 2: card2, 3: card3 } %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-lg">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.portal.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.portal.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-lg">
+        {% if flashPortalOk %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            {{ flashPortalOk|e }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        <form action="{{ core_url(adminPath ~ '/portal-settings/update') }}" method="post">
+            {{ core_csrf_field('admin_portal_settings')|raw }}
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">Portal</h3></div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">{{ lang('admin.portal.home_type_hint_before') }}<a href="{{ core_url(adminPath ~ '/settings/general') }}">{{ lang('admin.portal.settings_general') }}</a>{{ lang('admin.portal.home_type_hint_after') }}</p>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.portal.forums_for_topics') }}</label>
+                        <div class="border rounded p-3" style="max-height: 220px; overflow-y: auto;">
+                            {% for cat in categories %}
+                            <div class="mb-2">
+                                <span class="fw-semibold text-muted small">{{ (cat.name ?? '')|e }}</span>
+                                <div class="ms-3 mt-1">
+                                    {% for f in cat.forums ?? [] %}
+                                    <label class="form-check d-block">
+                                        <input type="checkbox" name="portal_forum_ids[]" value="{{ f.id }}" class="form-check-input" {{ f.id in portalForumIds ? 'checked' : '' }}>
+                                        <span class="form-check-label">{{ (f.name ?? '')|e }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if categories is empty %}
+                            <p class="text-muted small mb-0">{{ lang('admin.portal.no_forums') }} <a href="{{ core_url(adminPath ~ '/forums') }}">{{ lang('admin.portal.add_categories_forums') }}</a>.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.portal.latest_topics_count') }}</label>
+                            <input type="number" name="portal_latest_topics_count" class="form-control" value="{{ s.portal_latest_topics_count ?? 10 }}" min="5" max="30">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.portal.latest_articles_count') }}</label>
+                            <input type="number" name="portal_latest_articles_count" class="form-control" value="{{ s.portal_latest_articles_count ?? 5 }}" min="3" max="20">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ lang('admin.portal.latest_comments_count') }}</label>
+                            <input type="number" name="portal_latest_comments_count" class="form-control" value="{{ s.portal_latest_comments_count ?? 8 }}" min="5" max="15">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">{{ lang('admin.portal.cards_title') }}</h3></div>
+                <div class="card-body">
+                    {% for slot, c in cards %}
+                    {% set pfx = 'portal_card_' ~ slot %}
+                    <div class="border rounded p-3 mb-3">
+                        <h5 class="mb-3">{{ lang('admin.portal.card_slot', {'num': slot}) }}</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <input type="hidden" name="{{ pfx }}_enabled" value="0">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" name="{{ pfx }}_enabled" value="1" class="form-check-input" {{ c.enabled ? 'checked' : '' }}>
+                                    <span class="form-check-label">Aktif</span>
+                                </label>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">{{ lang('admin.portal.card_title') }}</label>
+                                <input type="text" name="{{ pfx }}_title" class="form-control" value="{{ (c.title ?? '')|e }}" placeholder="{{ slot == 1 ? lang('admin.portal.type_latest') : (slot == 2 ? lang('admin.portal.category_label') : lang('admin.portal.type_popular')) }}">
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <label class="form-label">{{ lang('admin.portal.card_desc_optional') }}</label>
+                                <input type="text" name="{{ pfx }}_description" class="form-control" value="{{ (c.description ?? '')|e }}">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">Tip</label>
+                                <select name="{{ pfx }}_type" class="form-select portal-card-type" data-slot="{{ slot }}">
+                                    <option value="latest" {{ (c.type ?? '') == 'latest' ? 'selected' : '' }}>{{ lang('admin.portal.type_latest') }}</option>
+                                    <option value="category" {{ (c.type ?? '') == 'category' ? 'selected' : '' }}>{{ lang('admin.portal.type_category') }}</option>
+                                    <option value="popular" {{ (c.type ?? '') == 'popular' ? 'selected' : '' }}>{{ lang('admin.portal.type_popular') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2 portal-card-category-wrap" data-slot="{{ slot }}" style="display: {{ (c.type ?? '') == 'category' ? 'block' : 'none' }};">
+                                <label class="form-label">{{ lang('admin.portal.category_label') }}</label>
+                                <select name="{{ pfx }}_category_id" class="form-select">
+                                    <option value="0">{{ lang('admin.portal.select_placeholder') }}</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.id }}" {{ (c.category_id ?? 0) == cat.id ? 'selected' : '' }}>{{ (cat.name ?? '')|e }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">{{ lang('admin.portal.layout') }}</label>
+                                <select name="{{ pfx }}_layout" class="form-select">
+                                    <option value="grid" {{ (c.layout ?? 'grid') == 'grid' ? 'selected' : '' }}>{{ lang('admin.portal.layout_grid') }}</option>
+                                    <option value="list" {{ (c.layout ?? '') == 'list' ? 'selected' : '' }}>{{ lang('admin.portal.layout_list') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">{{ lang('admin.portal.grid_columns') }}</label>
+                                <input type="number" name="{{ pfx }}_per_slide" class="form-control" value="{{ c.per_slide ?? 4 }}" min="2" max="6">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">{{ lang('admin.portal.total_display') }}</label>
+                                <input type="number" name="{{ pfx }}_total" class="form-control" value="{{ c.total ?? 12 }}" min="4" max="24">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">Kart Vurgu Rengi</label>
+                                <input type="color" name="{{ pfx }}_color" class="form-control form-control-color" value="{{ (c.color ?? '#1c8b42')|e }}" title="{{ lang('admin.portal.card_color') }}">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">{{ lang('admin.portal.border_color') }}</label>
+                                <input type="color" name="{{ pfx }}_border_color" class="form-control form-control-color" value="{{ (c.border_color ?? '')|e }}">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">{{ lang('admin.portal.members_list') }}</h3></div>
+                <div class="card-body">
+                    <input type="hidden" name="members_list_enabled" value="0">
+                    <label class="form-check form-switch">
+                        <input type="checkbox" name="members_list_enabled" value="1" class="form-check-input" {{ s.members_list_enabled ? 'checked' : '' }}>
+                        <span class="form-check-label">{{ lang('admin.portal.members_list_label') }}</span>
+                    </label>
+                    <p class="text-muted small mt-1 mb-0">{{ lang('admin.portal.members_404_hint') }}</p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">{{ lang('admin.portal.articles_system') }}</h3></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="hidden" name="article_comments_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="article_comments_enabled" value="1" class="form-check-input" {{ s.article_comments_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.portal.article_comments') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.portal.article_forum_label') }}</label>
+                        <select name="article_forum_id" class="form-select">
+                            <option value="0" {{ (s.article_forum_id ?? 0) == 0 ? 'selected' : '' }}>{{ lang('admin.portal.article_select_off') }}</option>
+                            {% for f in articleForums ?? [] %}
+                            <option value="{{ f.id }}" {{ (s.article_forum_id ?? 0) == f.id ? 'selected' : '' }}>{{ (f.name ?? '')|e }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if (articleForums ?? []) is empty %}
+                        <small class="form-hint text-muted">{{ lang('admin.portal.article_forum_hint_no_category') }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.portal.articles_view') }}</label>
+                        <select name="articles_view_mode" class="form-select">
+                            <option value="list" {{ (s.articles_view_mode ?? 'list') == 'list' ? 'selected' : '' }}>{{ lang('admin.portal.layout_list') }}</option>
+                            <option value="grid" {{ (s.articles_view_mode ?? '') == 'grid' ? 'selected' : '' }}>{{ lang('admin.portal.layout_grid') }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4">
+                <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                <a href="{{ core_url(adminPath) }}" class="btn btn-outline-secondary">{{ lang('admin.common.cancel') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function() {
+    function toggleCategoryFields() {
+        document.querySelectorAll('.portal-card-type').forEach(function(sel) {
+            var slot = sel.getAttribute('data-slot');
+            var wrap = document.querySelector('.portal-card-category-wrap[data-slot="' + slot + '"]');
+            if (wrap) wrap.style.display = (sel.value === 'category') ? 'block' : 'none';
+        });
+    }
+    document.querySelectorAll('.portal-card-type').forEach(function(el) {
+        el.addEventListener('change', toggleCategoryFields);
+    });
+    toggleCategoryFields();
+})();
+</script>
+{% endblock %}

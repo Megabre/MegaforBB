@@ -1,0 +1,49 @@
+{% extends "base.html.twig" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/idelist.css') }}?v={{ core_config('app.version', '1.0.0') }}&idelist=20260421r">
+{% endblock %}
+
+{% block content %}
+<div class="idelist-wrap">
+  <section class="idelist-hero">
+    <h1>{{ core_e(core__('idelist.submit_idea')) }}</h1>
+    <p>{{ core_e(core__('idelist.description_help')) }}</p>
+  </section>
+
+  <form class="idelist-form" method="post" action="{{ idea is defined ? core_url('idelist/' ~ idea.slug ~ '/edit') : core_url('idelist') }}">
+    {{ core_csrf_field('idelist_store')|raw }}
+    <div class="idelist-form__head" style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+      <strong>{{ core_e(core__('idelist.page_title')) }}</strong>
+      <small style="color:var(--il-muted)">{{ core_e(core__('idelist.submit_idea')) }}</small>
+    </div>
+    <div class="idelist-form__body">
+      <div class="idelist-form__row">
+        <label class="idelist-form__label">{{ core_e(core__('idelist.title_label')) }}</label>
+        <input class="form-control" name="title" maxlength="255" placeholder="{{ core_e(core__('idelist.title_placeholder')) }}" value="{{ idea.title ?? '' }}" required>
+      </div>
+
+      <div class="idelist-form__row">
+        <label class="idelist-form__label">{{ core_e(core__('idelist.category_label')) }}</label>
+        <select class="idelist-filter-select" name="category_id">
+          <option value="">{{ core_e(core__('idelist.filter_all')) }}</option>
+          {% for category in categories %}
+            <option value="{{ category.id }}" {{ idea.category_id is defined and idea.category_id == category.id ? 'selected' : '' }}>{{ core_e(category.name) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="idelist-form__row">
+        <label class="idelist-form__label">{{ core_e(core__('idelist.description_label')) }}</label>
+        <div class="idelist-editor-wrap">
+          <textarea class="form-control" name="description" rows="10" maxlength="5000" data-editor required>{{ idea.description ?? '' }}</textarea>
+        </div>
+        <div class="idelist-form__help">{{ core_e(core__('idelist.description_help')) }}</div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end">
+        <button class="idelist-filter-btn idelist-filter-btn--primary" type="submit">{{ core_e(core__('idelist.submit_idea')) }}</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

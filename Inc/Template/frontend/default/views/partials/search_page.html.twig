@@ -1,0 +1,235 @@
+{% set query = query ?? '' %}
+{% set tag = tag ?? '' %}
+{% set type = type ?? 'all' %}
+{% set forumId = forumId ?? null %}
+{% set author = author ?? '' %}
+{% set dateFrom = dateFrom ?? '' %}
+{% set dateTo = dateTo ?? '' %}
+{% set results = results ?? { forums: [], topics: [], articles: [], posts: [], users: [], docs: [], ideas: [] } %}
+{% set totals = totals ?? { forums: 0, topics: 0, articles: 0, posts: 0, users: 0, docs: 0, ideas: 0 } %}
+{% set forums = forums ?? [] %}
+{% set totalResults = totalResults ?? 0 %}
+{% set page = page ?? 1 %}
+{% set totalPages = totalPages ?? 1 %}
+{% set searchCategories = searchCategories ?? [] %}
+{% set hasFilters = (forumId != '' and forumId != null) or author != '' or dateFrom != '' or dateTo != '' %}
+
+<link rel="stylesheet" href="{{ core_url('css/search.css') }}?v={{ core_config('app.version', '1.0.0') }}">
+
+<div id="mfbb-search-app" class="mfbb-search-page">
+  <div class="mfbb-search-hero">
+    <h1 class="mfbb-search-hero__title">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      {{ core__('common.search') }}
+    </h1>
+    <form action="{{ core_url('search') }}" method="get" data-search-form data-no-soft-nav>
+      <input type="hidden" name="type" value="{{ core_e(type) }}" data-search-type>
+      {% if tag != '' %}<input type="hidden" name="tag" value="{{ core_e(tag) }}">{% endif %}
+      <div class="mfbb-search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" name="q" value="{{ query != '' ? core_e(query) : '' }}"
+          placeholder="{{ core__('search.placeholder') }}"
+          class="mfbb-search-input" data-search-input autofocus autocomplete="off">
+        <button type="submit" class="mfbb-search-submit">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span class="hidden sm:inline">{{ core__('common.search_btn') }}</span>
+        </button>
+      </div>
+      <button type="button" class="mfbb-search-advanced-toggle" data-advanced-toggle aria-expanded="{{ hasFilters ? 'true' : 'false' }}">
+        <i class="fa-solid fa-sliders"></i>
+        {{ core__('search.advanced_filters') }}
+      </button>
+      <div class="mfbb-search-advanced {{ hasFilters ? 'is-open' : '' }}" data-advanced-panel>
+        <div class="mfbb-search-advanced__grid">
+          <div class="mfbb-search-field">
+            <label>{{ core__('stats.forums') }}</label>
+            <select name="forum_id">
+              <option value="">{{ core__('search.all_forums') }}</option>
+              {% for f in forums %}
+              <option value="{{ f.id ?? 0 }}" {{ (forumId ?? '') == (f.id ?? '') ? 'selected' : '' }}>{{ core_e(f.name ?? '') }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mfbb-search-field">
+            <label>{{ core__('search.author') }}</label>
+            <input type="text" name="author" value="{{ core_e(author) }}" placeholder="{{ core__('search.author') }}">
+          </div>
+          <div class="mfbb-search-field">
+            <label>{{ core__('search.date_from') }}</label>
+            <input type="date" name="date_from" value="{{ core_e(dateFrom) }}">
+          </div>
+          <div class="mfbb-search-field">
+            <label>{{ core__('search.date_to') }}</label>
+            <input type="date" name="date_to" value="{{ core_e(dateTo) }}">
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="mfbb-search-layout">
+    <aside class="mfbb-search-sidebar" aria-label="{{ core__('common.search') }}">
+      {% for cat in searchCategories %}
+      <button type="button"
+        class="mfbb-search-cat {{ type == cat.key ? 'is-active' : '' }}"
+        data-search-category="{{ cat.key }}">
+        <i class="fa-solid {{ cat.icon }}"></i>
+        <span>{{ core_e(cat.label) }}</span>
+        <span class="mfbb-search-cat__count {{ (cat.count ?? 0) <= 0 ? 'hidden' : '' }}" data-count>{{ cat.count ?? 0 }}</span>
+      </button>
+      {% endfor %}
+    </aside>
+
+    <div class="mfbb-search-main">
+      <div class="mfbb-search-status" data-search-status>
+        {% if totalResults > 0 and (query != '' or tag != '') %}
+        <strong>{{ core__('search.results_count', { count: totalResults }) }}</strong>
+        {% endif %}
+      </div>
+
+      <div class="mfbb-search-results" data-search-results>
+        {% if query == '' and tag == '' %}
+        <div class="mfbb-search-empty mfbb-search-empty--idle">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <p>{{ core__('search.placeholder') }}</p>
+        </div>
+        {% elseif totalResults == 0 %}
+        <div class="mfbb-search-empty">
+          <i class="fa-solid fa-face-frown"></i>
+          <p class="mfbb-search-empty__title">{{ core__('search.no_results') }}</p>
+          <p class="mfbb-search-empty__hint">{{ core__('search.no_results_hint') }}</p>
+        </div>
+        {% else %}
+          {% macro search_item_forum(item) %}
+          <a href="{{ item.url }}" class="mfbb-search-item mfbb-search-item--forum">
+            <span class="mfbb-search-item__icon"><i class="fa-solid fa-folder-open"></i></span>
+            <div class="mfbb-search-item__main">
+              <h3 class="mfbb-search-item__title">{{ core_e(item.name) }}</h3>
+              {% if item.description %}<p class="mfbb-search-item__snippet">{{ core_e(item.description) }}</p>{% endif %}
+              <div class="mfbb-search-item__meta">
+                <span>{{ item.topic_count }} {{ core__('topic.topics')|lower }}</span>
+                <span>{{ item.post_count }} {{ core__('search.posts_label') }}</span>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right mfbb-search-item__arrow"></i>
+          </a>
+          {% endmacro %}
+          {% import _self as s %}
+
+          {% set sections = [
+            { key: 'forums', title: core__('search.section_forums'), icon: 'fa-folder-tree', items: results.forums ?? [], total: totals.forums ?? 0 },
+            { key: 'topics', title: core__('search.section_topics'), icon: 'fa-comments', items: results.topics ?? [], total: totals.topics ?? 0 },
+            { key: 'articles', title: core__('search.section_articles'), icon: 'fa-newspaper', items: results.articles ?? [], total: totals.articles ?? 0 },
+            { key: 'posts', title: core__('search.section_posts'), icon: 'fa-message', items: results.posts ?? [], total: totals.posts ?? 0 },
+            { key: 'users', title: core__('search.section_users'), icon: 'fa-user-group', items: results.users ?? [], total: totals.users ?? 0 },
+            { key: 'docs', title: core__('search.section_docs'), icon: 'fa-book', items: results.docs ?? [], total: totals.docs ?? 0 },
+            { key: 'ideas', title: core__('search.section_ideas'), icon: 'fa-lightbulb', items: results.ideas ?? [], total: totals.ideas ?? 0 },
+          ] %}
+
+          {% for sec in sections %}
+            {% if sec.items is not empty and (type == 'all' or type == sec.key) %}
+            <section class="mfbb-search-section" data-section="{{ sec.key }}">
+              <header class="mfbb-search-section__head">
+                <span class="mfbb-search-section__icon mfbb-search-section__icon--{{ sec.key }}"><i class="fa-solid {{ sec.icon }}"></i></span>
+                <h2 class="mfbb-search-section__title">{{ sec.title }}</h2>
+                <span class="mfbb-search-section__count">{{ sec.total }}</span>
+                {% if type == 'all' and sec.total > sec.items|length %}
+                <button type="button" class="mfbb-search-section__more" data-filter-type="{{ sec.key }}">{{ core__('search.view_all') }} →</button>
+                {% endif %}
+              </header>
+              <div class="mfbb-search-section__body">
+                {% if sec.key == 'forums' %}
+                  {% for item in sec.items %}{{ s.search_item_forum(item) }}{% endfor %}
+                {% elseif sec.key in ['topics', 'articles'] %}
+                  {% for item in sec.items %}
+                  <a href="{{ item.url }}" class="mfbb-search-item mfbb-search-item--topic">
+                    <div class="mfbb-search-item__main">
+                      <h3 class="mfbb-search-item__title">{{ core_e(item.title) }}</h3>
+                      <div class="mfbb-search-item__meta">
+                        <span><i class="fa-solid fa-user"></i> {{ core_e(item.username) }}</span>
+                        {% if item.forum_name %}<span><i class="fa-solid fa-folder"></i> {{ core_e(item.forum_name) }}</span>{% endif %}
+                        <span>{{ item.reply_count }} {{ core__('search.replies') }}</span>
+                        <span>{{ item.view_count }} {{ core__('search.views') }}</span>
+                        <span>{{ core_e(item.created_at) }}</span>
+                      </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right mfbb-search-item__arrow"></i>
+                  </a>
+                  {% endfor %}
+                {% elseif sec.key == 'posts' %}
+                  {% for item in sec.items %}
+                  <a href="{{ item.url }}" class="mfbb-search-item mfbb-search-item--post">
+                    <p class="mfbb-search-item__snippet">{{ core_e(item.body_snippet) }}</p>
+                    <div class="mfbb-search-item__meta">
+                      <span class="mfbb-search-item__topic">{{ core_e(item.topic_title) }}</span>
+                      <span><i class="fa-solid fa-user"></i> {{ core_e(item.username) }}</span>
+                      {% if item.forum_name %}<span><i class="fa-solid fa-folder"></i> {{ core_e(item.forum_name) }}</span>{% endif %}
+                      <span>{{ core_e(item.created_at) }}</span>
+                    </div>
+                  </a>
+                  {% endfor %}
+                {% elseif sec.key == 'users' %}
+                  {% for item in sec.items %}
+                  {% set avatarUrl = item.avatar_url ?? ('https://ui-avatars.com/api/?name=' ~ avatar_display_name(item.username)|url_encode ~ '&background=105289&color=fff&size=80') %}
+                  <a href="{{ item.url }}" class="mfbb-search-item mfbb-search-item--user">
+                    <img src="{{ core_e(avatarUrl) }}" alt="" class="mfbb-search-item__avatar" loading="lazy">
+                    <div class="mfbb-search-item__main">
+                      <h3 class="mfbb-search-item__title">{{ core_e(item.username) }}</h3>
+                      <div class="mfbb-search-item__meta">
+                        <span>{{ item.post_count }} {{ core__('search.posts_label') }}</span>
+                        <span><i class="fa-solid fa-calendar"></i> {{ core_e(item.created_at) }}</span>
+                      </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right mfbb-search-item__arrow"></i>
+                  </a>
+                  {% endfor %}
+                {% elseif sec.key == 'docs' %}
+                  {% for item in sec.items %}
+                  <a href="{{ item.url }}" class="mfbb-search-item mfbb-search-item--doc">
+                    <span class="mfbb-search-item__icon"><i class="fa-solid fa-book-open"></i></span>
+                    <div class="mfbb-search-item__main">
+                      <h3 class="mfbb-search-item__title">{{ core_e(item.title) }}</h3>
+                      {% if item.section_title %}<span class="mfbb-search-item__badge">{{ core_e(item.section_title) }}</span>{% endif %}
+                      {% if item.snippet %}<p class="mfbb-search-item__snippet">{{ core_e(item.snippet) }}</p>{% endif %}
+                    </div>
+                    <i class="fa-solid fa-chevron-right mfbb-search-item__arrow"></i>
+                  </a>
+                  {% endfor %}
+                {% elseif sec.key == 'ideas' %}
+                  {% for item in sec.items %}
+                  <a href="{{ item.url }}" class="mfbb-search-item mfbb-search-item--idea">
+                    <span class="mfbb-search-item__icon"><i class="fa-solid fa-lightbulb"></i></span>
+                    <div class="mfbb-search-item__main">
+                      <h3 class="mfbb-search-item__title">{{ core_e(item.title) }}</h3>
+                      {% if item.snippet %}<p class="mfbb-search-item__snippet">{{ core_e(item.snippet) }}</p>{% endif %}
+                      <div class="mfbb-search-item__meta">
+                        {% if item.category_name %}<span>{{ core_e(item.category_name) }}</span>{% endif %}
+                        <span>{{ item.vote_count }} {{ core__('search.votes') }}</span>
+                        <span><i class="fa-solid fa-user"></i> {{ core_e(item.username) }}</span>
+                      </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right mfbb-search-item__arrow"></i>
+                  </a>
+                  {% endfor %}
+                {% endif %}
+              </div>
+            </section>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <nav class="mfbb-search-pagination {{ totalPages <= 1 or type == 'all' ? 'hidden' : '' }}" data-search-pagination aria-label="{{ core__('common.pagination') }}">
+        {% if totalPages > 1 and type != 'all' %}
+          {% if page > 1 %}
+          <button type="button" class="mfbb-search-page-btn" data-page="{{ page - 1 }}"><i class="fa-solid fa-chevron-left"></i> {{ core__('common.prev') }}</button>
+          {% endif %}
+          <span class="mfbb-search-page-info">{{ core__('common.page_of', { page: page, total: totalPages }) }}</span>
+          {% if page < totalPages %}
+          <button type="button" class="mfbb-search-page-btn" data-page="{{ page + 1 }}">{{ core__('common.next') }} <i class="fa-solid fa-chevron-right"></i></button>
+          {% endif %}
+        {% endif %}
+      </nav>
+    </div>
+  </div>
+</div>

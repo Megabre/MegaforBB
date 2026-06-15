@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? 'admin' %}
+{% set docPage = docPage ?? null %}
+{% set sectionsFlat = sectionsFlat ?? [] %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.css" rel="stylesheet">
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.documentation.edit_page') }}</h2>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/documentation-settings') }}" class="btn btn-outline-secondary">{{ lang('admin.common.back_to_list') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <form action="{{ core_url(adminPath ~ '/documentation-settings/pages/update/' ~ docPage.id) }}" method="post">
+                {{ core_csrf_field('admin_documentation')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.section_label') }}</label>
+                        <select name="section_id" class="form-select">
+                            {% for item in sectionsFlat %}
+                            <option value="{{ item.section.id }}" {{ docPage.section_id == item.section.id ? 'selected' : '' }}>{% for i in 1..item.depth %}— {% endfor %}{{ item.section.title|e }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.page_title_label') }} <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" value="{{ docPage.title|e }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.slug_label') }}</label>
+                        <input type="text" name="slug" class="form-control" value="{{ docPage.slug|e }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.sort_order') }}</label>
+                        <input type="number" name="sort_order" class="form-control" value="{{ docPage.sort_order ?? 0 }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.documentation.content_label') }}</label>
+                        <textarea id="doc-page-content" name="content" class="form-control" rows="12">{{ docPage.content|e }}</textarea>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.update') }}</button>
+                    <a href="{{ core_url(adminPath ~ '/documentation-settings') }}" class="btn btn-outline-secondary">{{ lang('admin.common.cancel') }}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-tr-TR.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var $ = window.jQuery;
+    if (!$ || !$.fn.summernote) return;
+    $('#doc-page-content').summernote({
+        height: 320,
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link']],
+            ['view', ['fullscreen', 'codeview']]
+        ],
+        lang: 'tr-TR'
+    });
+});
+</script>
+{% endblock %}

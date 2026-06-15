@@ -1,0 +1,28 @@
+{# IPS tarzı özet istatistik şeridi — 4 temel metrik #}
+{% set u = profileUser ?? null %}
+{% set userStats = userStats ?? {} %}
+{% set portalEnabled = portal_enabled ?? false %}
+{% if u %}
+{% set baseUrl = core_url('member/' ~ member_url_path(u)) %}
+{% set forumTotal = (userStats.topic_count ?? 0) + (userStats.forum_reply_count ?? userStats.post_count ?? 0) %}
+<div class="ips-profile-stats">
+  <div class="ips-profile-stats__item">
+    <span class="ips-profile-stats__value">{{ (userStats.content_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stats__label">{{ core__('member.content_count') }}</span>
+  </div>
+  <a href="{{ baseUrl }}?filter=forum" class="ips-profile-stats__item ips-profile-stats__item--link">
+    <span class="ips-profile-stats__value">{{ forumTotal|number_format(0) }}</span>
+    <span class="ips-profile-stats__label">{{ core__('member.forum_contributions') }}</span>
+  </a>
+  {% if portalEnabled %}
+  <a href="{{ baseUrl }}?filter=articles" class="ips-profile-stats__item ips-profile-stats__item--link">
+    <span class="ips-profile-stats__value">{{ (userStats.article_count ?? 0)|number_format(0) }}</span>
+    <span class="ips-profile-stats__label">{{ core__('article.articles') }}</span>
+  </a>
+  {% endif %}
+  <div class="ips-profile-stats__item ips-profile-stats__item--static">
+    <span class="ips-profile-stats__value ips-profile-stats__value--sm">{{ u.created_at is not empty ? u.created_at|date('d.m.Y') : '—' }}</span>
+    <span class="ips-profile-stats__label">{{ core__('profile.joined') }}</span>
+  </div>
+</div>
+{% endif %}

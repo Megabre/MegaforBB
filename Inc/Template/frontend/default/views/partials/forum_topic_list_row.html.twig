@@ -1,0 +1,78 @@
+{# Masaüstü tablo satırı — durum | yazar | başlık | boşluk | son yorum | cevap | görüntü #}
+{% set is_sticky = topic_row_theme|default('default') == 'sticky' %}
+{% set author = t.user %}
+{% set authorName = author ? author.username : '?' %}
+{% set lastUser = t.lastPostUser ?? author %}
+{% set lastName = lastUser ? lastUser.username : authorName %}
+{% set border_b = is_sticky ? 'border-amber-200/60' : 'border-gray-200' %}
+{% set ring_av = is_sticky ? 'border-amber-200' : 'border-gray-200' %}
+{% set hover_bg = is_sticky ? 'hover:bg-amber-50/50' : 'hover:bg-gray-50' %}
+{% set authorBanned = author and (author.is_banned|default(false)) %}
+{% set authorAvatarUrl = authorBanned ? banned_avatar_url() : (author and (author.avatar_path|default('')) != '' ? asset_url(author.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ avatar_display_name(authorName)|url_encode ~ '&size=64&background=1a252f&color=ffffff')) %}
+{% set lastBanned = lastUser and (lastUser.is_banned|default(false)) %}
+{% set lastAvatarUrl = lastBanned ? banned_avatar_url() : (lastUser and (lastUser.avatar_path|default('')) != '' ? asset_url(lastUser.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ avatar_display_name(lastName)|url_encode ~ '&size=64&background=1a252f&color=ffffff')) %}
+{% set goto_last = (t.last_post_at ?? '') and (t.last_post_id ?? '') %}
+{% set topic_href = core_url('topic/' ~ topic_url_path(t)) %}
+{% set last_href = topic_href ~ (goto_last ? '#post-' ~ t.last_post_id : '') %}
+{% set lastAt = t.last_post_at ?? t.created_at %}
+{% set row_unread = user and (t.is_unread ?? false) %}
+<tr class="border-b {{ border_b }} {{ hover_bg }} transition-colors {{ row_unread ? 'bg-amber-50/35' : '' }}">
+  <td class="px-1 py-2.5 align-middle w-9 text-center">
+    {% if user %}
+      {% set has_reply = t.viewer_has_replied ?? false %}
+      {% if row_unread %}
+      <span class="mfbb-topic-read-frame mfbb-topic-read-frame--compact relative inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 text-amber-800 border border-amber-400/90 shadow-sm" title="{{ core__('forum.topic_read_state_unread')|e('html_attr') }}{{ has_reply ? ' · ' ~ core__('forum.topic_viewer_replied_badge') : '' }}" role="img" aria-label="{{ core__('forum.topic_read_state_unread')|e('html_attr') }}">
+        <i class="fa-regular fa-eye-slash text-[13px]" aria-hidden="true"></i>
+        {% if has_reply %}<span class="mfbb-topic-replied-mark" title="{{ core__('forum.topic_viewer_replied_badge')|e('html_attr') }}"><i class="fa-solid fa-reply" aria-hidden="true"></i></span>{% endif %}
+      </span>
+      {% else %}
+      <span class="mfbb-topic-read-frame mfbb-topic-read-frame--compact relative inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-400/70 shadow-sm" title="{{ core__('forum.topic_read_state_read')|e('html_attr') }}{{ has_reply ? ' · ' ~ core__('forum.topic_viewer_replied_badge') : '' }}" role="img" aria-label="{{ core__('forum.topic_read_state_read')|e('html_attr') }}">
+        <i class="fa-solid fa-eye text-[12px]" aria-hidden="true"></i>
+        {% if has_reply %}<span class="mfbb-topic-replied-mark" title="{{ core__('forum.topic_viewer_replied_badge')|e('html_attr') }}"><i class="fa-solid fa-reply" aria-hidden="true"></i></span>{% endif %}
+      </span>
+      {% endif %}
+    {% else %}
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-slate-50 text-slate-300 border border-dashed border-slate-200" title="—" aria-hidden="true"><i class="fa-regular fa-eye-slash text-[11px]"></i></span>
+    {% endif %}
+  </td>
+  <td class="px-2 py-2.5 align-middle w-12 whitespace-nowrap">
+    <a href="{{ topic_href }}" class="inline-flex rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" title="{{ core_e(authorName) }}">
+      <img class="w-10 h-10 md:w-11 md:h-11 rounded-full object-cover border {{ ring_av }}" src="{{ core_e(authorAvatarUrl) }}" alt="{{ core_e(authorName) }}" width="44" height="44" loading="lazy">
+    </a>
+  </td>
+  <td class="px-2 py-2.5 align-middle min-w-0">
+    <a href="{{ topic_href }}" class="block no-underline text-inherit group/title min-w-0 max-w-full {{ row_unread ? 'font-medium' : '' }}">
+      <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+        {% if t.prefix %}{% include 'partials/topic_prefix_badge.html.twig' with { prefix_name: t.prefix.name, prefix_css_class: t.prefix.css_class, prefix_badge_bg: t.prefix.badge_bg|default(''), prefix_badge_text: t.prefix.badge_text|default(''), prefix_icon_class: t.prefix.icon_class|default('') } only %}{% endif %}
+        <span class="font-semibold text-[#1a252f] group-hover/title:text-blue-500 group-hover/title:underline text-sm md:text-base line-clamp-2 min-w-0 {{ row_unread ? '!text-[#0f172a]' : '' }}">
+          {% if (t.is_private ?? 0) == 1 %}<i class="fa-solid fa-lock text-amber-500 mr-1" title="{{ core__('topic.private_topic')|e('html_attr') }}"></i>{% endif %}
+          {{ core_e(t.title ?? '') }}
+          {% if (t.status ?? '') == 'scheduled' and (t.scheduled_remaining_text ?? '') != '' %}<span class="inline-block ml-1.5 text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded whitespace-nowrap">{{ core__('topic.scheduled_badge') }} {{ t.scheduled_remaining_text }}</span>{% endif %}
+        </span>
+      </div>
+      <div class="text-xs text-gray-500 mt-0.5 truncate">{{ core_e(authorName) }} · {{ core_e(t.created_at ?? '') }}</div>
+    </a>
+  </td>
+  <td class="w-2 p-0 min-w-[0.5rem]" aria-hidden="true"></td>
+  <td class="px-2 py-2 align-middle min-w-[9.5rem] max-w-[13rem]">
+    {% if goto_last %}
+    <a href="{{ core_e(last_href) }}" class="flex items-center gap-2.5 rounded-lg px-1 py-1 -mx-1 hover:bg-slate-100/80 transition-colors no-underline text-inherit text-left min-w-0" title="{{ core__('topic.go_last_post')|e('html_attr') }}">
+      <img class="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover border {{ ring_av }} shrink-0" src="{{ core_e(lastAvatarUrl) }}" alt="" width="40" height="40" loading="lazy">
+      <div class="min-w-0 flex-1">
+        <div class="text-[11px] text-slate-500 tabular-nums leading-tight tracking-tight">{{ lastAt ? lastAt|date('d-m-Y H:i:s') : '—' }}</div>
+        <div class="text-sm font-semibold text-[#1a252f] truncate">{{ core_e(lastName) }}</div>
+      </div>
+    </a>
+    {% else %}
+    <div class="flex items-center gap-2.5 px-1 py-1 opacity-60 min-w-0">
+      <img class="w-9 h-9 rounded-full object-cover border border-dashed {{ ring_av }} grayscale shrink-0" src="{{ core_e(lastAvatarUrl) }}" alt="" width="36" height="36" loading="lazy">
+      <div class="min-w-0">
+        <div class="text-[11px] text-slate-400">—</div>
+        <div class="text-xs text-slate-500 truncate">{{ core__('forum.no_messages_yet') }}</div>
+      </div>
+    </div>
+    {% endif %}
+  </td>
+  <td class="px-2 py-2.5 align-middle text-end tabular-nums text-sm font-semibold text-[#1a252f] w-16 whitespace-nowrap">{{ (t.reply_count ?? 0)|number_format(0, ',', '.') }}</td>
+  <td class="px-2 py-2.5 align-middle text-end tabular-nums text-sm font-semibold text-[#1a252f] w-20 whitespace-nowrap">{{ (t.view_count ?? 0)|number_format(0, ',', '.') }}</td>
+</tr>

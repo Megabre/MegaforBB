@@ -1,0 +1,84 @@
+{% set topicReaders  = topicReaders  ?? [] %}
+{% set topicReactors = topicReactors ?? [] %}
+{% set tvStats = topicViewerStats ?? {members: 0, guests: 0, total: 0, member_names: []} %}
+
+{# ── Toplam İzleyici Bar (her zaman göster; JS ile ApiController aynı tabloyu günceller) ── #}
+{% if tvStats.total > 0 or true %}
+<div id="topic-viewers-bar"
+     class="mt-3 flex flex-wrap items-start gap-x-2 gap-y-0.5 px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-xs text-slate-600 min-h-[32px]"
+     {% if topic is defined and topic.id is defined %}data-topic-id="{{ topic.id }}" data-api-ping="{{ core_url('api/topic/viewer-ping') }}" data-api-get="{{ core_url('api/topic/viewers') }}" data-viewer-token="{{ topicViewerClientToken|default('')|e('html_attr') }}"{% endif %}>
+  <i class="fa-solid fa-circle-dot text-green-500 text-[9px] animate-pulse mt-1 flex-shrink-0"></i>
+  <span id="tvb-summary" class="font-medium flex-shrink-0">
+    {% if tvStats.total == 0 %}
+      {{ core__('topic.readers_empty')|default('Su an izleyici yok.') }}
+    {% elseif tvStats.members > 0 and tvStats.guests > 0 %}
+      {{ core__('topic.active_viewers')|default('Konuyu toplam :total kisi okuyor. (:members kayitli uye ve :guests misafir)')|replace({':total': tvStats.total, ':members': tvStats.members, ':guests': tvStats.guests}) }}
+    {% elseif tvStats.members > 0 %}
+      {{ core__('topic.active_viewers_members_only')|default('Konuyu toplam :total kisi okuyor. (:members kayitli uye)')|replace({':total': tvStats.total, ':members': tvStats.members}) }}
+    {% else %}
+      {{ core__('topic.active_viewers_guests_only')|default('Konuyu toplam :total kisi okuyor. (:guests misafir)')|replace({':total': tvStats.total, ':guests': tvStats.guests}) }}
+    {% endif %}
+  </span>
+  {% if tvStats.member_names is defined and tvStats.member_names is not empty %}
+  <span class="text-slate-400 flex-shrink-0">&#183;</span>
+  <span id="tvb-names" class="text-slate-500">
+    {% for m in tvStats.member_names %}
+      <a href="{{ core_url('member/' ~ m.username|e('url')) }}" class="hover:text-indigo-600 hover:underline transition-colors">{{ core_e(m.username) }}</a>{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  </span>
+  {% endif %}
+</div>
+{% endif %}
+{# ── / Toplam İzleyici Bar ────────────────────────────────────────────── #}
+
+{% if topicReaders is not empty or topicReactors is not empty %}
+<div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-3">
+    <div class="flex items-center gap-1.5 mb-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+      <i class="fa-solid fa-eye text-indigo-400"></i>
+      {{ core__('topic.readers_title')|default('Konuyu okuyor') }}
+      <span class="ml-auto font-bold text-slate-700">{{ topicReaders|length > 15 ? 15 : topicReaders|length }}</span>
+    </div>
+    <div class="flex flex-wrap gap-1.5">
+      {% for reader in topicReaders %}
+        {% if loop.index <= 15 %}
+        {% set rAv = reader.avatar_path is not empty ? asset_url(reader.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(reader.username)|url_encode ~ '&size=64' %}
+        <a href="{{ core_url('member/' ~ reader.username|e('url')) }}" title="{{ core_e(reader.username) }}" class="group flex-shrink-0">
+          <img src="{{ core_e(rAv) }}" alt="{{ core_e(reader.username) }}" class="w-7 h-7 rounded-full object-cover border-2 border-white ring-1 ring-gray-200 group-hover:ring-indigo-400 transition-all shadow-sm" loading="lazy">
+        </a>
+        {% endif %}
+      {% endfor %}
+      {% if topicReaders|length > 15 %}
+      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 self-center">+{{ topicReaders|length - 15 }} daha</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-3">
+    <div class="flex items-center gap-1.5 mb-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+      <i class="fa-solid fa-heart text-rose-400"></i>
+      {{ core__('topic.reactors_title')|default('Tepki verenler') }}
+      <span class="ml-auto font-bold text-slate-700">{{ topicReactors|length > 20 ? 20 : topicReactors|length }}</span>
+    </div>
+    {% if topicReactors is empty %}
+      <p class="text-xs text-slate-400 italic">{{ core__('topic.reactors_empty')|default('Henuz tepki yok.') }}</p>
+    {% else %}
+      <div class="flex flex-wrap gap-1.5">
+        {% for reactor in topicReactors %}
+          {% if loop.index <= 20 %}
+          {% set rxAv = reactor.avatar_path is not empty ? asset_url(reactor.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(reactor.username)|url_encode ~ '&size=64' %}
+          <a href="{{ core_url('member/' ~ reactor.username|e('url')) }}" title="{{ core_e(reactor.username) }}" class="group flex-shrink-0">
+            <img src="{{ core_e(rxAv) }}" alt="{{ core_e(reactor.username) }}" class="w-7 h-7 rounded-full object-cover border-2 border-white ring-1 ring-gray-200 group-hover:ring-rose-400 transition-all shadow-sm" loading="lazy">
+          </a>
+          {% endif %}
+        {% endfor %}
+        {% if topicReactors|length > 20 %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 self-center">+{{ topicReactors|length - 20 }} daha</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endif %}

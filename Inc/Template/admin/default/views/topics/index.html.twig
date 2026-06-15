@@ -1,0 +1,232 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set topics = topics ?? [] %}
+{% set paginator = paginator ?? null %}
+{% set categories = categories ?? [] %}
+{% set forums = forums ?? [] %}
+{% set prefixes = prefixes ?? [] %}
+{% set filters = filters ?? {} %}
+{% set topicTypes = topicTypes ?? ['topic','article','question','poll'] %}
+{% set topicStatuses = topicStatuses ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.topic_settings.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.topic_settings.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {# Filtreler #}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.topic_settings.filters') }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{{ core_url(adminPath ~ '/topic-settings') }}" class="row g-2 flex-wrap align-items-end">
+                    <div class="col-auto">
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="{{ lang('admin.topic_settings.search_placeholder') }}" value="{{ filters.search|default('') }}" style="min-width:180px">
+                    </div>
+                    <div class="col-auto">
+                        <select name="category_id" class="form-select form-select-sm" style="min-width:140px">
+                            <option value="">{{ lang('admin.topic_settings.category') }} —</option>
+                            {% for c in categories %}
+                            <option value="{{ c.id }}" {{ (filters.category_id|default(0)) == c.id ? 'selected' : '' }}>{{ core_e(c.name) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <select name="forum_id" class="form-select form-select-sm" style="min-width:160px">
+                            <option value="">{{ lang('admin.topic_settings.forum') }} —</option>
+                            {% for f in forums %}
+                            <option value="{{ f.id }}" {{ (filters.forum_id|default(0)) == f.id ? 'selected' : '' }}>{{ core_e(f.name) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <select name="type" class="form-select form-select-sm" style="min-width:100px">
+                            <option value="">{{ lang('admin.topic_settings.type') }} —</option>
+                            <option value="topic" {{ (filters.type|default('')) == 'topic' ? 'selected' : '' }}>{{ lang('admin.topic_settings.type_topic') }}</option>
+                            <option value="article" {{ (filters.type|default('')) == 'article' ? 'selected' : '' }}>{{ lang('admin.topic_settings.type_article') }}</option>
+                            <option value="question" {{ (filters.type|default('')) == 'question' ? 'selected' : '' }}>{{ lang('admin.topic_settings.type_question') }}</option>
+                            <option value="poll" {{ (filters.type|default('')) == 'poll' ? 'selected' : '' }}>{{ lang('admin.topic_settings.type_poll') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <select name="status" class="form-select form-select-sm" style="min-width:120px">
+                            <option value="">{{ lang('admin.topic_settings.status') }} —</option>
+                            <option value="published" {{ (filters.status|default('')) == 'published' ? 'selected' : '' }}>{{ lang('admin.topic_settings.status_published') }}</option>
+                            <option value="scheduled" {{ (filters.status|default('')) == 'scheduled' ? 'selected' : '' }}>{{ lang('admin.topic_settings.status_scheduled') }}</option>
+                            <option value="cancelled" {{ (filters.status|default('')) == 'cancelled' ? 'selected' : '' }}>{{ lang('admin.topic_settings.status_cancelled') }}</option>
+                            <option value="trashed" {{ (filters.status|default('')) == 'trashed' ? 'selected' : '' }}>{{ lang('admin.topic_settings.status_trashed') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from|default('') }}" placeholder="{{ lang('admin.topic_settings.date_from') }}">
+                    </div>
+                    <div class="col-auto">
+                        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to|default('') }}" placeholder="{{ lang('admin.topic_settings.date_to') }}">
+                    </div>
+                    <div class="col-auto">
+                        <select name="sort" class="form-select form-select-sm" style="min-width:140px">
+                            <option value="id_desc" {{ (filters.sort|default('id_desc')) == 'id_desc' ? 'selected' : '' }}>ID (yeni)</option>
+                            <option value="id_asc" {{ (filters.sort|default('')) == 'id_asc' ? 'selected' : '' }}>ID (eski)</option>
+                            <option value="title_asc" {{ (filters.sort|default('')) == 'title_asc' ? 'selected' : '' }}>Başlık A–Z</option>
+                            <option value="title_desc" {{ (filters.sort|default('')) == 'title_desc' ? 'selected' : '' }}>Başlık Z–A</option>
+                            <option value="created_desc" {{ (filters.sort|default('')) == 'created_desc' ? 'selected' : '' }}>Oluşturma (yeni)</option>
+                            <option value="created_asc" {{ (filters.sort|default('')) == 'created_asc' ? 'selected' : '' }}>Oluşturma (eski)</option>
+                            <option value="last_post_desc" {{ (filters.sort|default('')) == 'last_post_desc' ? 'selected' : '' }}>Son mesaj</option>
+                            <option value="views_desc" {{ (filters.sort|default('')) == 'views_desc' ? 'selected' : '' }}>Görüntülenme</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <select name="per_page" class="form-select form-select-sm" style="width:80px">
+                            <option value="10" {{ (filters.per_page|default(25)) == 10 ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ (filters.per_page|default(25)) == 25 ? 'selected' : '' }}>25</option>
+                            <option value="50" {{ (filters.per_page|default(25)) == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ (filters.per_page|default(25)) == 100 ? 'selected' : '' }}>100</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-sm">{{ lang('admin.common.filter')|default('Filtrele') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Toplu işlem formu #}
+        <form method="post" action="{{ core_url(adminPath ~ '/topic-settings/bulk') }}" id="bulk-form">
+            {{ core_csrf_field('admin_topic_settings_bulk')|raw }}
+            <input type="hidden" name="return_search" value="{{ filters.search|default('') }}">
+            <input type="hidden" name="return_forum_id" value="{{ filters.forum_id|default('') }}">
+            <input type="hidden" name="return_category_id" value="{{ filters.category_id|default('') }}">
+            <input type="hidden" name="return_type" value="{{ filters.type|default('') }}">
+            <input type="hidden" name="return_status" value="{{ filters.status|default('') }}">
+            <input type="hidden" name="return_page" value="{{ filters.page|default(1) }}">
+            <div class="card">
+                <div class="card-header d-flex flex-wrap align-items-center gap-2">
+                    <span class="text-muted me-2">{{ lang('admin.topic_settings.bulk_actions') }}:</span>
+                    <select name="bulk_action" class="form-select form-select-sm" style="width:auto; max-width:220px">
+                        <option value="">— {{ lang('admin.topic_settings.bulk_actions') }} —</option>
+                        <option value="delete">{{ lang('admin.topic_settings.bulk_delete') }}</option>
+                        <option value="restore">{{ lang('admin.topic_settings.bulk_restore') }}</option>
+                        <option value="move_forum">{{ lang('admin.topic_settings.bulk_move_forum') }}</option>
+                        <option value="set_prefix">{{ lang('admin.topic_settings.bulk_set_prefix') }}</option>
+                        <option value="set_type">{{ lang('admin.topic_settings.bulk_set_type') }}</option>
+                        <option value="lock">{{ lang('admin.topic_settings.bulk_lock') }}</option>
+                        <option value="unlock">{{ lang('admin.topic_settings.bulk_unlock') }}</option>
+                        <option value="sticky">{{ lang('admin.topic_settings.bulk_sticky') }}</option>
+                        <option value="unsticky">{{ lang('admin.topic_settings.bulk_unsticky') }}</option>
+                        <option value="convert_to_article">{{ lang('admin.topic_settings.bulk_convert_article') }}</option>
+                        <option value="convert_to_topic">{{ lang('admin.topic_settings.bulk_convert_topic') }}</option>
+                        <option value="set_status">{{ lang('admin.topic_settings.bulk_set_status') }}</option>
+                        <option value="set_private">{{ lang('admin.topic_settings.bulk_set_private') }}</option>
+                        <option value="set_public">{{ lang('admin.topic_settings.bulk_set_public') }}</option>
+                    </select>
+                    <span id="bulk-extra" class="d-none">
+                        <select name="bulk_forum_id" class="form-select form-select-sm d-none" style="width:180px"><option value="">Forum seçin</option>{% for f in forums %}<option value="{{ f.id }}">{{ core_e(f.name) }}</option>{% endfor %}</select>
+                        <select name="bulk_prefix_id" class="form-select form-select-sm d-none" style="width:140px"><option value="">— Ön ek —</option>{% for p in prefixes %}<option value="{{ p.id }}">{{ core_e(p.name) }}</option>{% endfor %}</select>
+                        <select name="bulk_type" class="form-select form-select-sm d-none" style="width:120px"><option value="topic">Konu</option><option value="article">Makale</option><option value="question">Soru</option><option value="poll">Anket</option></select>
+                        <select name="bulk_status" class="form-select form-select-sm d-none" style="width:120px"><option value="published">Yayında</option><option value="scheduled">Planlanmış</option><option value="cancelled">İptal</option></select>
+                    </span>
+                    <button type="submit" class="btn btn-sm btn-primary" id="bulk-submit" disabled>{{ lang('admin.topic_settings.bulk_apply') }}</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="w-1"><input type="checkbox" id="select-all" title="Tümünü seç"></th>
+                                <th class="w-1">{{ lang('admin.topic_settings.col_id') }}</th>
+                                <th>{{ lang('admin.topic_settings.col_title') }}</th>
+                                <th>{{ lang('admin.topic_settings.col_forum') }}</th>
+                                <th>{{ lang('admin.topic_settings.col_author') }}</th>
+                                <th>{{ lang('admin.topic_settings.col_type') }}</th>
+                                <th>{{ lang('admin.topic_settings.col_replies') }}</th>
+                                <th>{{ lang('admin.topic_settings.col_views') }}</th>
+                                <th>{{ lang('admin.topic_settings.col_created') }}</th>
+                                <th>{{ lang('admin.topic_settings.col_status') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in topics %}
+                            <tr class="{{ t.deleted_at ? 'table-secondary' : '' }}">
+                                <td><input type="checkbox" name="topic_ids[]" value="{{ t.id }}" class="topic-cb"></td>
+                                <td class="text-muted">{{ t.id }}</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width:280px" title="{{ core_e(t.title ?? '') }}">
+                                        {% if t.is_sticky %}<i class="ti ti-pin text-warning me-1"></i>{% endif %}
+                                        {% if t.is_locked %}<i class="ti ti-lock text-muted me-1"></i>{% endif %}
+                                        {{ core_e((t.title ?? '—')|slice(0, 60)) }}{{ (t.title ?? '')|length > 60 ? '…' : '' }}
+                                    </div>
+                                </td>
+                                <td class="text-muted small">{{ t.forum ? core_e(t.forum.name) : '—' }}</td>
+                                <td class="text-muted small">{{ t.user ? core_e(t.user.username) : '—' }}</td>
+                                <td><span class="badge bg-secondary">{{ (t.type ?? 'topic') }}</span></td>
+                                <td>{{ t.reply_count ?? 0 }}</td>
+                                <td>{{ t.view_count ?? 0 }}</td>
+                                <td class="text-muted small">{{ t.created_at ? t.created_at|date('d.m.Y H:i') : '—' }}</td>
+                                <td>
+                                    {% if t.deleted_at %}
+                                    <span class="badge bg-danger">{{ lang('admin.topic_settings.status_trashed') }}</span>
+                                    {% else %}
+                                    <span class="badge bg-{{ (t.status ?? 'published') == 'published' ? 'success' : ((t.status ?? '') == 'scheduled' ? 'info' : 'secondary') }}">{{ t.status ?? 'published' }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ core_url(adminPath ~ '/topic-settings/edit/' ~ t.id) }}" class="btn btn-sm btn-ghost-primary">{{ lang('admin.topic_settings.btn_edit') }}</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="11" class="text-center text-muted py-4">{{ lang('admin.topic_settings.no_topics') }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if paginator and pageLinks|default([])|length > 0 %}
+                <div class="card-footer d-flex align-items-center">
+                    <p class="m-0 text-muted small">{{ lang('admin.common.showing')|default('Gösterilen') }} {{ paginator.firstItem ?? 0 }}–{{ paginator.lastItem ?? 0 }} / {{ paginator.total }}</p>
+                    <ul class="pagination m-0 ms-auto">
+                        {% for link in pageLinks %}
+                        <li class="page-item {{ link.active ? 'active' : '' }}"><a class="page-link" href="{{ link.url }}">{{ link.label }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var selectAll = document.getElementById('select-all');
+    var checkboxes = document.querySelectorAll('.topic-cb');
+    var bulkSubmit = document.getElementById('bulk-submit');
+    var bulkAction = document.querySelector('select[name="bulk_action"]');
+    var bulkExtra = document.getElementById('bulk-extra');
+    if (selectAll) selectAll.addEventListener('change', function() { checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; }); updateBulk(); });
+    checkboxes.forEach(function(cb) { cb.addEventListener('change', updateBulk); });
+    if (bulkAction) bulkAction.addEventListener('change', function() {
+        var v = bulkAction.value;
+        bulkExtra.querySelectorAll('select').forEach(function(s) { s.classList.add('d-none'); });
+        if (v === 'move_forum') bulkExtra.querySelector('select[name="bulk_forum_id"]').classList.remove('d-none');
+        if (v === 'set_prefix') bulkExtra.querySelector('select[name="bulk_prefix_id"]').classList.remove('d-none');
+        if (v === 'set_type') bulkExtra.querySelector('select[name="bulk_type"]').classList.remove('d-none');
+        if (v === 'set_status') bulkExtra.querySelector('select[name="bulk_status"]').classList.remove('d-none');
+        bulkExtra.classList.toggle('d-none', !['move_forum','set_prefix','set_type','set_status'].includes(v));
+        updateBulk();
+    });
+    function updateBulk() {
+        var any = Array.prototype.slice.call(checkboxes).some(function(cb) { return cb.checked; });
+        bulkSubmit.disabled = !any || !bulkAction.value;
+    }
+    updateBulk();
+});
+</script>
+{% endblock %}

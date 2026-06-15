@@ -1,0 +1,128 @@
+{# İstatistik sayfası — grafik kartları (dashboard) #}
+{% set s = userStats ?? {} %}
+{% set c = statsCharts ?? null %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set idelistEnabled = idelistEnabled ?? false %}
+{% set portalEnabled = portal_enabled ?? false %}
+{% if c %}
+{% set chartJson = {
+  labels: c.labels,
+  content: c.content,
+  topics: c.topics,
+  posts: c.posts,
+  articles: c.articles,
+  ideas: c.ideas,
+  likes: c.likes,
+  rep_received: c.rep_received,
+  deltas: c.deltas
+}|json_encode %}
+<div class="ips-stats-dashboard" id="ips-stats-dashboard"
+  data-charts="{{ chartJson|e('html_attr') }}"
+  data-this-month="{{ core_e(core__('member.stats_this_month')) }}"
+  data-month-delta="{{ core_e(core__('member.stats_month_delta')) }}">
+  <div class="ips-dash-cards">
+    <div class="ips-dash-card ips-dash-card--content" data-series="content">
+      <div class="ips-dash-card__top">
+        <span class="ips-dash-card__icon"><i class="fa-solid fa-layer-group"></i></span>
+        <span class="ips-dash-card__label">{{ core__('member.content_count') }}</span>
+      </div>
+      <div class="ips-dash-card__value">{{ (s.content_count ?? 0)|number_format(0) }}</div>
+      <div class="ips-dash-card__trend" data-delta="content"></div>
+      <canvas class="ips-dash-card__chart" height="56"></canvas>
+    </div>
+    <div class="ips-dash-card ips-dash-card--topics" data-series="topics">
+      <div class="ips-dash-card__top">
+        <span class="ips-dash-card__icon"><i class="fa-solid fa-folder-open"></i></span>
+        <span class="ips-dash-card__label">{{ core__('profile.topics') }}</span>
+      </div>
+      <div class="ips-dash-card__value">{{ (s.topic_count ?? 0)|number_format(0) }}</div>
+      <div class="ips-dash-card__trend" data-delta="topics"></div>
+      <canvas class="ips-dash-card__chart" height="56"></canvas>
+    </div>
+    <div class="ips-dash-card ips-dash-card--posts" data-series="posts">
+      <div class="ips-dash-card__top">
+        <span class="ips-dash-card__icon"><i class="fa-solid fa-comments"></i></span>
+        <span class="ips-dash-card__label">{{ core__('profile.posts') }}</span>
+      </div>
+      <div class="ips-dash-card__value">{{ (s.forum_reply_count ?? s.post_count ?? 0)|number_format(0) }}</div>
+      <div class="ips-dash-card__trend" data-delta="posts"></div>
+      <canvas class="ips-dash-card__chart" height="56"></canvas>
+    </div>
+    {% if portalEnabled %}
+    <div class="ips-dash-card ips-dash-card--articles" data-series="articles">
+      <div class="ips-dash-card__top">
+        <span class="ips-dash-card__icon"><i class="fa-solid fa-newspaper"></i></span>
+        <span class="ips-dash-card__label">{{ core__('article.articles') }}</span>
+      </div>
+      <div class="ips-dash-card__value">{{ (s.article_count ?? 0)|number_format(0) }}</div>
+      <div class="ips-dash-card__trend" data-delta="articles"></div>
+      <canvas class="ips-dash-card__chart" height="56"></canvas>
+    </div>
+    {% endif %}
+    {% if idelistEnabled %}
+    <div class="ips-dash-card ips-dash-card--ideas" data-series="ideas">
+      <div class="ips-dash-card__top">
+        <span class="ips-dash-card__icon"><i class="fa-solid fa-lightbulb"></i></span>
+        <span class="ips-dash-card__label">{{ core__('member.contributions_ideas') }}</span>
+      </div>
+      <div class="ips-dash-card__value">{{ (s.idea_count ?? 0)|number_format(0) }}</div>
+      <div class="ips-dash-card__trend" data-delta="ideas"></div>
+      <canvas class="ips-dash-card__chart" height="56"></canvas>
+    </div>
+    {% endif %}
+    <div class="ips-dash-card ips-dash-card--likes" data-series="likes">
+      <div class="ips-dash-card__top">
+        <span class="ips-dash-card__icon"><i class="fa-solid fa-heart"></i></span>
+        <span class="ips-dash-card__label">{{ core__('member.stats_likes_received') }}</span>
+      </div>
+      <div class="ips-dash-card__value">{{ (s.like_count ?? 0)|number_format(0) }}</div>
+      <div class="ips-dash-card__trend" data-delta="likes"></div>
+      <canvas class="ips-dash-card__chart" height="56"></canvas>
+    </div>
+    {% if reputationEnabled %}
+    <div class="ips-dash-card ips-dash-card--rep" data-series="rep_received">
+      <div class="ips-dash-card__top">
+        <span class="ips-dash-card__icon"><i class="fa-solid fa-star"></i></span>
+        <span class="ips-dash-card__label">{{ core__('member.stats_rep_received') }}</span>
+      </div>
+      <div class="ips-dash-card__value"><span class="text-green-600">+{{ (s.reputation_positive ?? 0)|number_format(0) }}</span> <span class="text-red-500">/{{ (s.reputation_negative ?? 0)|number_format(0) }}</span></div>
+      <div class="ips-dash-card__trend" data-delta="rep_received"></div>
+      <canvas class="ips-dash-card__chart" height="56"></canvas>
+    </div>
+    {% endif %}
+    <div class="ips-dash-card ips-dash-card--reward">
+      <div class="ips-dash-card__top">
+        <span class="ips-dash-card__icon"><i class="fa-solid fa-trophy"></i></span>
+        <span class="ips-dash-card__label">{{ core__('profile.reward_points_label') }}</span>
+      </div>
+      <div class="ips-dash-card__value">{{ (s.reward_points ?? 0)|number_format(0) }}</div>
+      <div class="ips-dash-card__trend ips-dash-card__trend--muted">{{ core__('member.stats_reward_note') }}</div>
+    </div>
+  </div>
+
+  <section class="ips-dash-chart-panel">
+    <header class="ips-dash-chart-panel__head">
+      <h3><i class="fa-solid fa-chart-line"></i> {{ core__('member.stats_activity_chart') }}</h3>
+      <p>{{ core__('member.stats_activity_chart_desc') }}</p>
+    </header>
+    <div class="ips-dash-chart-panel__body">
+      <canvas id="ips-stats-main-chart" height="220"></canvas>
+    </div>
+    <div class="ips-dash-chart-panel__legend">
+      <span class="ips-dash-legend-item ips-dash-legend-item--content"><i></i>{{ core__('member.content_count') }}</span>
+      <span class="ips-dash-legend-item ips-dash-legend-item--topics"><i></i>{{ core__('profile.topics') }}</span>
+      <span class="ips-dash-legend-item ips-dash-legend-item--posts"><i></i>{{ core__('profile.posts') }}</span>
+      {% if portalEnabled %}<span class="ips-dash-legend-item ips-dash-legend-item--articles"><i></i>{{ core__('article.articles') }}</span>{% endif %}
+    </div>
+  </section>
+
+  <section class="ips-profile-panel ips-profile-panel--nested">
+    <header class="ips-profile-panel__head">
+      <h2 class="ips-profile-panel__title"><i class="fa-solid fa-table-cells"></i> {{ core__('member.stats_detail_grid') }}</h2>
+    </header>
+    <div class="ips-profile-panel__body">
+      {% include 'partials/profile_stats_grid.html.twig' with { userStats: userStats, reputationEnabled: reputationEnabled, idelistEnabled: idelistEnabled, isOwnProfile: isOwnProfile ?? false } %}
+    </div>
+  </section>
+</div>
+{% endif %}

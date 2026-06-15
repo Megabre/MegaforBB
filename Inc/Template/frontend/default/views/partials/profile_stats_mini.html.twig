@@ -1,0 +1,36 @@
+{# Minimal istatistik chip'leri — bio altında #}
+{% set s = userStats ?? {} %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% set idelistEnabled = idelistEnabled ?? (idelist_enabled ?? false) %}
+{% set portalEnabled = portal_enabled ?? false %}
+{% set base = core_url('member/' ~ member_url_path(profileUser ?? null)) %}
+<div class="ips-profile-stat-mini">
+  <a href="{{ base }}" class="ips-profile-stat-mini__chip ips-profile-stat-mini__chip--content" title="{{ core__('member.content_count') }}">
+    <i class="fa-solid fa-layer-group"></i><span class="ips-profile-stat-mini__val">{{ (s.content_count ?? 0)|number_format(0) }}</span>
+  </a>
+  <a href="{{ base }}?filter=forum" class="ips-profile-stat-mini__chip ips-profile-stat-mini__chip--topics" title="{{ core__('profile.topics') }}">
+    <i class="fa-solid fa-folder-open"></i><span class="ips-profile-stat-mini__val">{{ (s.topic_count ?? 0)|number_format(0) }}</span>
+  </a>
+  <a href="{{ base }}?filter=forum" class="ips-profile-stat-mini__chip ips-profile-stat-mini__chip--posts" title="{{ core__('profile.posts') }}">
+    <i class="fa-solid fa-comments"></i><span class="ips-profile-stat-mini__val">{{ (s.forum_reply_count ?? s.post_count ?? 0)|number_format(0) }}</span>
+  </a>
+  <span class="ips-profile-stat-mini__chip ips-profile-stat-mini__chip--likes" title="{{ core__('member.stats_likes_received') }}">
+    <i class="fa-solid fa-heart"></i><span class="ips-profile-stat-mini__val">{{ (s.like_count ?? 0)|number_format(0) }}</span>
+  </span>
+  {% if reputationEnabled %}
+  <a href="{{ base }}/stats" class="ips-profile-stat-mini__chip ips-profile-stat-mini__chip--rep" title="{{ core__('member.stats_rep_net') }}">
+    <i class="fa-solid fa-star"></i><span class="ips-profile-stat-mini__val">{{ (s.reputation_net ?? 0)|number_format(0) }}</span>
+  </a>
+  {% endif %}
+  <a href="{{ base }}/stats" class="ips-profile-stat-mini__chip ips-profile-stat-mini__chip--reward" title="{{ core__('profile.reward_points_label') }}">
+    <i class="fa-solid fa-trophy"></i><span class="ips-profile-stat-mini__val">{{ (s.reward_points ?? 0)|number_format(0) }}</span>
+  </a>
+  {% if portalEnabled and (s.article_count ?? 0) > 0 %}
+  <a href="{{ base }}?filter=articles" class="ips-profile-stat-mini__chip ips-profile-stat-mini__chip--articles" title="{{ core__('article.articles') }}">
+    <i class="fa-solid fa-newspaper"></i><span class="ips-profile-stat-mini__val">{{ (s.article_count ?? 0)|number_format(0) }}</span>
+  </a>
+  {% endif %}
+  <a href="{{ base }}/stats" class="ips-profile-stat-mini__chip ips-profile-stat-mini__chip--more" title="{{ core__('member.tab_stats') }}">
+    <i class="fa-solid fa-chart-bar"></i>
+  </a>
+</div>

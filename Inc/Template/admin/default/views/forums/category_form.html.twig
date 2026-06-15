@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set category = category ?? null %}
+{% set allPrefixes = allPrefixes ?? [] %}
+{% set categoryPrefixIds = categoryPrefixIds ?? [] %}
+{% set isEdit = category and category.id %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle) }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/forums') }}" class="btn btn-outline-secondary">{{ core_e(admin__('common.cancel')) }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row row-cards">
+            <div class="col-12">
+                <div class="card">
+                    <form action="{{ isEdit ? core_url(adminPath ~ '/categories/update/' ~ category.id) : core_url(adminPath ~ '/categories/store') }}" method="post">
+                        {{ core_csrf_field()|raw }}
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label required">{{ core_e(admin__('categories.name')) }}</label>
+                                <input type="text" class="form-control" name="name" value="{{ core_e(category.name ?? '') }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ core_e(admin__('categories.description')) }}</label>
+                                <textarea class="form-control" name="description" rows="3">{{ core_e(category.description ?? '') }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ core_e(admin__('categories.icon')) }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text w-5 text-center d-flex justify-content-center"><i id="category-icon-preview" class="{{ (category.icon ?? '') != '' ? ((' ' in (category.icon ?? '')) ? (category.icon) : 'fa-solid fa-' ~ (category.icon)) : 'fa-solid fa-comments' }}"></i></span>
+                                    <input type="text" class="form-control" name="icon" id="category-icon-input" value="{{ core_e(category.icon ?? '') }}" placeholder="{{ core_e(admin__('forums.icon_category_ph')) }}">
+                                    <button class="btn btn-outline-secondary icon-selector-btn" type="button" data-target="category-icon-input" data-preview="category-icon-preview">{{ lang('admin.forums.select') }}</button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ lang('admin.forums.category_color') }}</label>
+                                <input type="color" class="form-control form-control-color" name="color" value="{{ core_e(category.color ?? '#cccccc') }}" title="{{ lang('admin.forums.category_color_title') }}">
+                                <small class="form-hint">{{ lang('admin.forums.category_color_hint') }}</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ core_e(admin__('categories.sort_order')) }}</label>
+                                <input type="number" class="form-control" name="sort_order" value="{{ category.sort_order ?? 0 }}">
+                                <small class="form-hint">{{ core_e(admin__('categories.sort_hint')) }}</small>
+                            </div>
+                            <div class="mb-3">
+                                <input type="hidden" name="is_article_category" value="0">
+                                <label class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" name="is_article_category" value="1" {{ (category.is_article_category ?? false) ? 'checked' : '' }}>
+                                    <span class="form-check-label">{{ core_e(lang('admin.categories.is_article_category')) }}</span>
+                                </label>
+                                <small class="form-hint text-muted d-block mt-1">{{ core_e(lang('admin.categories.is_article_category_hint')) }}</small>
+                            </div>
+
+                            <hr class="my-4">
+                            <h3 class="card-title">{{ core_e(admin__('prefixes.category_assign_title')) }}</h3>
+                            <p class="text-muted small mb-3">{{ core_e(admin__('prefixes.category_assign_hint')) }}</p>
+                            {% if allPrefixes is empty %}
+                            <p class="text-muted small">{{ core_e(admin__('prefixes.no_prefixes_assign')) }}</p>
+                            {% else %}
+                            <div class="row g-2" style="max-height:220px;overflow-y:auto;">
+                                {% for p in allPrefixes %}
+                                <div class="col-md-4 col-lg-3">
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="category_prefix_ids[]" value="{{ p.id }}" {{ p.id in categoryPrefixIds ? 'checked' : '' }}>
+                                        <span class="form-check-label">{{ core_e(p.name) }}</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer text-end">
+                            <button type="submit" class="btn btn-primary">{{ core_e(admin__('common.save')) }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

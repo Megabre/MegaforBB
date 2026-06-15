@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.smiley.page_title') }}</h2>
+                <div class="text-muted">{{ lang('admin.smiley.description') }}</div>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/smileys/create') }}" class="btn btn-primary">{{ lang('admin.smiley.add') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('smiley_ok', []) %}
+            <div class="alert alert-success">{{ core_e(msg) }}</div>
+        {% endfor %}
+        {% for msg in app.session.getFlashBag().get('smiley_error', []) %}
+            <div class="alert alert-danger">{{ core_e(msg) }}</div>
+        {% endfor %}
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.smiley.settings_title') }}</h3>
+            </div>
+            <form action="{{ core_url(adminPath ~ '/smileys/settings') }}" method="post">
+                {{ core_csrf_field('admin_smiley')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="hidden" name="smiley_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="smiley_enabled" value="1" class="form-check-input" {{ smiley_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.smiley.smiley_enabled') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="smiley_use_gif" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="smiley_use_gif" value="1" class="form-check-input" {{ smiley_use_gif ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.smiley.smiley_use_gif') }}</span>
+                        </label>
+                        <small class="form-hint">{{ lang('admin.smiley.smiley_use_gif_hint') }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.smiley.gif_max_size_kb') }}</label>
+                        <input type="number" name="smiley_gif_max_size_kb" class="form-control" value="{{ smiley_gif_max_size_kb }}" min="10" max="500" style="max-width: 120px;">
+                        <small class="form-hint">{{ lang('admin.smiley.gif_max_size_hint') }}</small>
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.smiley.list_title') }}</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.smiley.code') }}</th>
+                            <th>{{ lang('admin.smiley.unicode_char') }}</th>
+                            <th>{{ lang('admin.smiley.gif_preview') }}</th>
+                            <th>{{ lang('admin.smiley.sort_order') }}</th>
+                            <th class="w-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if smileys is empty %}
+                        <tr><td colspan="5" class="text-center text-muted">{{ lang('admin.smiley.no_smileys') }}</td></tr>
+                        {% else %}
+                        {% for s in smileys %}
+                        <tr>
+                            <td><code>{{ core_e(s.code) }}</code></td>
+                            <td>{% if s.unicode_char %}<span class="text-2xl">{{ s.unicode_char }}</span>{% else %}—{% endif %}</td>
+                            <td>{% if s.image_path %}<img src="{{ asset_url(s.image_path) }}" alt="" class="mfbb-smiley-admin" style="max-width:32px;height:auto">{% else %}—{% endif %}</td>
+                            <td>{{ s.sort_order ?? 0 }}</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a href="{{ core_url(adminPath ~ '/smileys/edit/' ~ s.id) }}" class="btn btn-sm btn-white">{{ lang('admin.common.edit') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/smileys/delete/' ~ s.id) }}" method="post" onsubmit="return confirm('{{ lang('admin.smiley.confirm_delete') }}');" class="d-inline">
+                                        {{ core_csrf_field('admin_smiley')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,373 @@
+/**
+ * Docusaurus-style documentation layout and typography
+ * Infima-inspired variables and structure
+ */
+
+/* Stay inside site container */
+.doc-layout-wrapper {
+  width: 100%;
+  min-height: 20rem;
+  background: var(--doc-bg, #fff);
+}
+
+/* Docusaurus doc root: flex */
+.doc-root {
+  display: flex;
+  width: 100%;
+}
+
+/* Sidebar: fixed width, Docusaurus gray */
+.doc-sidebar {
+  flex: 0 0 300px;
+  width: 300px;
+  background: var(--doc-sidebar-bg, #f7f7f8);
+  border-right: 1px solid var(--doc-sidebar-border, #e6e6e6);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.doc-sidebar-inner {
+  padding: 1rem 0;
+}
+
+.doc-sidebar-header {
+  padding: 0.75rem 1rem 0.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--doc-sidebar-border, #e6e6e6);
+}
+
+.doc-sidebar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--doc-sidebar-title, #1c1e21);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.doc-sidebar-title:hover {
+  color: var(--doc-link, #3578e5);
+}
+
+.doc-sidebar-title i {
+  color: var(--doc-sidebar-muted, #8d949e);
+  font-size: 0.9rem;
+}
+
+/* Menu list: Docusaurus style */
+.doc-sidebar .doc-sidebar-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+
+.doc-sidebar .doc-sidebar-menu li {
+  margin: 0;
+  padding: 0;
+}
+
+.doc-sidebar .doc-sidebar-section-link {
+  display: block;
+  padding: 0.375rem 1rem;
+  color: var(--doc-menu-color, #444950);
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.doc-sidebar .doc-sidebar-section-link:hover {
+  background: var(--doc-menu-hover-bg, rgba(0, 0, 0, 0.05));
+  color: var(--doc-link, #3578e5);
+}
+
+.doc-sidebar .doc-sidebar-section-link.doc-sidebar-section-link--active {
+  color: var(--doc-link, #3578e5);
+  background: var(--doc-menu-active-bg, rgba(53, 120, 229, 0.08));
+  border-left: 3px solid var(--doc-link, #3578e5);
+  padding-left: calc(1rem - 3px);
+}
+
+.doc-sidebar .doc-sidebar-page-link {
+  display: block;
+  padding: 0.25rem 1rem 0.25rem 1.5rem;
+  color: var(--doc-menu-color, #606770);
+  text-decoration: none;
+  font-weight: 400;
+  font-size: 13px;
+  transition: background 0.2s, color 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.doc-sidebar .doc-sidebar-page-link:hover {
+  color: var(--doc-link, #3578e5);
+  background: var(--doc-menu-hover-bg, rgba(0, 0, 0, 0.03));
+}
+
+.doc-sidebar .doc-sidebar-page-link.doc-sidebar-page-link--active {
+  color: var(--doc-link, #3578e5);
+  font-weight: 500;
+  background: var(--doc-menu-active-bg, rgba(53, 120, 229, 0.08));
+  border-left-color: var(--doc-link, #3578e5);
+  padding-left: calc(1.5rem - 3px);
+}
+
+/* Tree indent: each level adds 1rem so hierarchy is visible */
+.doc-sidebar .doc-sidebar-level-0 {
+  padding-left: 0;
+}
+.doc-sidebar .doc-sidebar-level-1 { padding-left: 1rem; }
+.doc-sidebar .doc-sidebar-level-2 { padding-left: 1rem; }
+.doc-sidebar .doc-sidebar-level-3 { padding-left: 1rem; }
+.doc-sidebar .doc-sidebar-level-4 { padding-left: 1rem; }
+.doc-sidebar .doc-sidebar-level-5 { padding-left: 1rem; }
+.doc-sidebar .doc-sidebar-level-6 { padding-left: 1rem; }
+
+/* Pages under a section: one level indent */
+.doc-sidebar .doc-sidebar-pages {
+  margin-left: 0;
+  padding-left: 1rem;
+  border-left: 1px solid var(--doc-sidebar-border, #e6e6e6);
+  margin-top: 0.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.doc-sidebar .doc-sidebar-pages .doc-sidebar-page-link {
+  padding-left: 0.75rem;
+}
+.doc-sidebar .doc-sidebar-pages .doc-sidebar-page-link.doc-sidebar-page-link--active {
+  padding-left: calc(0.75rem - 3px);
+}
+
+/* Nested section links: optional left border for tree feel */
+.doc-sidebar .doc-sidebar-level-1,
+.doc-sidebar .doc-sidebar-level-2,
+.doc-sidebar .doc-sidebar-level-3,
+.doc-sidebar .doc-sidebar-level-4,
+.doc-sidebar .doc-sidebar-level-5,
+.doc-sidebar .doc-sidebar-level-6 {
+  border-left: 1px solid var(--doc-sidebar-border, #e6e6e6);
+  margin-left: 0.25rem;
+}
+
+/* Main content area */
+.doc-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2rem 3rem 3rem;
+  max-width: 100%;
+}
+
+.doc-main-inner {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Breadcrumb: Docusaurus minimal */
+.doc-breadcrumb {
+  font-size: 0.875rem;
+  color: var(--doc-muted, #8d949e);
+  margin-bottom: 1rem;
+}
+
+.doc-breadcrumb a {
+  color: var(--doc-muted, #8d949e);
+  text-decoration: none;
+}
+
+.doc-breadcrumb a:hover {
+  color: var(--doc-link, #3578e5);
+  text-decoration: underline;
+}
+
+.doc-breadcrumb .doc-breadcrumb-sep {
+  margin: 0 0.4rem;
+  color: var(--doc-muted, #bec3c9);
+}
+
+.doc-breadcrumb .doc-breadcrumb-current {
+  color: var(--doc-heading, #1c1e21);
+  font-weight: 500;
+}
+
+/* Article: Docusaurus typography */
+.doc-article {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--doc-content, #1c1e21);
+}
+
+.doc-article h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  line-height: 1.25;
+  color: var(--doc-heading, #1c1e21);
+}
+
+.doc-article h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--doc-border, #ebedf0);
+  line-height: 1.25;
+}
+
+.doc-article h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.doc-article h4, .doc-article h5, .doc-article h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.doc-article p {
+  margin-bottom: 1rem;
+}
+
+.doc-article a {
+  color: var(--doc-link, #3578e5);
+  text-decoration: none;
+}
+
+.doc-article a:hover {
+  text-decoration: underline;
+}
+
+.doc-article ul, .doc-article ol {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.doc-article li {
+  margin: 0.25rem 0;
+}
+
+.doc-article code {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 90%;
+  background: var(--doc-code-bg, #f6f8fa);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--doc-code-border, #e6e6e6);
+}
+
+.doc-article pre {
+  background: var(--doc-code-bg, #f6f8fa);
+  border: 1px solid var(--doc-code-border, #e6e6e6);
+  border-radius: 0.4rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.doc-article pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  font-size: inherit;
+}
+
+.doc-article blockquote {
+  margin: 1rem 0;
+  padding: 0 1rem;
+  border-left: 4px solid var(--doc-border, #dadde1);
+  color: var(--doc-muted, #606770);
+}
+
+.doc-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9375rem;
+}
+
+.doc-article th,
+.doc-article td {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--doc-border, #e6e6e6);
+  text-align: left;
+}
+
+.doc-article th {
+  font-weight: 600;
+  background: var(--doc-table-head-bg, #f5f6f7);
+}
+
+.doc-article hr {
+  border: none;
+  height: 1px;
+  background: var(--doc-border, #ebedf0);
+  margin: 1.5rem 0;
+}
+
+/* Doc landing (index) */
+.doc-landing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.doc-landing-icon {
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--doc-menu-active-bg, rgba(53, 120, 229, 0.1));
+  color: var(--doc-link, #3578e5);
+  border-radius: 0.75rem;
+  font-size: 1.75rem;
+  margin: 0 auto 1rem;
+}
+
+.doc-landing h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--doc-heading, #1c1e21);
+}
+
+.doc-landing p {
+  color: var(--doc-muted, #606770);
+  margin: 0;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Mobile: hide sidebar by default, show as drawer or stack */
+@media (max-width: 996px) {
+  .doc-root {
+    flex-direction: column;
+  }
+
+  .doc-sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: auto;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--doc-sidebar-border, #e6e6e6);
+  }
+
+  .doc-main {
+    padding: 1.5rem 1.25rem 2rem;
+  }
+}

@@ -1,0 +1,99 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set profileUser = profileUser ?? null %}
+{% if not profileUser %}
+  <p class="p-4 text-gray-500">Kullanıcı bulunamadı.</p>
+{% else %}
+{% set baseUrl = core_url('member/' ~ (profileUser.username|e('url'))) %}
+{% set tab = tab ?? 'positive' %}
+{% set positive = positive ?? [] %}
+{% set negative = negative ?? [] %}
+
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-md shadow-sm px-4 py-2">
+    <ol class="flex items-center gap-2">
+      <li><a href="{{ core_url('') }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">Ana Sayfa</a></li>
+      <li>›</li>
+      <li><a href="{{ baseUrl }}" class="text-[#1a252f] hover:text-blue-500 hover:underline">{{ core_e(profileUser.username) }}</a></li>
+      <li>›</li>
+      <li class="text-gray-700">Reputation</li>
+    </ol>
+  </nav>
+</div>
+<div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
+    <h1 class="text-xl font-semibold text-[#1a252f]">{{ core_e(profileUser.username) }} — Reputation</h1>
+    <div class="flex rounded-lg border border-gray-200 overflow-hidden">
+      <a href="{{ baseUrl }}/reputation?tab=positive" class="px-4 py-2 text-sm font-medium {{ tab == 'positive' ? 'bg-green-100 text-green-800' : 'bg-white text-gray-600 hover:bg-gray-50' }}">+ Rep ({{ positive|length }})</a>
+      <a href="{{ baseUrl }}/reputation?tab=negative" class="px-4 py-2 text-sm font-medium {{ tab == 'negative' ? 'bg-red-100 text-red-800' : 'bg-white text-gray-600 hover:bg-gray-50' }}">− Rep ({{ negative|length }})</a>
+    </div>
+  </div>
+  {% if tab == 'negative' %}
+  {% if negative is empty %}
+  <div class="p-8 text-center text-gray-500">Negatif reputation kaydı yok.</div>
+  {% else %}
+  <ul class="divide-y divide-gray-200">
+    {% for r in negative %}
+    <li class="px-6 py-4 hover:bg-gray-50">
+      <div class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-sm font-bold">−</span>
+        <div class="min-w-0 flex-1">
+          <div class="text-sm text-gray-500">
+            <a href="{{ core_url('member/' ~ (r.from_username ?? '')|e('url')) }}" class="font-medium text-[#1a252f] hover:underline">{{ core_e(r.from_username ?? '') }}</a>
+            <span class="mx-1">·</span>
+            <span>{{ core_e(r.created_at ?? '') }}</span>
+          </div>
+          {% if r.post_id ?? null %}
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            {% if r.post_url ?? '' %}
+            <a href="{{ r.post_url }}" class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-slate-100 text-[#1a252f] hover:bg-slate-200 border border-slate-200 transition-colors">{{ core__('member.rep_show_message') }}</a>
+            {% if r.topic_title ?? '' %}<span class="text-xs text-gray-500 truncate max-w-[min(100%,18rem)]" title="{{ core_e(r.topic_title) }}">{{ core_e(r.topic_title) }}</span>{% endif %}
+            {% else %}
+            <p class="text-gray-500 text-sm">{{ core__('member.rep_post_unavailable') }}</p>
+            {% endif %}
+          </div>
+          {% endif %}
+          {% if r.comment ?? '' %}<p class="mt-1 text-gray-700">{{ (r.comment ?? '')|nl2br }}</p>{% endif %}
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% else %}
+  {% if positive is empty %}
+  <div class="p-8 text-center text-gray-500">Pozitif reputation kaydı yok.</div>
+  {% else %}
+  <ul class="divide-y divide-gray-200">
+    {% for r in positive %}
+    <li class="px-6 py-4 hover:bg-gray-50">
+      <div class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-bold">+</span>
+        <div class="min-w-0 flex-1">
+          <div class="text-sm text-gray-500">
+            <a href="{{ core_url('member/' ~ (r.from_username ?? '')|e('url')) }}" class="font-medium text-[#1a252f] hover:underline">{{ core_e(r.from_username ?? '') }}</a>
+            <span class="mx-1">·</span>
+            <span>{{ core_e(r.created_at ?? '') }}</span>
+          </div>
+          {% if r.post_id ?? null %}
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            {% if r.post_url ?? '' %}
+            <a href="{{ r.post_url }}" class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-slate-100 text-[#1a252f] hover:bg-slate-200 border border-slate-200 transition-colors">{{ core__('member.rep_show_message') }}</a>
+            {% if r.topic_title ?? '' %}<span class="text-xs text-gray-500 truncate max-w-[min(100%,18rem)]" title="{{ core_e(r.topic_title) }}">{{ core_e(r.topic_title) }}</span>{% endif %}
+            {% else %}
+            <p class="text-gray-500 text-sm">{{ core__('member.rep_post_unavailable') }}</p>
+            {% endif %}
+          </div>
+          {% endif %}
+          {% if r.comment ?? '' %}<p class="mt-1 text-gray-700">{{ (r.comment ?? '')|nl2br }}</p>{% endif %}
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

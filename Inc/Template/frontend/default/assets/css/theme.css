@@ -1,0 +1,3800 @@
+/**
+ * MegaforBB default theme – tema stilleri
+ * Tüm inline CSS buraya taşındı; tema paket olarak satıldığında assets tema klasöründe kalır.
+ */
+
+/* Sistem cekirdegi stilleri public/css/main.css dosyasina tasindi. */
+
+/* ========================================================
+  FORUM KABUĞU — Source Sans 3, soguk acik zemin (portal: Fraunces, portal.css)
+  ======================================================== */
+:root {
+  --mfbb-font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  --mfbb-font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --mfbb-forum-bg: #edf2f7;
+  --mfbb-forum-surface: #ffffff;
+  --mfbb-forum-ink: #111827;
+  --mfbb-forum-muted: #64748b;
+  --mfbb-forum-accent: #105289;
+  --mfbb-forum-border: #d9e2ec;
+  --mfbb-forum-rail: #105289;
+}
+
+body.mfbb-layout-forum {
+  font-family: var(--mfbb-font-sans);
+  background-color: var(--mfbb-forum-bg) !important;
+  color: var(--mfbb-forum-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+body.mfbb-layout-portal {
+  font-family: var(--mfbb-font-sans);
+  background-color: #edf2f7 !important;
+}
+
+/* Forum ana sayfa — üst karşılama kartı (Tailwind utility ile birlikte) */
+body.mfbb-layout-forum .mfbb-hero-strip {
+  --tw-ring-width: 0 !important;
+  border: 1px solid var(--mfbb-forum-border) !important;
+  border-left: 4px solid var(--mfbb-forum-rail) !important;
+  border-radius: 0.75rem !important;
+  background: linear-gradient(165deg, #ffffff 0%, #f7fbff 100%) !important;
+  box-shadow:
+    0 1px 0 rgba(15, 23, 42, 0.04),
+    0 14px 36px -18px rgba(15, 23, 42, 0.12) !important;
+}
+
+body.mfbb-layout-forum .mfbb-hero-strip .text-xl.font-semibold {
+  font-family: var(--mfbb-font-sans);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--mfbb-forum-ink);
+}
+
+body.mfbb-layout-forum .mfbb-hero-strip .rounded-lg.bg-gray-50 {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: var(--mfbb-forum-border) !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Forum görünümü — kategori / konu listesi sayfası */
+.mfbb-forum-view nav[aria-label="Breadcrumb"] {
+  border-left: 3px solid var(--mfbb-forum-accent);
+  border-radius: 0.5rem;
+  background: var(--mfbb-forum-surface) !important;
+  border-color: var(--mfbb-forum-border) !important;
+  box-shadow: 0 1px 0 rgba(28, 25, 23, 0.05);
+}
+
+.mfbb-forum-view h1.text-lg {
+  font-family: var(--mfbb-font-sans);
+  letter-spacing: -0.02em;
+  font-weight: 650;
+  color: var(--mfbb-forum-ink) !important;
+}
+
+/* Forum ana index — IPS tarzı bloklar (index.html.twig) */
+.mfbb-forum-index .ips-forum-wrapper {
+  margin-bottom: 1.75rem;
+}
+
+.mfbb-forum-index .ips-category-header {
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: #fff;
+  margin-bottom: 0;
+  padding: 0.85rem 1.25rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.mfbb-forum-index .ips-forum-block {
+  display: flex;
+  background: var(--mfbb-forum-surface);
+  border: 1px solid var(--mfbb-forum-border);
+  border-top-width: 4px;
+  margin-bottom: 1rem;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 0 0 0.65rem 0.65rem;
+  box-shadow: 0 8px 28px -20px rgba(28, 25, 23, 0.35);
+}
+
+.mfbb-forum-index .ips-forum-info {
+  width: 33%;
+  padding: 1.25rem 1.15rem;
+  border-right: 1px solid var(--mfbb-forum-border);
+  min-width: 0;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+}
+
+.mfbb-forum-index .ips-forum-image {
+  width: 100%;
+  height: auto;
+  border-radius: 0.4rem;
+  margin-bottom: 0.85rem;
+  object-fit: cover;
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+}
+
+.mfbb-forum-index .ips-forum-title-wrap {
+  border: 1px solid var(--mfbb-forum-border);
+  border-left-width: 3px;
+  border-radius: 0.35rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+}
+
+.mfbb-forum-index .ips-forum-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  text-decoration: none;
+  display: block;
+  word-break: break-word;
+  letter-spacing: -0.02em;
+}
+
+.mfbb-forum-index .ips-forum-title:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mfbb-forum-index .ips-forum-desc {
+  color: var(--mfbb-forum-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0 0 0.85rem 0;
+  word-break: break-word;
+}
+
+.mfbb-forum-index .ips-forum-stats {
+  color: var(--mfbb-forum-muted);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.mfbb-forum-index .ips-forum-stats strong {
+  color: var(--mfbb-forum-ink);
+  font-weight: 650;
+}
+
+.mfbb-forum-index .ips-topic-list {
+  width: 67%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.mfbb-forum-index .ips-topic-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.15rem;
+  border-bottom: 1px solid #e2e8f0;
+  min-width: 0;
+}
+
+.mfbb-forum-index .ips-topic-item:last-child {
+  border-bottom: none;
+}
+
+.mfbb-forum-index .ips-topic-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  margin-right: 0.9rem;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(28, 25, 23, 0.06);
+}
+
+.mfbb-forum-index .ips-topic-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mfbb-forum-index .ips-topic-title {
+  color: var(--mfbb-forum-ink);
+  font-size: 0.9rem;
+  font-weight: 550;
+  text-decoration: none;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.mfbb-forum-index .ips-topic-title:hover {
+  text-decoration: underline;
+}
+
+.mfbb-forum-index .ips-topic-meta {
+  color: var(--mfbb-forum-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mfbb-forum-index .ips-topic-comments {
+  color: var(--mfbb-forum-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  margin-left: 1.15rem;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.mfbb-forum-index .ips-forum-no-image-placeholder {
+  width: 100%;
+  height: 160px;
+  border-radius: 0.4rem;
+  margin-bottom: 0.85rem;
+  background: linear-gradient(145deg, #f8fbff 0%, #edf3f9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a6a09a;
+  font-size: 2.25rem;
+  border: 1px dashed var(--mfbb-forum-border);
+}
+
+@media (max-width: 768px) {
+  .mfbb-forum-index .ips-forum-block {
+    flex-direction: column;
+  }
+
+  .mfbb-forum-index .ips-forum-info,
+  .mfbb-forum-index .ips-topic-list {
+    width: 100%;
+    border-right: none;
+  }
+
+  .mfbb-forum-index .ips-forum-info {
+    border-bottom: 1px solid var(--mfbb-forum-border);
+    padding: 0.85rem;
+  }
+
+  .mfbb-forum-index .ips-topic-title {
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .mfbb-forum-index .ips-topic-meta {
+    white-space: normal;
+  }
+
+  .mfbb-forum-index .ips-topic-comments {
+    margin-left: 0.5rem;
+    white-space: normal;
+    font-size: 0.75rem;
+  }
+
+  .mfbb-forum-index .ips-topic-item {
+    padding: 0.65rem 0.85rem;
+  }
+
+  .mfbb-forum-index .ips-topic-avatar {
+    width: 30px;
+    height: 30px;
+    margin-right: 0.65rem;
+  }
+
+  .mfbb-forum-index .ips-forum-image {
+    max-height: 180px;
+  }
+
+  .mfbb-forum-index .ips-forum-no-image-placeholder {
+    height: 100px;
+    font-size: 1.75rem;
+  }
+
+  .mfbb-forum-index .ips-category-header {
+    font-size: 0.95rem;
+    padding: 0.65rem 0.9rem;
+  }
+
+  .mfbb-forum-index .ips-forum-title {
+    font-size: 0.95rem;
+  }
+
+  .mfbb-forum-index .ips-forum-desc {
+    font-size: 0.8125rem;
+  }
+}
+
+/* ========================================================
+   RICH TEXT (PROSE) & EDITOR FORMATTING
+   (Frontend: Toast UI Editor | Admin: Summernote)
+   ======================================================== */
+.prose h1 {
+  font-size: 2.25em;
+  margin-top: 0;
+  margin-bottom: 0.8888889em;
+  line-height: 1.111;
+  font-weight: 800;
+  color: #111827;
+}
+
+.prose h2 {
+  font-size: 1.5em;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  line-height: 1.333;
+  font-weight: 700;
+  color: #111827;
+}
+
+.prose h3 {
+  font-size: 1.25em;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  line-height: 1.6;
+  font-weight: 600;
+  color: #111827;
+}
+
+.prose h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #111827;
+}
+
+.prose h5 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #111827;
+}
+
+.prose h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #111827;
+}
+
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose ul {
+  padding-left: 1.625em;
+  list-style-type: disc;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose ol {
+  padding-left: 1.625em;
+  list-style-type: decimal;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose pre {
+  background-color: #1e293b;
+  color: #f8fafc;
+  overflow-x: auto;
+  font-weight: 400;
+  font-size: 0.875em;
+  line-height: 1.714;
+  margin-top: 1.714em;
+  margin-bottom: 1.714em;
+  border-radius: 0.375rem;
+  padding: 0.857em 1.142em;
+}
+
+.prose code {
+  color: #111827;
+  font-weight: 600;
+  font-size: 0.875em;
+}
+
+.prose pre code {
+  background-color: transparent;
+  border-width: 0;
+  border-radius: 0;
+  padding: 0;
+  font-weight: inherit;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+}
+
+.prose hr {
+  border-color: #e5e7eb;
+  border-top-width: 1px;
+  margin-top: 3em;
+  margin-bottom: 3em;
+}
+
+.prose table {
+  width: 100%;
+  table-layout: auto;
+  text-align: left;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  font-size: 0.875em;
+  line-height: 1.714;
+}
+
+.prose thead {
+  color: #111827;
+  font-weight: 600;
+  border-bottom-width: 1px;
+  border-bottom-color: #d1d5db;
+}
+
+.prose thead th {
+  vertical-align: bottom;
+  padding: 0.571em;
+}
+
+.prose tbody tr {
+  border-bottom-width: 1px;
+  border-bottom-color: #e5e7eb;
+}
+
+.prose tbody td {
+  vertical-align: baseline;
+  padding: 0.571em;
+}
+
+/* Handle Text Alignments Properly inside Prose (Overrides Tailwind Defaults) */
+.prose [align="center"],
+.post-content [align="center"],
+.prose [style*="text-align: center"],
+.post-content [style*="text-align: center"] {
+  text-align: center !important;
+}
+
+.prose [align="right"],
+.post-content [align="right"],
+.prose [style*="text-align: right"],
+.post-content [style*="text-align: right"] {
+  text-align: right !important;
+}
+
+.prose [align="left"],
+.post-content [align="left"],
+.prose [style*="text-align: left"],
+.post-content [style*="text-align: left"] {
+  text-align: left !important;
+}
+
+.prose [align="justify"],
+.post-content [align="justify"],
+.prose [style*="text-align: justify"],
+.post-content [style*="text-align: justify"] {
+  text-align: justify !important;
+}
+
+/* Alıntı (blockquote) mesajlarda diğerinden ayrılsın */
+.prose blockquote,
+.post-content blockquote,
+blockquote[data-author],
+.mfbb-quote {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #3b82f6;
+  background: linear-gradient(180deg, #eff6ff 0%, #f8fbff 100%);
+  border-radius: 0 0.375rem 0.375rem 0;
+  color: #334155;
+  font-style: normal;
+  box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.35);
+}
+
+.prose blockquote strong:first-child,
+blockquote[data-author] strong:first-child,
+.mfbb-quote-author {
+  color: #1d4ed8;
+}
+
+.mfbb-quote-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+  color: #1d4ed8;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.mfbb-quote-header i {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.mfbb-quote-label {
+  color: #475569;
+  font-weight: 500;
+}
+
+.mfbb-quote-body {
+  color: #334155;
+}
+
+.mfbb-quote-body > :first-child {
+  margin-top: 0;
+}
+
+.mfbb-quote-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Spoiler (details/summary) – tıklanınca açılır içerik */
+.prose details.mfbb-spoiler,
+.post-content details.mfbb-spoiler,
+.post-body details.mfbb-spoiler {
+  margin: 0.5rem 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+.prose details.mfbb-spoiler summary,
+.post-content details.mfbb-spoiler summary,
+.post-body details.mfbb-spoiler summary {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #475569;
+  user-select: none;
+  list-style: none;
+}
+.prose details.mfbb-spoiler summary::-webkit-details-marker,
+.post-content details.mfbb-spoiler summary::-webkit-details-marker {
+  display: none;
+}
+.prose details.mfbb-spoiler summary::before,
+.post-content details.mfbb-spoiler summary::before,
+.post-body details.mfbb-spoiler summary::before {
+  content: "▶ ";
+  display: inline-block;
+  margin-right: 0.25rem;
+  transition: transform 0.2s;
+}
+.prose details.mfbb-spoiler[open] summary::before,
+.post-content details.mfbb-spoiler[open] summary::before,
+.post-body details.mfbb-spoiler[open] summary::before {
+  transform: rotate(90deg);
+}
+.prose details.mfbb-spoiler > *:not(summary),
+.post-content details.mfbb-spoiler > *:not(summary),
+.post-body details.mfbb-spoiler > *:not(summary) {
+  padding: 0.75rem 1rem;
+  margin: 0;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+/* Editör renk paleti popup */
+.mfbb-editor-color-picker button[data-color]:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+.mfbb-editor-color-picker input[type="color"] {
+  display: block;
+  width: 100%;
+}
+
+/* Prose: vurgu ve hizalı bloklar */
+.prose mark,
+.post-content mark,
+.post-body mark {
+  background: #fef08a;
+  padding: 0.1em 0.2em;
+  border-radius: 0.2em;
+}
+
+/* Task list (Toast UI görev listesi) – mesaj içinde checkbox görünümü */
+.prose .task-list-item,
+.post-content .task-list-item,
+.post-body .task-list-item {
+  list-style: none;
+  padding-left: 26px;
+  position: relative;
+  margin-bottom: 0.25em;
+}
+.prose .task-list-item::before,
+.post-content .task-list-item::before,
+.post-body .task-list-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #94a3b8;
+  border-radius: 3px;
+  background: #fff;
+  box-sizing: border-box;
+}
+.prose .task-list-item.checked::before,
+.prose .task-list-item[data-task-checked]::before,
+.post-content .task-list-item.checked::before,
+.post-content .task-list-item[data-task-checked]::before,
+.post-body .task-list-item.checked::before,
+.post-body .task-list-item[data-task-checked]::before {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  content: '✓';
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 14px;
+  text-align: center;
+}
+.prose ul:has(.task-list-item),
+.post-content ul:has(.task-list-item),
+.post-body ul:has(.task-list-item) {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* Admin index sayfası (themes/default/admin/index.php) */
+body.admin-page {
+  font-family: sans-serif;
+  background: #f0f0f0;
+  margin: 0;
+  padding: 20px;
+}
+
+.admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.admin-menu a {
+  margin-right: 15px;
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+}
+
+.admin-menu a:hover {
+  color: #007bff;
+}
+
+.admin-container .alert {
+  background: #d4edda;
+  color: #155724;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+/* Tema ana rengi – base.html.twig'deki --primary-color (varsayılan #206bc4) */
+.text-primary { color: var(--primary-color, #206bc4); }
+.hover\:text-primary:hover { color: var(--primary-color, #206bc4); }
+.group:hover .group-hover\:text-primary { color: var(--primary-color, #206bc4); }
+
+/* Portal tab butonları – data-[active=true] Tailwind CDN parse hatası verdiği için theme.css'te */
+.portal-tab-btn {
+  border-bottom: 2px solid transparent;
+}
+
+.portal-tab-btn:hover {
+  color: #1a252f;
+  border-color: #d1d5db;
+}
+
+.portal-tab-btn[data-active="true"] {
+  border-color: var(--primary-color, #206bc4);
+  color: var(--primary-color, #206bc4);
+}
+
+/* Duyuru badge stilleri (header + forum bölümü) */
+.announcement-badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.announcement-badge-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.announcement-badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.announcement-badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.announcement-badge-primary {
+  background: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #334155;
+}
+
+.announcement-badge-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+/* ========================================================
+   MOBILE RESPONSIVE OVERRIDES
+   ======================================================== */
+
+/* ── Post Body / Prose genel taşma koruması (tüm ekranlar) ── */
+.post-body,
+.post-content {
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.post-body > *,
+.post-content > * {
+  max-width: 100%;
+}
+
+/* Prose / post content içindeki tabloları kaydırılabilir yap */
+.post-body table,
+.post-content table,
+.prose table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* Pre/code blokları taşmasın */
+.post-body pre,
+.post-content pre,
+.prose pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Inline img koruma */
+.post-body img,
+.post-content img,
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* iframe koruma */
+.post-body iframe,
+.post-content iframe,
+.prose iframe {
+  max-width: 100%;
+}
+
+/* Sidebar widget HTML taşma koruması */
+.sidebar-widget-html {
+  overflow-x: auto;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.sidebar-widget-html img {
+  max-width: 100%;
+  height: auto;
+}
+
+.sidebar-widget-html table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* ── MOBIL (< 768px) ── */
+@media (max-width: 767px) {
+
+  /* Genel overflow engelle */
+  html,
+  body {
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ana sayfa container taşma önle */
+  .mfbb-page-container,
+  #mfbb-page-container {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* ── Header ── */
+  #header-bar .flex.items-center.justify-between {
+    gap: 0.5rem;
+  }
+
+  /* Logo mobilde küçült */
+  #header-bar img[style*="height:50px"] {
+    height: 36px !important;
+    max-width: 160px !important;
+  }
+
+  #header-bar img[alt=""][class*="h-6"] {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* ── Breadcrumb kaydırılabilir ── */
+  nav[aria-label="Breadcrumb"] ol {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  nav[aria-label="Breadcrumb"] ol::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ── Konu başlık barı (showthread) ── */
+  [class*="bg-"][class*="text-white"][class*="rounded-t-lg"][class*="font-semibold"] {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+
+  [class*="bg-"][class*="text-white"][class*="rounded-t-lg"][class*="font-semibold"] > span:first-child {
+    font-size: 0.875rem;
+    line-height: 1.3;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  /* Konu başlığı buton alanı: wrap yap */
+  [class*="bg-"][class*="text-white"][class*="rounded-t-lg"][class*="font-semibold"] .flex-shrink-0 {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  /* Butonlar mobilde daha küçük */
+  [class*="bg-"][class*="text-white"][class*="rounded-t-lg"][class*="font-semibold"] .flex-shrink-0 form,
+  [class*="bg-"][class*="text-white"][class*="rounded-t-lg"][class*="font-semibold"] .flex-shrink-0 a,
+  [class*="bg-"][class*="text-white"][class*="rounded-t-lg"][class*="font-semibold"] .flex-shrink-0 > div {
+    flex-shrink: 0;
+  }
+
+  /* ── Post action bar (cevapla, alıntıla, paylaş) ── */
+  article .flex.items-center.gap-3.text-xs {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+  }
+
+  /* Post alt aksiyon barı */
+  .post-body + * + .flex.flex-wrap,
+  article > div > .flex.flex-wrap {
+    gap: 0.25rem 0.375rem;
+  }
+
+  /* ── Post gövdesi mobilde ── */
+  .prose,
+  .post-content,
+  .post-body {
+    font-size: 0.9375rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .prose img,
+  .post-content img,
+  .post-body img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .prose blockquote,
+  .post-content blockquote,
+  blockquote[data-author],
+  .mfbb-quote {
+    margin: 0.5rem 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Prose tabloları mobilde kaydırılabilir */
+  .prose table,
+  .post-content table,
+  .post-body table {
+    font-size: 0.8125rem;
+  }
+
+  /* ── IPS Forum Blokları (index sayfası) ── */
+  .ips-forum-block {
+    flex-direction: column !important;
+  }
+
+  .ips-forum-info {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid #d9d9d9;
+    padding: 12px !important;
+  }
+
+  .ips-topic-list {
+    width: 100% !important;
+  }
+
+  .ips-topic-title {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .ips-topic-comments {
+    margin-left: 8px !important;
+    white-space: normal !important;
+    font-size: 12px;
+  }
+
+  .ips-topic-item {
+    padding: 10px 12px !important;
+  }
+
+  .ips-forum-image {
+    max-height: 180px;
+    object-fit: cover;
+  }
+
+  .ips-forum-no-image-placeholder {
+    height: 100px !important;
+    font-size: 28px !important;
+  }
+
+  .ips-category-header {
+    font-size: 15px !important;
+    padding: 10px 14px !important;
+  }
+
+  .ips-forum-title {
+    font-size: 15px !important;
+  }
+
+  .ips-forum-desc {
+    font-size: 13px !important;
+  }
+
+  /* ── Sayfalama kompakt ── */
+  .flex.items-center.gap-1 a[class*="px-2"] {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.6875rem;
+  }
+
+  /* ── Son olaylar kartı ── */
+  .son-olaylar-card {
+    min-height: 280px !important;
+    max-height: none !important;
+  }
+
+  .son-olaylar-card .portal-tab-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  /* ── Admin panel: Summernote editör mobil uyumu ── */
+  .note-editor {
+    min-height: 200px;
+  }
+
+  .note-editor .note-editable {
+    min-height: 200px;
+  }
+
+  .note-editor .note-toolbar {
+    padding: 0.125rem 0.25rem;
+  }
+
+  .note-editor .note-toolbar .note-btn-group {
+    margin-right: 0.125rem;
+  }
+
+  .note-editor .note-toolbar .btn {
+    padding: 0.25rem 0.375rem;
+    font-size: 0.75rem;
+  }
+
+  /* ── Forum açıklama kutusu & duyurular ── */
+  .forum-announcements-box {
+    padding: 1rem;
+  }
+
+  .announcement-item,
+  .announcement-forum-item {
+    flex-direction: row;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  /* ── Footer grid ── */
+  footer .grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem;
+  }
+
+  /* Footer credit barı */
+  footer [class*="inline-flex"][class*="flex-wrap"] {
+    text-align: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.6875rem;
+  }
+
+  /* ── Lightbox mobilde ── */
+  #mfbb-lightbox img {
+    max-width: 95vw;
+    max-height: 80vh;
+  }
+
+  /* ── Profil: Cover görseli ── */
+  [class*="h-48"] {
+    height: 8rem;
+  }
+
+  /* ── Modal'lar mobilde tam genişlik ── */
+  .fixed[class*="left-1/2"][class*="top-1/2"],
+  .fixed[class*="-translate-x-1/2"][class*="-translate-y-1/2"] {
+    width: calc(100% - 2rem) !important;
+    max-width: none !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    transform: translateY(-50%) !important;
+  }
+
+  /* ── Portal kartları mobilde ── */
+  .portal-card-item {
+    padding: 0.5rem !important;
+  }
+
+  /* ── Toplu mesaj işlemleri barı ── */
+  #posts-bulk-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  #posts-bulk-bar .flex.items-center.gap-2 {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  #posts-bulk-bar button {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* ── Reklam alanları ── */
+  .ads-slot {
+    overflow: hidden;
+  }
+
+  .ads-slot .ad-item {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* ── Conversation / mesaj sayfası ── */
+  .flex.items-center.gap-4.p-4 img[class*="h-12"] {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* ── Genel buton ve form taşma korumaları ── */
+  .flex.justify-end.gap-3,
+  .flex.gap-3.pt-2 {
+    flex-wrap: wrap;
+  }
+
+  .flex.justify-end.gap-3 button,
+  .flex.justify-end.gap-3 a,
+  .flex.gap-3.pt-2 button,
+  .flex.gap-3.pt-2 a {
+    flex-shrink: 0;
+  }
+
+  /* Form padding düzeltmeleri */
+  .p-6 {
+    padding: 1rem;
+  }
+
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Mod rapor tablosu */
+  .divide-y.divide-gray-100 > div {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Genel metin taşma koruması */
+  h1, h2, h3,
+  .font-semibold,
+  .font-bold {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* ── User dropdown pozisyonu ── */
+  #auth-nav-container .absolute[class*="w-56"],
+  #auth-nav-container .absolute[class*="w-80"] {
+    position: fixed;
+    right: 0.5rem;
+    left: auto;
+    top: auto;
+    z-index: 9999;
+    max-width: calc(100vw - 1rem);
+  }
+
+  /* ── Inline yanıt ağacı mobilde ── */
+  .post-body + div[class*="border-t"] {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .post-body + div[class*="border-t"] [class*="pl-8"] {
+    padding-left: 1.5rem;
+  }
+
+  /* ── Profil sayfası tab grid ── */
+  [class*="grid-cols-3"][class*="gap-"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Arama sayfası filtreler ── */
+  [class*="grid-cols-1"][class*="md\:grid-cols-2"][class*="lg\:grid-cols-4"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Postbit signature mobilde */
+  .post-signature {
+    font-size: 0.8125rem;
+    overflow-x: auto;
+  }
+
+  .post-signature img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* ── Tablet (768px - 1023px) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .son-olaylar-card {
+    max-height: 480px !important;
+  }
+
+  /* IPS Forum blokları tablette */
+  .ips-forum-info {
+    width: 40% !important;
+  }
+  .ips-topic-list {
+    width: 60% !important;
+  }
+}
+
+/* ── Küçük ekranlar (<375px) ── */
+@media (max-width: 374px) {
+  #header-bar {
+    padding: 0.5rem 0;
+  }
+
+  .portal-tab-btn {
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.6875rem !important;
+  }
+
+  .prose,
+  .post-content,
+  .post-body {
+    font-size: 0.875rem;
+  }
+
+  /* IPS blokları daha da sıkı */
+  .ips-topic-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    margin-right: 8px !important;
+  }
+
+  .ips-topic-comments {
+    display: none !important;
+  }
+
+  .ips-forum-title {
+    font-size: 14px !important;
+  }
+}
+
+/* ── Safe area support (notch'lu telefonlar) ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  #posts-bulk-bar {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── Tab scrollbar gizle ── */
+.son-olaylar-card > div:first-child {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.son-olaylar-card > div:first-child::-webkit-scrollbar {
+  display: none;
+}
+
+.son-olaylar-card nav[role="tablist"] {
+  scrollbar-width: none;
+}
+
+.son-olaylar-card nav[role="tablist"]::-webkit-scrollbar {
+  display: none;
+}
+
+/* Panel içi scrollbar gizle */
+.portal-tab-panels,
+.portal-tab-panel {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.portal-tab-panels::-webkit-scrollbar,
+.portal-tab-panel::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.portal-tab-panels::-webkit-scrollbar-thumb,
+.portal-tab-panel::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 4px;
+}
+
+.portal-tab-panels:hover::-webkit-scrollbar-thumb,
+.portal-tab-panel:hover::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.45);
+}
+
+/* ── Video embed ── */
+.mfbb-media-embed.ratio.ratio-16x9,
+.mfbb-media-embed {
+  position: relative;
+  width: 100%;
+  max-width: min(100%, 900px);
+  overflow: hidden;
+  margin: 0.75em 0;
+}
+.mfbb-media-embed.ratio-16x9::before,
+.ratio.ratio-16x9::before {
+  content: "";
+  display: block;
+  padding-top: 56.25%;
+}
+.mfbb-media-embed iframe,
+.ratio.ratio-16x9 iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.prose .mfbb-media-embed,
+.post-content .mfbb-media-embed,
+[class*="prose"] .mfbb-media-embed {
+  max-width: min(100%, 900px);
+  min-height: 0;
+}
+
+/* ── Konu sayfası: mesaj scrubber (sağ rail) ── */
+/* tailwind.css derlemesinde overflow-x-hidden olmayabiliyor; kritik düzen burada */
+.mfbb-showthread-card {
+  overflow-x: hidden;
+}
+
+/* fixed: mesaj sütununun sağında; DOM mfbb-page-container dışında; konum theme.js (#thread-posts-region) */
+.mfbb-topic-post-scrubber {
+  display: none;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  width: 2.75rem;
+  padding: 0.4rem 0.25rem;
+  gap: 0.35rem;
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(229, 231, 235, 0.65);
+  border-radius: 0.625rem;
+  box-shadow: 0 4px 18px rgba(26, 37, 47, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, backdrop-filter 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .mfbb-topic-post-scrubber {
+    display: flex;
+  }
+}
+
+.mfbb-topic-post-scrubber:hover,
+.mfbb-topic-post-scrubber:focus-within {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: #e5e7eb;
+  box-shadow: 0 8px 28px rgba(26, 37, 47, 0.14);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mfbb-topic-post-scrubber {
+    transition: none;
+  }
+}
+
+.mfbb-topic-post-scrubber__navbtn {
+  flex-shrink: 0;
+  width: 2.125rem;
+  height: 2.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(229, 231, 235, 0.75);
+  background: rgba(248, 250, 252, 0.65);
+  color: #1a252f;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.mfbb-topic-post-scrubber:hover .mfbb-topic-post-scrubber__navbtn:not(:disabled),
+.mfbb-topic-post-scrubber:focus-within .mfbb-topic-post-scrubber__navbtn:not(:disabled) {
+  background: #fff;
+  border-color: #e2e8f0;
+}
+
+.mfbb-topic-post-scrubber__navbtn:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.mfbb-topic-post-scrubber__navbtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.mfbb-topic-post-scrubber__dots {
+  flex: 1 1 auto;
+  min-height: 2rem;
+  max-height: min(42vh, 280px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
+}
+
+.mfbb-topic-post-scrubber__readout {
+  width: 100%;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.1rem;
+  padding-top: 0.35rem;
+}
+
+#thread-posts-region article[id^="post-"] {
+  scroll-margin-top: 0.75rem;
+}
+
+#thread-posts-region > article[id^="post-"] {
+  margin: 0 0.75rem 5px;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.topic-post-scrubber__track {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+}
+
+.topic-post-scrubber__track::-webkit-scrollbar {
+  width: 4px;
+}
+
+.topic-post-scrubber__track::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 4px;
+}
+
+.topic-post-scrubber__dot.topic-post-scrubber__dot--active {
+  background-color: #1a252f;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px #206bc4;
+}
+
+/* ========================================================
+   PROFİL SAYFALARI — Invision Community tarzı düzen
+   ======================================================== */
+
+.ips-profile-page {
+  margin-top: 0.75rem;
+}
+
+/* Breadcrumb */
+.ips-profile-breadcrumb {
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--mfbb-forum-muted);
+}
+
+.ips-profile-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ips-profile-breadcrumb__list a {
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+}
+
+.ips-profile-breadcrumb__list a:hover {
+  text-decoration: underline;
+}
+
+.ips-profile-breadcrumb__current {
+  color: var(--mfbb-forum-ink);
+  font-weight: 600;
+}
+
+.ips-profile-breadcrumb__sep {
+  opacity: 0.45;
+}
+
+/* Ana kabuk */
+.ips-profile-wrap {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  overflow: visible;
+}
+
+/* Cover + Header — IPS ipsPhotoPanel */
+.ips-profile__cover {
+  position: relative;
+  height: 280px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3d7ab5 100%);
+  overflow: hidden;
+}
+
+.ips-profile__cover-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 35%, rgba(15, 23, 42, 0.55) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ips-profile__cover-img--lightbox {
+  cursor: zoom-in;
+}
+
+.ips-profile--compact .ips-profile__cover {
+  height: 120px;
+}
+
+.ips-profile__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ips-profile__cover-tools {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+}
+
+.ips-profile__cover-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ips-profile__cover-btn:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.ips-profile__band {
+  background: #fff;
+  position: relative;
+  z-index: 2;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ips-profile__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 24px 18px;
+  margin-top: -52px;
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 640px) {
+  .ips-profile__header {
+    padding: 0 14px 14px;
+    margin-top: -44px;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.ips-profile--compact .ips-profile__header {
+  margin-top: -36px;
+  padding: 0 20px 12px;
+}
+
+.ips-profile__photo-panel,
+.ips-profile__header-main {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .ips-profile__photo-panel {
+    align-items: flex-start;
+    width: 100%;
+  }
+}
+
+.ips-profile__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ips-profile__avatar {
+  width: 132px;
+  height: 132px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 4px solid #fff;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+  display: block;
+}
+
+.ips-profile--compact .ips-profile__avatar {
+  width: 72px;
+  height: 72px;
+  border-width: 3px;
+}
+
+.ips-profile__verified {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.ips-profile__identity {
+  padding: 6px 0 2px;
+  min-width: 0;
+}
+
+.ips-profile__banned {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #b91c1c;
+  margin-bottom: 4px;
+}
+
+.ips-profile__username {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.ips-profile--compact .ips-profile__username {
+  font-size: 1.25rem;
+}
+
+.ips-profile__title {
+  margin: 4px 0 0;
+  font-size: 0.9375rem;
+  color: #64748b;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.ips-profile__realname {
+  margin: 3px 0 0;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+.ips-profile__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ips-profile__header-actions,
+.ips-profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+  padding-top: 62px;
+}
+
+.ips-profile--compact .ips-profile__header-actions,
+.ips-profile--compact .ips-profile__actions {
+  padding-top: 38px;
+}
+
+@media (max-width: 640px) {
+  .ips-profile__header-actions,
+  .ips-profile__actions {
+    width: 100%;
+    padding-top: 0;
+    justify-content: flex-start;
+  }
+}
+
+.ips-profile__bio-strip {
+  padding: 0 24px 16px 174px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: -4px;
+}
+
+.ips-profile__bio {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
+  max-width: 52rem;
+}
+
+@media (max-width: 640px) {
+  .ips-profile__bio-strip {
+    padding: 0 14px 14px;
+    margin-top: 0;
+  }
+
+  .ips-profile__bio {
+    margin-top: 10px;
+  }
+}
+
+.ips-profile__bio-more {
+  color: var(--mfbb-forum-accent, #105289);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.ips-profile__bio-more:hover {
+  text-decoration: underline;
+}
+
+/* Profil gözleri + ziyaretçi kutusu */
+.ips-profile__watcher {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.ips-profile__eyes {
+  display: flex;
+  gap: 8px;
+}
+
+.ips-profile__eye {
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ips-profile__pupil {
+  width: 14px;
+  height: 14px;
+  background: #1e293b;
+  border-radius: 50%;
+  transition: transform 0.08s ease-out;
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
+.ips-profile__viewers-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: background 0.12s, transform 0.12s;
+}
+
+.ips-profile__viewers-btn:hover {
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.ips-profile__viewers-count {
+  font-size: 0.9375rem;
+  color: var(--mfbb-forum-accent, #105289);
+}
+
+.ips-profile__viewers-label {
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Özet istatistik kartları */
+.ips-profile-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+  padding: 16px 20px 0;
+}
+
+.ips-profile-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 14px 10px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+a.ips-profile-stat-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+
+.ips-profile-stat-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.ips-profile-stat-card--content .ips-profile-stat-card__icon { background: #e0e7ff; color: #4338ca; }
+.ips-profile-stat-card--topics .ips-profile-stat-card__icon { background: #dbeafe; color: #1d4ed8; }
+.ips-profile-stat-card--posts .ips-profile-stat-card__icon { background: #f1f5f9; color: #475569; }
+.ips-profile-stat-card--likes .ips-profile-stat-card__icon { background: #fce7f3; color: #be185d; }
+.ips-profile-stat-card--rep .ips-profile-stat-card__icon { background: #fef3c7; color: #b45309; }
+.ips-profile-stat-card--reward .ips-profile-stat-card__icon { background: #fef9c3; color: #a16207; }
+.ips-profile-stat-card--articles .ips-profile-stat-card__icon { background: #fce7f3; color: #be185d; }
+.ips-profile-stat-card--more .ips-profile-stat-card__icon { background: #f1f5f9; color: var(--mfbb-forum-accent, #105289); }
+
+.ips-profile-stat-card__value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.ips-profile-stat-card__label {
+  margin-top: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+/* Profil ziyaretçi modal */
+.ips-profile-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.ips-profile-modal.hidden {
+  display: none;
+}
+
+.ips-profile-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.ips-profile-modal__dialog {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ips-profile-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.ips-profile-modal__head h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ips-profile-modal__close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.ips-profile-modal__summary {
+  padding: 10px 16px;
+  font-size: 0.8125rem;
+  color: #64748b;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ips-profile-modal__body {
+  padding: 8px 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ips-profile-modal__loading {
+  padding: 24px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.ips-profile-viewer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.ips-profile-viewer-row:hover {
+  background: #fafbfc;
+}
+
+.ips-profile-viewer-row__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.ips-profile-viewer-row__main {
+  min-width: 0;
+  flex: 1;
+}
+
+.ips-profile-viewer-row__name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--mfbb-forum-accent, #105289);
+  text-decoration: none;
+}
+
+.ips-profile-viewer-row__name:hover {
+  text-decoration: underline;
+}
+
+.ips-profile-viewer-row__meta {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.ips-profile-group-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  border-radius: 3px;
+  line-height: 1.3;
+}
+
+.ips-profile-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 3px;
+}
+
+/* Aksiyon butonları (toolbar + legacy) */
+.ips-profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.ips-profile__action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  line-height: 1;
+}
+
+.ips-profile__action-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.ips-profile__action-btn--primary {
+  background: var(--mfbb-forum-accent, #105289);
+  border-color: var(--mfbb-forum-accent, #105289);
+  color: #fff;
+}
+
+.ips-profile__action-btn--primary:hover {
+  background: #0c4270;
+  border-color: #0c4270;
+  color: #fff;
+}
+
+.ips-profile__action-btn--rep-up {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.ips-profile__action-btn--rep-down {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.ips-profile__action-btn--danger {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+/* İstatistik şeridi */
+.ips-profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.ips-profile-stats__item {
+  flex: 1;
+  min-width: 90px;
+  padding: 14px 16px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  border-right: 1px solid #e2e8f0;
+  transition: background 0.12s;
+}
+
+.ips-profile-stats__item:last-child {
+  border-right: none;
+}
+
+.ips-profile-stats__item--link {
+  cursor: pointer;
+}
+
+.ips-profile-stats__item--link:hover {
+  background: #f1f5f9;
+}
+
+.ips-profile-stats__value {
+  display: block;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.ips-profile-stats__value--sm {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.ips-profile-stats__value--rep {
+  font-size: 1.125rem;
+}
+
+.ips-profile-stats__label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* Ana sekmeler — sade, sarılabilir */
+.ips-profile-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 0 20px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  margin: 0;
+}
+
+.ips-profile-tabs__item {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.ips-profile-tabs__item:hover {
+  color: #1e293b;
+}
+
+.ips-profile-tabs__item.is-active {
+  color: var(--mfbb-forum-accent, #105289);
+  border-bottom-color: var(--mfbb-forum-accent, #105289);
+  font-weight: 600;
+}
+
+.ips-profile-tabs__count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.ips-profile-tabs__item.is-active .ips-profile-tabs__count {
+  background: #e8f2fb;
+  color: var(--mfbb-forum-accent, #105289);
+}
+
+/* IPS 2 sütun düzen */
+.ips-profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 0;
+  background: #f4f6f8;
+  border-top: 1px solid #e2e8f0;
+}
+
+.ips-profile-layout__main {
+  background: #fff;
+  min-width: 0;
+}
+
+.ips-profile-layout__side {
+  background: #f9fafb;
+  border-left: 1px solid #e2e8f0;
+  padding: 16px;
+  min-width: 0;
+}
+
+.ips-profile-layout__side--sticky {
+  position: sticky;
+  top: 72px;
+  align-self: start;
+  padding: 0;
+  overflow: visible;
+}
+
+.ips-profile-side-inner {
+  max-height: calc(100vh - 88px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.ips-profile-side-inner::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ips-profile-side-inner::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.ips-profile-side-inner::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.ips-profile-layout--activity .ips-profile-layout__main {
+  display: flex;
+  flex-direction: column;
+  min-height: 480px;
+}
+
+.ips-profile-layout--single {
+  grid-template-columns: 1fr;
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .ips-profile-layout:not(.ips-profile-layout--single) {
+    grid-template-columns: 1fr;
+  }
+
+  .ips-profile-layout__side {
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+    order: -1;
+  }
+}
+
+/* Sidebar kullanıcı kartı */
+.ips-profile-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.ips-profile-card__title {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  background: #fafbfc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ips-profile-card__bio {
+  padding: 12px 14px;
+  font-size: 0.8125rem;
+  color: #475569;
+  line-height: 1.55;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ips-profile-stat-mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ips-profile-stat-mini__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 0.12s, border-color 0.12s;
+  line-height: 1;
+}
+
+a.ips-profile-stat-mini__chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.ips-profile-stat-mini__chip i { font-size: 0.6875rem; }
+.ips-profile-stat-mini__chip--content i { color: #4338ca; }
+.ips-profile-stat-mini__chip--topics i { color: #1d4ed8; }
+.ips-profile-stat-mini__chip--posts i { color: #475569; }
+.ips-profile-stat-mini__chip--likes i { color: #be185d; }
+.ips-profile-stat-mini__chip--rep i { color: #b45309; }
+.ips-profile-stat-mini__chip--reward i { color: #a16207; }
+.ips-profile-stat-mini__chip--articles i { color: #be185d; }
+.ips-profile-stat-mini__chip--more i { color: var(--mfbb-forum-accent, #105289); }
+.ips-profile-stat-mini__val { color: #1e293b; }
+
+.ips-profile-card__facts {
+  margin: 0;
+  padding: 0;
+}
+
+.ips-profile-card__fact {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 8px;
+  padding: 9px 14px;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 0.8125rem;
+}
+
+.ips-profile-card__fact dt {
+  margin: 0;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.ips-profile-card__fact dd {
+  margin: 0;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+.ips-profile-card__link-inline {
+  display: inline;
+  margin-left: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mfbb-forum-accent, #105289);
+  text-decoration: none;
+}
+
+.ips-profile-card__link-inline:hover {
+  text-decoration: underline;
+}
+
+.ips-profile-card__facts a:not(.ips-profile-card__link-inline) {
+  color: var(--mfbb-forum-accent, #105289);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.ips-profile-card__facts a:not(.ips-profile-card__link-inline):hover {
+  text-decoration: underline;
+}
+
+.ips-profile-card__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mfbb-forum-accent, #105289);
+  text-decoration: none;
+  background: #fafbfc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.ips-profile-card__link:hover {
+  background: #f1f5f9;
+}
+
+/* Etkinlik araç çubuğu */
+.ips-profile-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.ips-profile-toolbar__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* IPS etkinlik akışı */
+.ips-stream {
+  padding: 0;
+}
+
+.ips-stream__empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: #94a3b8;
+}
+
+.ips-stream__empty i {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.ips-stream__empty p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.ips-stream-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.1s;
+}
+
+.ips-stream-item:hover {
+  background: #fafbfc;
+}
+
+.ips-stream-item__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.ips-stream-item__icon--topic { background: #e0e7ff; color: #4338ca; }
+.ips-stream-item__icon--post { background: #f1f5f9; color: #64748b; }
+.ips-stream-item__icon--article { background: #fce7f3; color: #be185d; }
+.ips-stream-item__icon--idea { background: #fef3c7; color: #b45309; }
+
+.ips-stream-item__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.ips-stream-item__meta {
+  margin: 0 0 4px;
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.ips-stream-item__user {
+  font-weight: 700;
+  color: var(--mfbb-forum-accent, #105289);
+  text-decoration: none;
+}
+
+.ips-stream-item__user:hover {
+  text-decoration: underline;
+}
+
+.ips-stream-item__context {
+  font-weight: 500;
+  color: #475569;
+}
+
+.ips-stream-item__time {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.ips-stream-item__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ips-stream-item__title a {
+  color: #1e293b;
+  text-decoration: none;
+}
+
+.ips-stream-item__title a:hover {
+  color: var(--mfbb-forum-accent, #105289);
+}
+
+.ips-stream-item__snippet {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.ips-stream__footer {
+  padding: 14px 20px;
+  text-align: center;
+  border-top: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+
+.ips-stream__more {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mfbb-forum-accent, #105289);
+  text-decoration: none;
+}
+
+.ips-stream__more:hover {
+  text-decoration: underline;
+}
+
+/* Profil panel (yorumlar vb.) */
+.ips-profile-panel {
+  border-top: 1px solid #e2e8f0;
+}
+
+.ips-profile-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 20px;
+  background: #fafbfc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ips-profile-panel__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ips-profile-panel__link {
+  font-size: 0.8125rem;
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+}
+
+.ips-profile-panel__body {
+  padding: 16px 20px 20px;
+}
+
+/* Birleşik içerik alanı */
+.ips-profile-content {
+  background: #fff;
+}
+
+.ips-profile-content--section {
+  border-top: 1px solid #e2e8f0;
+}
+
+.ips-profile-content__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.ips-profile-content__section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ips-profile-content__section-link {
+  font-size: 0.8125rem;
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+}
+
+.ips-profile-content__section-link:hover {
+  text-decoration: underline;
+}
+
+.ips-profile-content__section-body {
+  padding: 16px 24px 20px;
+}
+
+.ips-profile-content__desc {
+  margin: 0 0 12px;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* Etkinlik filtreleri */
+.ips-activity-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ips-activity-filters__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: none;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+button.ips-activity-filters__chip {
+  appearance: none;
+}
+
+.ips-activity-filters__chip:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.ips-activity-filters__chip.is-active {
+  background: var(--mfbb-forum-accent, #105289);
+  border-color: var(--mfbb-forum-accent, #105289);
+  color: #fff;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .ips-profile-tabs__item {
+    padding: 10px 12px;
+    font-size: 0.8125rem;
+  }
+
+  .ips-profile-toolbar {
+    padding: 12px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ips-activity-filters__chip {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+
+  .ips-stream-item {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .ips-stream-item__icon {
+    width: 34px;
+    height: 34px;
+    font-size: 0.8rem;
+  }
+
+  .ips-profile-layout__side--sticky {
+    position: static;
+    padding: 16px;
+  }
+
+  .ips-profile-side-inner {
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .ips-profile-activity-box {
+    margin: 12px 14px 16px;
+    max-height: 480px;
+    min-height: 360px;
+  }
+
+  .ips-profile-activity-box__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ips-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .ips-profile__cover {
+    height: 180px;
+  }
+
+  .ips-profile__avatar {
+    width: 96px;
+    height: 96px;
+  }
+
+  .ips-profile__username {
+    font-size: 1.375rem;
+  }
+
+  .ips-profile__watcher {
+    top: 8px;
+    right: 8px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .ips-profile__eye {
+    width: 28px;
+    height: 28px;
+  }
+
+  .ips-profile__pupil {
+    width: 10px;
+    height: 10px;
+  }
+
+}
+
+/* İçerik gövdesi — eski 2 sütun (geriye uyumluluk) */
+.ips-profile-body {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 0;
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 960px) {
+  .ips-profile-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ips-profile-body__main {
+  padding: 16px;
+  min-width: 0;
+}
+
+.ips-profile-body__sidebar {
+  padding: 16px;
+  background: #fff;
+  border-left: 1px solid #e2e8f0;
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .ips-profile-body__sidebar {
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+  }
+}
+
+/* İçerik kartları */
+.ips-profile-content-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.ips-profile-content-card--full {
+  margin: 16px;
+  border-radius: 4px;
+}
+
+.ips-profile-content-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.ips-profile-content-card__title {
+  margin: 0;
+  padding: 14px 16px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ips-profile-content-card__head .ips-profile-content-card__title {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.ips-profile-content-card__link {
+  font-size: 0.8125rem;
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+}
+
+.ips-profile-content-card__link:hover {
+  text-decoration: underline;
+}
+
+.ips-profile-content-card__desc {
+  margin: 0;
+  padding: 0 16px 12px;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.ips-profile-content-card__body {
+  padding: 16px;
+}
+
+/* Aktivite grid */
+.ips-profile-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.ips-profile-activity-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.ips-profile-activity-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.ips-profile-activity-item i {
+  font-size: 1.25rem;
+  color: var(--mfbb-forum-accent);
+  margin-bottom: 6px;
+}
+
+.ips-profile-activity-item__count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.ips-profile-activity-item__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* About sidebar */
+.ips-profile-about__title {
+  margin: 0 0 12px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ips-profile-about__list {
+  margin: 0;
+}
+
+.ips-profile-about__row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.8125rem;
+}
+
+.ips-profile-about__row dt {
+  margin: 0;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.ips-profile-about__row dd {
+  margin: 0;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+.ips-profile-about__row dd a {
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+}
+
+.ips-profile-about__row dd a:hover {
+  text-decoration: underline;
+}
+
+.ips-profile-about__link {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+}
+
+.ips-profile-about__link:hover {
+  text-decoration: underline;
+}
+
+.ips-profile-about__bio {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.ips-profile-about__bio-title {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ips-profile-about__bio-text {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+/* Feed listesi */
+.ips-profile-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ips-profile-feed__item {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.1s;
+}
+
+.ips-profile-feed__item:last-child {
+  border-bottom: none;
+}
+
+.ips-profile-feed__item:hover {
+  background: #fafbfc;
+}
+
+.ips-profile-feed__item--action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ips-profile-feed__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.ips-profile-feed__meta a {
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.ips-profile-feed__meta a:hover {
+  text-decoration: underline;
+}
+
+.ips-profile-feed__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e293b;
+  text-decoration: none;
+}
+
+.ips-profile-feed__title:hover {
+  color: var(--mfbb-forum-accent);
+}
+
+.ips-profile-feed__excerpt {
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.ips-profile-feed__link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+}
+
+.ips-profile-feed__link:hover {
+  text-decoration: underline;
+}
+
+/* Yorumlar */
+.ips-profile-comment-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  resize: vertical;
+  margin-bottom: 8px;
+}
+
+.ips-profile-comment-form textarea:focus {
+  outline: none;
+  border-color: var(--mfbb-forum-accent);
+  box-shadow: 0 0 0 2px rgba(16, 82, 137, 0.12);
+}
+
+.ips-profile-comment {
+  display: flex;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ips-profile-comment:last-child {
+  border-bottom: none;
+}
+
+.ips-profile-comment__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.ips-profile-comment__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.ips-profile-comment__author {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-decoration: none;
+}
+
+.ips-profile-comment__author:hover {
+  color: var(--mfbb-forum-accent);
+}
+
+.ips-profile-comment__date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.ips-profile-comment__text {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.ips-profile-comment__delete button {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #b91c1c;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ips-profile-comment__delete button:hover {
+  text-decoration: underline;
+}
+
+/* Rep tabs */
+.ips-profile-rep-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.ips-profile-rep-tabs__item {
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  border-radius: 3px;
+  border: 1px solid #e2e8f0;
+}
+
+.ips-profile-rep-tabs__item.is-active {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.ips-profile-rep-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ips-profile-rep-badge--pos {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ips-profile-rep-badge--neg {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Boş durum & uyarılar */
+.ips-profile-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+.ips-profile-empty i {
+  font-size: 2rem;
+  opacity: 0.3;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.ips-profile-empty-text {
+  text-align: center;
+  padding: 20px;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.ips-profile-alert {
+  margin: 12px 16px 0;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.ips-profile-alert--success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.ips-profile-alert--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+/* Ayarlar sayfaları (mfbb sınıfları korunur) */
+.mfbb-profile-page { margin-top: 0.75rem; }
+.mfbb-profile-layout { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .mfbb-profile-layout { grid-template-columns: 1fr; } }
+.mfbb-profile-sidebar { position: sticky; top: 1rem; }
+.mfbb-profile-main { min-width: 0; }
+.mfbb-profile-settings-nav { display: flex; flex-direction: column; gap: 2px; background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px; }
+.mfbb-profile-settings-nav__user { padding: 8px 10px 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 4px; }
+.mfbb-profile-settings-nav__label { display: block; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; }
+.mfbb-profile-settings-nav__item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 3px; font-size: 0.875rem; color: #64748b; text-decoration: none; }
+.mfbb-profile-settings-nav__item:hover { background: #f8fafc; color: #1e293b; }
+.mfbb-profile-settings-nav__item.is-active { background: var(--mfbb-forum-accent); color: #fff; }
+.mfbb-profile-settings-nav__divider { height: 1px; background: #e2e8f0; margin: 4px 0; }
+.mfbb-profile-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; }
+.mfbb-profile-card__body { padding: 20px; }
+.mfbb-profile-form-section { margin-bottom: 24px; }
+.mfbb-profile-form-section__title { font-size: 0.9375rem; font-weight: 700; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+.mfbb-profile-field { margin-bottom: 12px; }
+.mfbb-profile-field label { display: block; font-size: 0.8125rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+.mfbb-profile-field input, .mfbb-profile-field select, .mfbb-profile-field textarea { width: 100%; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 3px; font-size: 0.875rem; }
+.mfbb-profile-field input:focus, .mfbb-profile-field select:focus, .mfbb-profile-field textarea:focus { outline: none; border-color: var(--mfbb-forum-accent); }
+.mfbb-profile-field__hint { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
+.mfbb-profile-field--checkbox { display: flex; align-items: center; gap: 8px; }
+.mfbb-profile-field--checkbox label { margin: 0; }
+.mfbb-profile-prefs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+.mfbb-profile-pref-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 3px; }
+.mfbb-profile-pref-item__label { font-size: 0.8125rem; color: #475569; }
+.mfbb-profile-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.8125rem; font-weight: 600; border-radius: 3px; border: none; cursor: pointer; text-decoration: none; }
+.mfbb-profile-btn--primary { background: var(--mfbb-forum-accent); color: #fff; }
+.mfbb-profile-btn--secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.mfbb-profile-alert { padding: 10px 14px; border-radius: 4px; font-size: 0.875rem; margin-bottom: 12px; }
+.mfbb-profile-alert--success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.mfbb-profile-alert--error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+.mfbb-profile-avatar-edit { position: relative; display: inline-block; }
+.mfbb-profile-avatar-edit__btn { position: absolute; bottom: 4px; right: 4px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--mfbb-forum-accent); color: #fff; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
+
+/* IPS Activity stream — gruplu katkılar */
+.ips-profile-body--activity .ips-profile-body__main { width: 100%; }
+.ips-profile-body--single .ips-profile-body__main { max-width: 720px; margin: 0 auto; }
+.ips-profile-body--activity { grid-template-columns: 1fr; }
+.ips-profile-tabs__icon { font-size: 0.8rem; opacity: 0.75; margin-right: 2px; }
+.ips-profile-tabs__item.is-active .ips-profile-tabs__icon { opacity: 1; }
+
+.ips-activity-stream { padding: 0; }
+.ips-activity-group { border-bottom: 1px solid #e2e8f0; }
+.ips-activity-group:last-child { border-bottom: none; }
+.ips-activity-group__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; background: #fafbfc; border-bottom: 1px solid #e2e8f0;
+}
+.ips-activity-group__title { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ips-activity-group__title h3 { margin: 0; font-size: 0.9375rem; font-weight: 700; color: #1e293b; }
+.ips-activity-group__title p { margin: 2px 0 0; font-size: 0.75rem; color: #94a3b8; }
+.ips-activity-group__icon {
+  width: 36px; height: 36px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem;
+}
+.ips-activity-group__icon--forum { background: #dbeafe; color: #1d4ed8; }
+.ips-activity-group__icon--article { background: #fce7f3; color: #be185d; }
+.ips-activity-group__icon--idea { background: #fef3c7; color: #b45309; }
+.ips-activity-group__link { font-size: 0.8125rem; font-weight: 600; color: var(--mfbb-forum-accent); text-decoration: none; white-space: nowrap; }
+.ips-activity-group__link:hover { text-decoration: underline; }
+.ips-activity-group__body { padding: 4px 0; }
+.ips-activity-group__empty { padding: 16px; font-size: 0.875rem; color: #94a3b8; text-align: center; }
+
+.ips-activity-stream--flat .ips-activity-stream__empty {
+  padding: 32px 24px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+.ips-activity-stream--flat .ips-activity-stream__footer {
+  padding: 12px 24px 16px;
+  border-top: 1px solid #f1f5f9;
+  text-align: center;
+}
+
+.ips-activity-stream__more {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+}
+
+.ips-activity-stream__more:hover {
+  text-decoration: underline;
+}
+
+.ips-activity-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 24px;
+  text-decoration: none; color: inherit; border-bottom: 1px solid #f1f5f9; transition: background 0.1s;
+}
+.ips-activity-stream--flat .ips-activity-item:last-child { border-bottom: 1px solid #f1f5f9; }
+.ips-activity-item:hover { background: #f8fafc; }
+
+.ips-activity-item__time {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  padding-top: 2px;
+  min-width: 90px;
+  text-align: right;
+}
+.ips-activity-item__icon {
+  width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 0.8rem;
+}
+.ips-activity-item__icon--topic { background: #e0e7ff; color: #4338ca; }
+.ips-activity-item__icon--post { background: #f1f5f9; color: #64748b; }
+.ips-activity-item__icon--article { background: #fce7f3; color: #be185d; }
+.ips-activity-item__icon--idea { background: #fef3c7; color: #b45309; }
+.ips-activity-item__main { min-width: 0; flex: 1; }
+.ips-activity-item__title { display: block; font-size: 0.875rem; font-weight: 600; color: #1e293b; line-height: 1.35; }
+.ips-activity-item:hover .ips-activity-item__title { color: var(--mfbb-forum-accent); }
+.ips-activity-item__excerpt { display: block; font-size: 0.8125rem; color: #64748b; margin-top: 2px; line-height: 1.4; }
+.ips-activity-item__meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 4px; font-size: 0.75rem; color: #94a3b8; }
+.ips-activity-item__type {
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.6875rem;
+  color: #64748b; background: #f1f5f9; padding: 1px 6px; border-radius: 3px;
+}
+
+.ips-section-subtitle { margin: 0 0 10px; font-size: 0.875rem; font-weight: 700; color: #475569; }
+
+/* Profil ayarları — IPS düzen */
+.ips-profile-wrap--settings { margin-bottom: 0; }
+.ips-profile--settings .ips-profile__cover { height: 160px; }
+.ips-profile-settings-tabs {
+  display: flex; flex-wrap: wrap; gap: 0; padding: 0 8px;
+  background: #fff; border-bottom: 1px solid #e2e8f0; overflow-x: auto;
+}
+.ips-profile-settings-tabs__item {
+  display: inline-flex; align-items: center; gap: 6px; padding: 12px 14px;
+  font-size: 0.8125rem; font-weight: 500; color: #64748b; text-decoration: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+}
+.ips-profile-settings-tabs__item:hover { color: #1e293b; }
+.ips-profile-settings-tabs__item.is-active { color: var(--mfbb-forum-accent); border-bottom-color: var(--mfbb-forum-accent); font-weight: 600; }
+.ips-profile-settings-body { padding: 16px; background: #f4f6f8; }
+
+.ips-form-section { margin-bottom: 24px; }
+.ips-form-section__title {
+  margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;
+  font-size: 0.9375rem; font-weight: 700; color: #1e293b;
+  display: flex; align-items: center; gap: 8px;
+}
+.ips-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 640px) { .ips-form-grid { grid-template-columns: 1fr; } }
+.ips-form-field { margin-bottom: 12px; }
+.ips-form-field label { display: block; font-size: 0.8125rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+.ips-form-field input, .ips-form-field select, .ips-form-field textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 3px; font-size: 0.875rem; background: #fff;
+}
+.ips-form-field input:focus, .ips-form-field select:focus, .ips-form-field textarea:focus {
+  outline: none; border-color: var(--mfbb-forum-accent); box-shadow: 0 0 0 2px rgba(16, 82, 137, 0.1);
+}
+.ips-form-field input:disabled { background: #f8fafc; color: #94a3b8; }
+.ips-form-field__hint { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
+.ips-form-field--check { display: flex; align-items: center; gap: 8px; }
+.ips-form-field--check label { margin: 0; font-weight: 500; }
+.ips-form-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+
+.ips-prefs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+.ips-pref-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 3px; font-size: 0.8125rem; color: #475569;
+}
+
+.ips-profile-avatar-edit { position: relative; display: inline-block; }
+.ips-profile-avatar-edit__btn {
+  position: absolute; bottom: 0; right: 0; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--mfbb-forum-accent); color: #fff; border-radius: 50%;
+  border: 2px solid #fff; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.ips-profile-about { padding: 16px; }
+
+.ips-profile-about--page {
+  padding: 0;
+}
+
+.ips-profile-about--page .ips-profile-about__page-head {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.ips-profile-about--page .ips-profile-about__page-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.ips-profile-about--page .ips-profile-about__page-desc {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.ips-profile-about--page .ips-profile-about__list {
+  padding: 0;
+}
+
+.ips-profile-about--page .ips-profile-about__row {
+  grid-template-columns: 200px 1fr;
+  padding: 14px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+}
+
+.ips-profile-about--page .ips-profile-about__row dt {
+  color: #64748b;
+}
+
+.ips-profile-about--page .ips-profile-about__bio {
+  margin: 0;
+  padding: 20px 24px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.ips-profile-about--page .ips-profile-about__bio-title {
+  font-size: 0.9375rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #1e293b;
+}
+
+.ips-profile-about--page .ips-profile-about__page-head--stats {
+  border-top: 1px solid #e2e8f0;
+}
+
+.ips-profile-about--page .ips-profile-about__list--stats .ips-profile-about__row dd strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.ips-profile-about--page .ips-profile-about__list--stats .ips-profile-about__row dd em {
+  font-style: normal;
+  font-size: 0.8125rem;
+}
+
+/* Kaydırmalı etkinlik kutusu */
+.ips-profile-activity-box {
+  margin: 16px 20px 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 420px;
+  max-height: 560px;
+}
+
+.ips-profile-activity-box__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+  flex-shrink: 0;
+}
+
+.ips-profile-activity-box__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ips-profile-activity-box__scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.ips-profile-activity-box__loader {
+  padding: 12px;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  border-top: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.ips-profile-activity-box__loader.is-hidden {
+  display: none;
+}
+
+/* İstatistik grid */
+.ips-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.ips-stats-grid__item {
+  padding: 16px 14px;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.ips-stats-grid__item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.ips-stats-grid__value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.ips-stats-grid__value--sm {
+  font-size: 1rem;
+}
+
+.ips-stats-grid__label {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.ips-profile-stats-note {
+  margin: 16px 0 0;
+  font-size: 0.8125rem;
+}
+
+.ips-profile-stats-note a {
+  color: var(--mfbb-forum-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.ips-profile-stats-note a:hover {
+  text-decoration: underline;
+}
+
+/* İstatistik dashboard grafik kartları */
+.ips-stats-dashboard {
+  padding: 16px 20px 20px;
+}
+
+.ips-dash-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.ips-dash-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 14px 14px 8px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  min-height: 148px;
+}
+
+.ips-dash-card__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ips-dash-card__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+}
+
+.ips-dash-card--content .ips-dash-card__icon { background: #e0e7ff; color: #4338ca; }
+.ips-dash-card--topics .ips-dash-card__icon { background: #dbeafe; color: #1d4ed8; }
+.ips-dash-card--posts .ips-dash-card__icon { background: #f1f5f9; color: #475569; }
+.ips-dash-card--articles .ips-dash-card__icon { background: #fce7f3; color: #be185d; }
+.ips-dash-card--ideas .ips-dash-card__icon { background: #fef3c7; color: #b45309; }
+.ips-dash-card--likes .ips-dash-card__icon { background: #fce7f3; color: #be185d; }
+.ips-dash-card--rep .ips-dash-card__icon { background: #fef3c7; color: #b45309; }
+.ips-dash-card--reward .ips-dash-card__icon { background: #fef9c3; color: #a16207; }
+
+.ips-dash-card__label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.ips-dash-card__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.ips-dash-card__trend {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 4px 0 6px;
+  min-height: 1rem;
+}
+
+.ips-dash-card__trend--up { color: #15803d; }
+.ips-dash-card__trend--down { color: #b91c1c; }
+.ips-dash-card__trend--muted { color: #94a3b8; }
+
+.ips-dash-card__chart {
+  width: 100%;
+  height: 56px;
+  margin-top: auto;
+}
+
+.ips-dash-chart-panel {
+  margin-top: 20px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.ips-dash-chart-panel__head {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.ips-dash-chart-panel__head h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.ips-dash-chart-panel__head p {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.ips-dash-chart-panel__body {
+  padding: 16px;
+}
+
+.ips-dash-chart-panel__body canvas {
+  width: 100%;
+  max-height: 220px;
+}
+
+.ips-dash-chart-panel__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.ips-dash-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ips-dash-legend-item i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.ips-dash-legend-item--content i { background: #4338ca; }
+.ips-dash-legend-item--topics i { background: #1d4ed8; }
+.ips-dash-legend-item--posts i { background: #64748b; }
+.ips-dash-legend-item--articles i { background: #be185d; }
+
+.ips-profile-panel--nested {
+  margin-top: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+}
+
+@media (max-width: 640px) {
+  .ips-dash-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .ips-stats-dashboard {
+    padding: 12px 14px 16px;
+  }
+
+  .ips-profile-about--page .ips-profile-about__row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 12px 14px;
+  }
+
+  .ips-profile-content__section-head,
+  .ips-profile-content__section-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .ips-activity-item {
+    padding: 10px 14px;
+  }
+
+  .ips-activity-item__time {
+    display: none;
+  }
+}

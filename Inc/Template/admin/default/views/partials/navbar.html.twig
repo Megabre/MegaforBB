@@ -1,0 +1,163 @@
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set attackModeOn = attackModeOn ?? false %}
+{% set currentUser = user ?? null %}
+<header class="admin-topbar">
+    <div class="admin-topbar-left">
+        <button class="admin-mobile-toggle" id="admin-mobile-toggle" type="button" aria-label="{{ core_e(admin__('common.open_menu')) }}">
+            <i class="ti ti-menu-2"></i>
+        </button>
+        <div class="admin-topbar-title">{{ core_e(pageTitle ?? admin__('common.dashboard')) }}</div>
+    </div>
+    <div class="admin-topbar-right">
+        <div class="admin-topbar-search" id="admin-search-wrap">
+            <i class="ti ti-search"></i>
+            <input type="text" id="admin-search-input"
+                   placeholder="{{ core_e(lang('admin.search.placeholder')) }}"
+                   aria-label="{{ core_e(lang('admin.search.placeholder')) }}"
+                   autocomplete="off"
+                   title="{{ core_e(lang('admin.search.placeholder')) }}">
+            <div class="admin-search-results" id="admin-search-results"></div>
+        </div>
+        <button type="button" class="admin-topbar-link d-none d-md-flex" title="{{ lang('admin.navbar.clear_cache') }}" data-bs-toggle="modal" data-bs-target="#adminClearCacheModal">
+            <i class="ti ti-trash" style="font-size:18px"></i>
+        </button>
+        <a class="admin-topbar-link d-none d-md-flex" href="{{ core_url(adminPath ~ '/rebuild') }}" title="{{ lang('admin.navbar.system_rebuild') }}">
+            <i class="ti ti-refresh" style="font-size:18px"></i>
+        </a>
+        <form action="{{ core_url(adminPath ~ '/security/toggle-attack-mode') }}" method="post" class="d-inline">
+            {{ core_csrf_field('admin_security')|raw }}
+            <button type="submit" class="admin-topbar-link d-none d-md-flex" title="{{ attackModeOn ? lang('admin.navbar.attack_mode_on') : lang('admin.navbar.attack_mode_off') }}">
+                <i class="ti ti-shield{{ attackModeOn ? '-check' : '' }}" style="font-size:18px;{{ attackModeOn ? 'color:var(--tblr-success)' : '' }}"></i>
+            </button>
+        </form>
+        <a class="admin-topbar-link d-none d-md-flex" href="{{ core_url('') }}" target="_blank"
+           title="{{ core_e(admin__('header.go_to_site')) }}" data-bs-toggle="tooltip" data-bs-placement="bottom">
+            <i class="ti ti-external-link" style="font-size:18px"></i>
+        </a>
+        <div class="dropdown">
+            <a href="#" class="admin-user-btn" data-bs-toggle="dropdown" aria-label="Open user menu">
+                <span class="avatar avatar-sm rounded-circle"
+                      style="background-image: url({{ currentUser and currentUser.avatar_path is not empty ? asset_url(currentUser.avatar_path) : ('https://ui-avatars.com/api/?name=' ~ (avatar_display_name(currentUser ? currentUser.username : null)|url_encode) ~ '&background=206bc4&color=fff&size=64') }})"></span>
+                <span class="admin-user-name d-none d-xl-inline">{{ core_e(currentUser ? currentUser.username : admin__('users.administrator')) }}</span>
+                <i class="ti ti-chevron-down d-none d-xl-inline" style="font-size:14px;color:var(--admin-muted)"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow mt-1">
+                <a href="{{ currentUser ? core_url('member/' ~ currentUser.username|e('url')) : core_url('') }}" class="dropdown-item">
+                    <i class="ti ti-user me-2" style="font-size:16px"></i>{{ core_e(admin__('header.profile')) }}
+                </a>
+                <a href="{{ core_url('profile/preferences') }}" class="dropdown-item">
+                    <i class="ti ti-settings me-2" style="font-size:16px"></i>{{ core_e(lang('common.preferences')) }}
+                </a>
+                <a href="{{ core_url('') }}" class="dropdown-item" target="_blank">
+                    <i class="ti ti-external-link me-2" style="font-size:16px"></i>{{ core_e(admin__('header.go_to_site')) }}
+                </a>
+                <div class="dropdown-divider"></div>
+                <form action="{{ core_url('logout') }}" method="post">
+                    {{ core_csrf_field()|raw }}
+                    <button type="submit" class="dropdown-item text-danger">
+                        <i class="ti ti-logout me-2" style="font-size:16px"></i>{{ core_e(admin__('header.logout')) }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Önbellek temizleme modal -->
+<div class="modal modal-blur fade" id="adminClearCacheModal" tabindex="-1" aria-labelledby="adminClearCacheModalLabel" aria-hidden="true" data-csrf="{{ core_e(core_csrf_token('admin_clear_cache')) }}">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminClearCacheModalLabel">
+                    <i class="ti ti-trash me-2"></i>{{ lang('admin.navbar.cache_modal_title') }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ lang('admin.navbar.close') }}"></button>
+            </div>
+            <div class="modal-body" id="adminClearCacheModalBody">
+                <p class="text-secondary mb-4">{{ lang('admin.navbar.cache_modal_desc') }}</p>
+                <div id="adminClearCacheResult" class="d-none"></div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ lang('admin.common.cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="adminClearCacheBtn">
+                        <i class="ti ti-trash me-1"></i>{{ lang('admin.navbar.cache_clear_btn') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    var modal = document.getElementById('adminClearCacheModal');
+    if (!modal) return;
+    var body = document.getElementById('adminClearCacheModalBody');
+    var resultEl = document.getElementById('adminClearCacheResult');
+    var btn = document.getElementById('adminClearCacheBtn');
+    var csrf = modal.getAttribute('data-csrf') || '';
+    var clearUrl = {{ core_url(adminPath ~ '/performance/clear-cache')|json_encode|raw }};
+
+    function setResult(html, isError) {
+        resultEl.innerHTML = html;
+        resultEl.classList.remove('d-none');
+        resultEl.classList.toggle('alert-danger', isError);
+        resultEl.classList.toggle('alert-success', !isError && html);
+        if (html) resultEl.classList.add('alert');
+    }
+
+    function setLoading(loading) {
+        btn.disabled = loading;
+        btn.innerHTML = loading ? '<span class="spinner-border spinner-border-sm me-1"></span> ' + {{ lang('admin.navbar.cache_clearing')|json_encode|raw }} : '<i class="ti ti-trash me-1"></i>' + {{ lang('admin.navbar.cache_clear_btn')|json_encode|raw }};
+    }
+
+    modal.addEventListener('show.bs.modal', function() {
+        resultEl.classList.add('d-none');
+        resultEl.classList.remove('alert', 'alert-success', 'alert-danger');
+        resultEl.innerHTML = '';
+        btn.classList.remove('d-none');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-trash me-1"></i>' + {{ lang('admin.navbar.cache_clear_btn')|json_encode|raw }};
+    });
+
+    btn.addEventListener('click', function() {
+        if (btn.disabled) return;
+        setLoading(true);
+        setResult('');
+
+        var formData = new FormData();
+        formData.append('_token', csrf);
+
+        fetch(clearUrl, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(_r) {
+            var r = _r;
+            setLoading(false);
+            if (!r.ok || !r.data.success) {
+                setResult(r.data && r.data.message ? r.data.message : {{ lang('admin.navbar.cache_error')|json_encode|raw }}, true);
+                return;
+            }
+            var details = r.data.details || [];
+            var html = '<p class="mb-3 fw-semibold text-success"><i class="ti ti-circle-check me-1"></i>' + (r.data.message || {{ lang('admin.navbar.cache_success')|json_encode|raw }}) + '</p>';
+            html += '<ul class="list-unstyled mb-0">';
+            details.forEach(function(d) {
+                html += '<li class="d-flex align-items-start gap-2 py-2 border-bottom border-light">';
+                html += '<i class="ti ti-' + (d.status === 'ok' ? 'check' : 'minus') + ' mt-1 text-' + (d.status === 'ok' ? 'success' : 'secondary') + '"></i>';
+                html += '<div><strong>' + (d.label || '') + '</strong>';
+                if (d.description) html += '<br><span class="text-secondary small">' + d.description + '</span>';
+                if (d.path) html += ' <code class="small">' + d.path + '</code>';
+                html += '</div></li>';
+            });
+            html += '</ul>';
+            setResult(html);
+            btn.classList.add('d-none');
+        })
+        .catch(function() {
+            setLoading(false);
+            setResult({{ lang('admin.navbar.cache_network_error')|json_encode|raw }}, true);
+        });
+    });
+})();
+</script>

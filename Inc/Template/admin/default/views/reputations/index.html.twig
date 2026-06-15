@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+{% set list = list ?? [] %}
+{% set reputationEnabled = reputationEnabled ?? true %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.reputations.title') }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.reputations.system_title') }}</h3>
+            </div>
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/reputations/toggle-setting') }}" method="post" class="d-flex align-items-center gap-3">
+                    {{ core_csrf_field('admin_rep_setting')|raw }}
+                    <label class="form-check form-switch">
+                        <input type="hidden" name="enabled" value="0">
+                        <input type="checkbox" name="enabled" value="1" class="form-check-input" {{ reputationEnabled ? 'checked' : '' }} onchange="this.form.submit()">
+                        <span class="form-check-label">{{ lang('admin.reputations.system_desc') }}</span>
+                    </label>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.reputations.recent_title') }}</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.reputations.date') }}</th>
+                            <th>{{ lang('admin.reputations.from') }}</th>
+                            <th>{{ lang('admin.reputations.to') }}</th>
+                            <th>{{ lang('admin.reputations.type') }}</th>
+                            <th>{{ lang('admin.reputations.comment') }}</th>
+                            <th class="w-1">{{ lang('admin.common.actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if list is empty %}
+                        <tr><td colspan="6" class="text-center text-muted">{{ lang('admin.reputations.no_records') }}</td></tr>
+                        {% else %}
+                        {% for r in list %}
+                        <tr>
+                            <td class="text-muted">{{ (r.created_at ?? '')|e }}</td>
+                            <td><a href="{{ core_url('member/' ~ (r.from_username ?? '')|e('url')) }}">{{ (r.from_username ?? '')|e }}</a></td>
+                            <td><a href="{{ core_url('member/' ~ (r.to_username ?? '')|e('url')) }}">{{ (r.to_username ?? '')|e }}</a></td>
+                            <td>{% if (r.value ?? 0) == 1 %}<span class="badge bg-success">+ Rep</span>{% else %}<span class="badge bg-danger">− Rep</span>{% endif %}</td>
+                            <td class="text-muted">{{ (r.comment ?? '')|slice(0, 80)|e }}{{ (r.comment ?? '')|length > 80 ? '…' : '' }}</td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a href="{{ core_url(adminPath ~ '/reputations/edit/' ~ r.id) }}" class="btn btn-sm btn-white">{{ lang('admin.common.edit') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/reputations/delete/' ~ r.id) }}" method="post" onsubmit="return confirm('{{ lang('admin.reputations.delete_confirm') }}');" style="display:inline;">
+                                        {{ core_csrf_field('admin_rep_delete')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

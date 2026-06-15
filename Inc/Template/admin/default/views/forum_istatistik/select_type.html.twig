@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+{% set forumIstatistikIcerikler = forumIstatistikIcerikler ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <h2 class="page-title">{{ lang('admin.forum_istatistik.select_type_title') }}</h2>
+        <div class="text-muted mt-1">{{ lang('admin.forum_istatistik.select_type_desc') }}</div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row g-3">
+            {% for icerik in forumIstatistikIcerikler %}
+            <div class="col-md-4">
+                <a href="{{ core_url(adminPath ~ '/forum-istatistik/ekle?type=' ~ icerik.icerik_id|e('url')) }}" class="card card-link card-link-pop text-decoration-none">
+                    <div class="card-body">
+                        <h3 class="card-title">{{ (icerik.title ?? icerik.icerik_id)|e }}</h3>
+                        <p class="text-muted small mb-0">{{ icerik.icerik_id|e }}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

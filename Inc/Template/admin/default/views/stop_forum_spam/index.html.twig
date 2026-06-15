@@ -1,0 +1,210 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.sfs.title') }}</h2>
+                <div class="text-secondary mt-1">{{ lang('admin.sfs.intro')|raw }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('sfs_ok', []) %}
+            <div class="alert alert-success">{{ core_e(msg) }}</div>
+        {% endfor %}
+        {% for msg in app.session.getFlashBag().get('sfs_error', []) %}
+            <div class="alert alert-danger">{{ core_e(msg) }}</div>
+        {% endfor %}
+
+        <form action="{{ urlSave }}" method="post" class="card mb-4">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.sfs.settings_section') }}</h3>
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="sfs_enabled" value="0">
+                <label class="form-check form-switch mb-3">
+                    <input type="checkbox" name="sfs_enabled" value="1" class="form-check-input" {{ sfs_enabled ? 'checked' : '' }}>
+                    <span class="form-check-label">{{ lang('admin.sfs.enabled') }}</span>
+                </label>
+
+                <p class="text-secondary small mb-2">{{ lang('admin.sfs.check_fields') }}</p>
+                <input type="hidden" name="sfs_check_ip" value="0">
+                <input type="hidden" name="sfs_check_email" value="0">
+                <input type="hidden" name="sfs_check_username" value="0">
+                <label class="form-check mb-1">
+                    <input type="checkbox" name="sfs_check_ip" value="1" class="form-check-input" {{ sfs_check_ip ? 'checked' : '' }}>
+                    <span class="form-check-label">{{ lang('admin.sfs.check_ip') }}</span>
+                </label>
+                <label class="form-check mb-1">
+                    <input type="checkbox" name="sfs_check_email" value="1" class="form-check-input" {{ sfs_check_email ? 'checked' : '' }}>
+                    <span class="form-check-label">{{ lang('admin.sfs.check_email') }}</span>
+                </label>
+                <label class="form-check mb-3">
+                    <input type="checkbox" name="sfs_check_username" value="1" class="form-check-input" {{ sfs_check_username ? 'checked' : '' }}>
+                    <span class="form-check-label">{{ lang('admin.sfs.check_username') }}</span>
+                </label>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">{{ lang('admin.sfs.min_frequency') }}</label>
+                        <input type="number" name="sfs_min_frequency" class="form-control" value="{{ sfs_min_frequency }}" min="1" max="255">
+                        <span class="form-hint">{{ lang('admin.sfs.min_frequency_hint') }}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ lang('admin.sfs.min_confidence') }}</label>
+                        <input type="number" name="sfs_min_confidence" class="form-control" value="{{ sfs_min_confidence }}" min="0" max="100" step="0.01">
+                        <span class="form-hint">{{ lang('admin.sfs.min_confidence_hint') }}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ lang('admin.sfs.expire_days') }}</label>
+                        <input type="number" name="sfs_expire_days" class="form-control" value="{{ sfs_expire_days }}" min="0" max="3650">
+                        <span class="form-hint">{{ lang('admin.sfs.expire_days_hint') }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">{{ core_e(admin__('common.save')) }}</button>
+            </div>
+        </form>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.sfs.test_section') }}</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary small">{{ lang('admin.sfs.test_intro') }}</p>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-4">
+                        <input type="text" id="sfs-test-username" class="form-control" placeholder="{{ lang('admin.sfs.test_username_ph') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="email" id="sfs-test-email" class="form-control" placeholder="{{ lang('admin.sfs.test_email_ph') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" id="sfs-test-ip" class="form-control" placeholder="{{ lang('admin.sfs.test_ip_ph') }}">
+                    </div>
+                </div>
+                <input type="hidden" id="sfs-csrf" value="{{ csrfToken }}">
+                <button type="button" class="btn btn-outline-primary" id="sfs-test-btn">{{ lang('admin.sfs.test_run') }}</button>
+                <div id="sfs-test-result" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% set sfsI18n = {
+    summary: lang('admin.sfs.result_summary'),
+    approvalYes: lang('admin.sfs.result_approval_yes'),
+    approvalNo: lang('admin.sfs.result_approval_no'),
+    apiFail: lang('admin.sfs.result_api_fail'),
+    blockIp: lang('admin.sfs.block_ip'),
+    blockEmail: lang('admin.sfs.block_email'),
+    blockUsername: lang('admin.sfs.block_username'),
+    colValue: lang('admin.sfs.col_value'),
+    colListed: lang('admin.sfs.col_listed'),
+    colFrequency: lang('admin.sfs.col_frequency'),
+    colConfidence: lang('admin.sfs.col_confidence'),
+    colLastseen: lang('admin.sfs.col_lastseen'),
+    colAsn: lang('admin.sfs.col_asn'),
+    colCountry: lang('admin.sfs.col_country'),
+    listedYes: lang('admin.sfs.listed_yes'),
+    listedNo: lang('admin.sfs.listed_no'),
+    rawJson: lang('admin.sfs.raw_json'),
+    onlyWhenListedFooter: lang('admin.sfs.only_when_listed_footer'),
+} %}
+<script type="application/json" id="sfs-test-i18n">{{ sfsI18n|json_encode|raw }}</script>
+<script>
+(function () {
+    var btn = document.getElementById('sfs-test-btn');
+    var wrap = document.getElementById('sfs-test-result');
+    var i18n = {};
+    try {
+        i18n = JSON.parse(document.getElementById('sfs-test-i18n').textContent);
+    } catch (e) {}
+
+    function esc(s) {
+        if (s === null || s === undefined) return '';
+        var d = document.createElement('div');
+        d.textContent = String(s);
+        return d.innerHTML;
+    }
+
+    function renderBlock(title, row, labels) {
+        if (!row || typeof row !== 'object') return '';
+        var appears = parseInt(row.appears, 10) === 1;
+        var badge = appears
+            ? '<span class="badge bg-danger text-white">' + esc(labels.listedYes) + '</span>'
+            : '<span class="badge bg-success text-white">' + esc(labels.listedNo) + '</span>';
+        var freq = row.frequency !== undefined ? esc(row.frequency) : '—';
+        var conf = row.confidence !== undefined && row.confidence !== null && row.confidence !== '' ? esc(row.confidence) : '—';
+        var lastseen = row.lastseen !== undefined && row.lastseen !== null && row.lastseen !== '' ? esc(row.lastseen) : '—';
+        var val = row.value !== undefined ? esc(row.value) : '—';
+        var asn = row.asn !== undefined ? esc(row.asn) : '';
+        var country = row.country !== undefined ? esc(row.country) : '';
+        var extra = '';
+        if (asn !== '' || country !== '') {
+            extra = '<tr><td class="text-secondary w-25">' + esc(labels.colAsn) + ' / ' + esc(labels.colCountry) + '</td><td>'
+                + (asn ? asn : '—') + (country ? ' · ' + country : '') + '</td></tr>';
+        }
+        return ''
+            + '<div class="card mb-2">'
+            + '<div class="card-header py-2"><strong>' + esc(title) + '</strong></div>'
+            + '<div class="card-body p-0"><table class="table table-vcenter mb-0">'
+            + '<tbody>'
+            + '<tr><td class="text-secondary w-25">' + esc(labels.colValue) + '</td><td><code>' + val + '</code></td></tr>'
+            + '<tr><td class="text-secondary">' + esc(labels.colListed) + '</td><td>' + badge + '</td></tr>'
+            + '<tr><td class="text-secondary">' + esc(labels.colFrequency) + '</td><td>' + freq + '</td></tr>'
+            + '<tr><td class="text-secondary">' + esc(labels.colConfidence) + '</td><td>' + conf + '</td></tr>'
+            + '<tr><td class="text-secondary">' + esc(labels.colLastseen) + '</td><td>' + lastseen + '</td></tr>'
+            + extra
+            + '</tbody></table></div>'
+            + (!appears && labels.onlyWhenListedFooter ? '<div class="card-footer py-2 small text-muted">' + esc(labels.onlyWhenListedFooter) + '</div>' : '')
+            + '</div>';
+    }
+
+    function renderResult(j) {
+        var L = i18n;
+        var html = '';
+        if (!j.success) {
+            html = '<div class="alert alert-danger mb-0">' + esc(j.message || L.apiFail) + '</div>';
+            return html;
+        }
+        var need = !!j.needs_approval;
+        var alertClass = need ? 'alert-danger' : 'alert-success';
+        var msg = need ? L.approvalYes : L.approvalNo;
+        html += '<div class="alert ' + alertClass + ' mb-3"><strong>' + esc(L.summary) + '</strong><br>' + esc(msg) + '</div>';
+        var raw = j.raw || {};
+        if (raw.ip) html += renderBlock(L.blockIp, raw.ip, L);
+        if (raw.email) html += renderBlock(L.blockEmail, raw.email, L);
+        if (raw.username) html += renderBlock(L.blockUsername, raw.username, L);
+        var jsonStr = esc(JSON.stringify(j, null, 2));
+        html += '<details class="mt-2"><summary class="text-secondary small cursor-pointer user-select-none">' + esc(L.rawJson) + '</summary>'
+            + '<pre class="bg-dark text-light p-3 rounded small mt-2 mb-0" style="max-height: 240px; overflow: auto;">' + jsonStr + '</pre></details>';
+        return html;
+    }
+
+    if (!btn || !wrap) return;
+    btn.addEventListener('click', function () {
+        var fd = new FormData();
+        fd.append('_token', document.getElementById('sfs-csrf').value);
+        fd.append('test_username', document.getElementById('sfs-test-username').value);
+        fd.append('test_email', document.getElementById('sfs-test-email').value);
+        fd.append('test_ip', document.getElementById('sfs-test-ip').value);
+        wrap.style.display = 'block';
+        wrap.innerHTML = '<div class="text-secondary">…</div>';
+        fetch({{ urlTest|json_encode|raw }}, { method: 'POST', body: fd, credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (j) {
+                wrap.innerHTML = renderResult(j);
+            })
+            .catch(function () {
+                wrap.innerHTML = '<div class="alert alert-danger mb-0">' + esc(i18n.apiFail || 'Error') + '</div>';
+            });
+    });
+})();
+</script>
+{% endblock %}

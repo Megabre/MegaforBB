@@ -1,0 +1,98 @@
+{% extends "base.html.twig" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ theme_asset_url('css/idelist.css') }}?v={{ core_config('app.version', '1.0.0') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-3">
+  {% include 'idelist/_nav.html.twig' with { tab: 'statuses' } %}
+  <div class="idelist-admin-grid">
+    <section class="idelist-admin-panel">
+      <div class="idelist-admin-panel__head">{{ core_e(core__('idelist.add_status')) }}</div>
+      <div class="idelist-admin-panel__body">
+        <form method="post" action="{{ core_url(adminPath ~ '/idelist/statuses') }}" class="d-grid gap-2">
+          {{ core_csrf_field('idelist_admin_status_def')|raw }}
+          <input class="form-control" name="name" placeholder="{{ core_e(core__('idelist.status_name_label')) }}" required maxlength="120">
+          <input class="form-control font-monospace" name="slug" placeholder="{{ core_e(core__('idelist.status_slug_placeholder')) }}" maxlength="64" autocomplete="off">
+          <div class="d-flex align-items-center gap-2">
+            <input class="form-control form-control-color" type="color" name="color_picker" value="#3B82F6" data-color-target="create-st">
+            <input class="form-control" name="color" id="create-st-color-input" placeholder="#3B82F6" maxlength="7">
+          </div>
+          {% include 'idelist/_color_palette.html.twig' with { targetKey: 'create-st' } %}
+          <input class="form-control" type="number" name="sort_order" value="0">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="requires_completion" value="1" id="st-req-new">
+            <label class="form-check-label" for="st-req-new">{{ core_e(core__('idelist.status_requires_completion')) }}</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="default_on_approval" value="1" id="st-appr-new">
+            <label class="form-check-label" for="st-appr-new">{{ core_e(core__('idelist.status_default_approval')) }}</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="default_on_open" value="1" id="st-open-new">
+            <label class="form-check-label" for="st-open-new">{{ core_e(core__('idelist.status_default_open')) }}</label>
+          </div>
+          <button class="btn btn-primary" type="submit">{{ core_e(core__('idelist.add_status')) }}</button>
+        </form>
+        <p class="text-muted small mt-2 mb-0">{{ core_e(core__('idelist.status_help')) }}</p>
+      </div>
+    </section>
+
+    <section class="idelist-admin-panel">
+      <div class="idelist-admin-panel__head">{{ core_e(core__('idelist.admin_tab_statuses')) }}</div>
+      <div class="idelist-admin-panel__body">
+        {% for st in statuses %}
+        <div class="idelist-category-row idelist-status-row">
+          <form method="post" action="{{ core_url(adminPath ~ '/idelist/statuses/' ~ st.id) }}" class="contents">
+            {{ core_csrf_field('idelist_admin_status_def')|raw }}
+            <div>
+              <input class="form-control form-control-sm fw-semibold" name="name" value="{{ st.name|e('html_attr') }}" maxlength="120" required>
+              <div class="text-muted small font-monospace mt-1">{{ core_e(st.slug) }}</div>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <input class="form-control form-control-color form-control-sm" type="color" value="{{ (st.color ?: '#3B82F6')|e('html_attr') }}" data-color-target="row-st-{{ st.id }}">
+                <input class="form-control form-control-sm" name="color" id="row-st-{{ st.id }}-color-input" value="{{ st.color|default('')|e('html_attr') }}">
+              </div>
+              {% include 'idelist/_color_palette.html.twig' with { targetKey: 'row-st-' ~ st.id } %}
+            </div>
+            <input class="form-control form-control-sm" type="number" name="sort_order" value="{{ st.sort_order|default(0) }}">
+            <div class="d-flex flex-column gap-1">
+              <div class="form-check m-0">
+                <input class="form-check-input" type="checkbox" name="requires_completion" value="1" id="st-req-{{ st.id }}" {{ st.requires_completion ? 'checked' : '' }}>
+                <label class="form-check-label small" for="st-req-{{ st.id }}">{{ core_e(core__('idelist.status_requires_completion_short')) }}</label>
+              </div>
+              <div class="form-check m-0">
+                <input class="form-check-input" type="checkbox" name="default_on_approval" value="1" id="st-appr-{{ st.id }}" {{ st.default_on_approval ? 'checked' : '' }}>
+                <label class="form-check-label small" for="st-appr-{{ st.id }}">{{ core_e(core__('idelist.status_default_approval_short')) }}</label>
+              </div>
+              <div class="form-check m-0">
+                <input class="form-check-input" type="checkbox" name="default_on_open" value="1" id="st-open-{{ st.id }}" {{ st.default_on_open ? 'checked' : '' }}>
+                <label class="form-check-label small" for="st-open-{{ st.id }}">{{ core_e(core__('idelist.status_default_open_short')) }}</label>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" type="submit">{{ core_e(core__('idelist.save_action')) }}</button>
+          </form>
+          <form method="post" action="{{ core_url(adminPath ~ '/idelist/statuses/' ~ st.id ~ '/delete') }}" onsubmit="return confirm({{ core__('idelist.confirm_delete_status')|json_encode|raw }})">
+            {{ core_csrf_field('idelist_admin_status_def')|raw }}
+            <button class="btn btn-sm btn-danger" type="submit">{{ core_e(core__('idelist.delete_action')) }}</button>
+          </form>
+        </div>
+        {% else %}
+          <div class="text-muted">{{ core_e(core__('idelist.no_statuses')) }}</div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% include 'idelist/_color_palette_script.html.twig' %}
+<script>
+bindPalette('create-st', 'create-st');
+document.querySelectorAll('[data-color-target^="row-st-"]').forEach(function (el) {
+  bindPalette(el.getAttribute('data-color-target'), 'create-st');
+});
+</script>
+{% endblock %}

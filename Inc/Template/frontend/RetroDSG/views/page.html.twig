@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set p = page ?? null %}
+{% if not p %}
+  <p class="p-4 text-gray-500">Sayfa bulunamadı.</p>
+{% else %}
+<div class="mt-6 bg-white ring-1 ring-gray-200 shadow-sm rounded-lg overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h1 class="text-xl font-semibold text-[#1a252f]">{{ core_e(p.title) }}</h1>
+  </div>
+  <div class="p-6 prose max-w-none">
+    {{ core_sanitize_html(p.body ?? '')|raw }}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

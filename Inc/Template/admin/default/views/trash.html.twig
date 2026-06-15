@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set topics = topics ?? [] %}
+{% set posts = posts ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.trash.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.trash.description') }}</div>
+            </div>
+            {% if (user.role_id ?? 0) == 1 and (topics is not empty or posts is not empty) %}
+            <div class="col-auto">
+                <form action="{{ core_url(adminPath ~ '/trash/empty') }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.trash.empty_confirm') }}');">
+                    {{ core_csrf_field('trash_empty')|raw }}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ti ti-trash me-1"></i>{{ lang('admin.trash.empty_btn') }}
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ lang('admin.trash.deleted_topics') }}</h3>
+                    </div>
+                    {% if topics is not empty %}
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ lang('admin.trash.table_id') }}</th>
+                                    <th>{{ lang('admin.trash.table_title') }}</th>
+                                    <th>{{ lang('admin.trash.table_deleted_by') }}</th>
+                                    <th>{{ lang('admin.trash.table_deleted_at') }}</th>
+                                    <th class="text-end">{{ lang('admin.common.actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in topics %}
+                                <tr>
+                                    <td class="text-muted">{{ t.id ?? 0 }}</td>
+                                    <td><div class="text-truncate" style="max-width:280px" title="{{ core_e(t.title ?? '') }}">{{ core_e(t.title ?? '—') }}</div></td>
+                                    <td class="text-muted">{{ core_e(t.deleted_by_username ?? '—') }}</td>
+                                    <td class="text-muted">{{ t.deleted_at ? (t.deleted_at|date('d.m.Y H:i')) : '—' }}</td>
+                                    <td class="text-end">
+                                        <form action="{{ core_url(adminPath ~ '/trash/restore/topic/' ~ (t.id ?? 0)) }}" method="post" class="d-inline">
+                                            {{ core_csrf_field('trash_action')|raw }}
+                                            <button type="submit" class="btn btn-sm btn-success">{{ lang('admin.trash.restore') }}</button>
+                                        </form>
+                                        {% if (user.role_id ?? 0) == 1 %}
+                                        <form action="{{ core_url(adminPath ~ '/trash/purge/topic/' ~ (t.id ?? 0)) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.trash.purge_topic_confirm') }}');">
+                                            {{ core_csrf_field('trash_action')|raw }}
+                                            <button type="submit" class="btn btn-sm btn-danger">{{ lang('admin.trash.purge') }}</button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-4">
+                            <i class="ti ti-trash-off mb-2" style="font-size:32px;display:block"></i>
+                            Silinen konu bulunmuyor.
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ lang('admin.trash.deleted_posts') }}</h3>
+                    </div>
+                    {% if posts is not empty %}
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ lang('admin.trash.table_post_id') }}</th>
+                                    <th>{{ lang('admin.trash.table_topic') }}</th>
+                                    <th>{{ lang('admin.trash.table_deleted_by') }}</th>
+                                    <th>{{ lang('admin.trash.table_deleted_at') }}</th>
+                                    <th class="text-end">{{ lang('admin.common.actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in posts %}
+                                <tr>
+                                    <td class="text-muted">{{ p.id ?? 0 }}</td>
+                                    <td><div class="text-truncate" style="max-width:280px" title="{{ core_e(p.topic_title ?? '') }}">{{ core_e(p.topic_title ?? '—') }}</div></td>
+                                    <td class="text-muted">{{ core_e(p.deleted_by_username ?? '—') }}</td>
+                                    <td class="text-muted">{{ p.deleted_at ? (p.deleted_at|date('d.m.Y H:i')) : '—' }}</td>
+                                    <td class="text-end">
+                                        <form action="{{ core_url(adminPath ~ '/trash/restore/post/' ~ (p.id ?? 0)) }}" method="post" class="d-inline">
+                                            {{ core_csrf_field('trash_action')|raw }}
+                                            <button type="submit" class="btn btn-sm btn-success">{{ lang('admin.trash.restore') }}</button>
+                                        </form>
+                                        {% if (user.role_id ?? 0) == 1 %}
+                                        <form action="{{ core_url(adminPath ~ '/trash/purge/post/' ~ (p.id ?? 0)) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.trash.purge_post_confirm') }}');">
+                                            {{ core_csrf_field('trash_action')|raw }}
+                                            <button type="submit" class="btn btn-sm btn-danger">{{ lang('admin.trash.purge') }}</button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="text-muted text-center py-4">
+                            <i class="ti ti-message-off mb-2" style="font-size:32px;display:block"></i>
+                            {{ lang('admin.trash.no_deleted_posts') }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+{% set forum = forum ?? null %}
+{% set topics = topics ?? [] %}
+{% if not forum %}
+  <p class="p-4 text-gray-500">Forum bulunamadı.</p>
+{% else %}
+
+<div class="mfbb-forum-view">
+<div class="mt-4 text-sm text-gray-600">
+  <nav aria-label="Breadcrumb" class="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-2.5">
+    <ol class="flex items-center gap-2 flex-wrap">
+      <li><a href="{{ core_url('') }}" class="text-[#105289] hover:text-blue-500 hover:underline">{{ core__('common.home') }}</a></li>
+      <li>›</li>
+      {% if parent_forum is defined and parent_forum %}
+      <li><a href="{{ core_url('forum/' ~ (parent_forum.slug|e('url'))) }}" class="text-[#105289] hover:text-blue-500 hover:underline">{{ core_e(parent_forum.name) }}</a></li>
+      <li>›</li>
+      {% endif %}
+      <li class="text-gray-700">{{ core_e(forum.name) }}</li>
+    </ol>
+  </nav>
+</div>
+
+{% set topic_period = topic_period ?? '' %}
+{% set topic_sort = topic_sort ?? 'newest' %}
+{% set forum_base_url = forum_url|default(core_url('forum/' ~ (forum.slug|e('url')))) %}
+{% set pagination = pagination ?? { page: 1, total_pages: 1, total: topics|length, per_page: topics|length } %}
+{% set pagination_base = pagination_base|default(forum_base_url ~ '?') %}
+
+<div class="mt-6 space-y-4">
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <h1 class="text-lg sm:text-xl font-semibold text-[#105289]">{{ core_e(forum.name) }}</h1>
+      {% if user %}
+      <form action="{{ core_url('mark-all-read') }}" method="post" class="inline">
+        {{ core_csrf_field('mark_all_read')|raw }}
+        <button type="submit" class="text-xs sm:text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md px-2.5 sm:px-3 py-2 transition-colors" title="{{ core__('topic.mark_all_read_title')|e('html_attr') }}">
+          <i class="fa-solid fa-check-double mr-1"></i><span class="hidden sm:inline">{{ core__('topic.mark_all_read') }}</span><span class="sm:hidden">{{ core__('topic.mark_all_read_short') }}</span>
+        </button>
+      </form>
+      <a href="{{ forum_new_topic_url|default(core_url('forum/' ~ (forum.slug|e('url')) ~ '/new-topic')) }}" class="text-xs sm:text-sm text-white bg-[#105289] hover:bg-[#234a73] rounded-md px-3 sm:px-4 py-2"><i class="fa-solid fa-pen-to-square mr-1 sm:mr-2"></i>{{ core__('forum.new_topic') }}</a>
+      {% endif %}
+    </div>
+    <div class="flex items-center justify-end" x-data="{ filterOpen: false }">
+      <div class="relative">
+        <button type="button" @click="filterOpen = !filterOpen" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#105289] focus:ring-offset-1" aria-haspopup="true" :aria-expanded="filterOpen">
+          <i class="fa-solid fa-sliders text-slate-500"></i>
+          <span>{{ core__('forum.filter_sort') }}</span>
+          <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform" :class="{ 'rotate-180': filterOpen }"></i>
+        </button>
+        <div x-show="filterOpen" @click.outside="filterOpen = false" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20" x-cloak>
+          <div class="px-3 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-gray-100 mb-1">{{ core__('forum.filter_period_label') }}</div>
+          <a href="{{ forum_base_url }}{% if topic_sort != 'newest' %}?sort={{ topic_sort }}{% endif %}" class="block px-3 py-2 text-sm {{ topic_period == '' ? 'bg-[#105289]/10 text-[#105289] font-medium' : 'text-slate-700 hover:bg-gray-50' }}">{{ core__('forum.period_all') }}</a>
+          <a href="{{ forum_base_url }}?period=24h{% if topic_sort != 'newest' %}&sort={{ topic_sort }}{% endif %}" class="block px-3 py-2 text-sm {{ topic_period == '24h' ? 'bg-[#105289]/10 text-[#105289] font-medium' : 'text-slate-700 hover:bg-gray-50' }}">{{ core__('forum.period_24h') }}</a>
+          <a href="{{ forum_base_url }}?period=3d{% if topic_sort != 'newest' %}&sort={{ topic_sort }}{% endif %}" class="block px-3 py-2 text-sm {{ topic_period == '3d' ? 'bg-[#105289]/10 text-[#105289] font-medium' : 'text-slate-700 hover:bg-gray-50' }}">{{ core__('forum.period_3d') }}</a>
+          <a href="{{ forum_base_url }}?period=7d{% if topic_sort != 'newest' %}&sort={{ topic_sort }}{% endif %}" class="block px-3 py-2 text-sm {{ topic_period == '7d' ? 'bg-[#105289]/10 text-[#105289] font-medium' : 'text-slate-700 hover:bg-gray-50' }}">{{ core__('forum.period_7d') }}</a>
+          <a href="{{ forum_base_url }}?period=1m{% if topic_sort != 'newest' %}&sort={{ topic_sort }}{% endif %}" class="block px-3 py-2 text-sm {{ topic_period == '1m' ? 'bg-[#105289]/10 text-[#105289] font-medium' : 'text-slate-700 hover:bg-gray-50' }}">{{ core__('forum.period_1m') }}</a>
+          <div class="border-t border-gray-100 mt-1 pt-1.5">
+            <div class="px-3 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ core__('forum.filter_sort_label') }}</div>
+            <a href="{{ forum_base_url }}{% if topic_period != '' %}?period={{ topic_period }}{% endif %}" class="block px-3 py-2 text-sm {{ topic_sort == 'newest' ? 'bg-[#105289]/10 text-[#105289] font-medium' : 'text-slate-700 hover:bg-gray-50' }}">{{ core__('forum.sort_newest') }}</a>
+            <a href="{{ forum_base_url }}?sort=oldest{% if topic_period != '' %}&period={{ topic_period }}{% endif %}" class="block px-3 py-2 text-sm {{ topic_sort == 'oldest' ? 'bg-[#105289]/10 text-[#105289] font-medium' : 'text-slate-700 hover:bg-gray-50' }}">{{ core__('forum.sort_oldest') }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if subforums is defined and subforums is not empty %}
+  <section class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+    <div class="px-5 py-2.5 border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold text-sm flex items-center gap-2">
+      <i class="fa-solid fa-folder-tree"></i> {{ core__('forum.subforums')|default('Alt forumlar') }}
+    </div>
+    <div class="divide-y divide-gray-200">
+      {% for sub in subforums %}
+      <a href="{{ sub.parent_slug is defined and sub.parent_slug is not empty ? core_url('forum/' ~ (sub.parent_slug|e('url')) ~ '/' ~ (sub.slug|e('url'))) : core_url('forum/' ~ (sub.slug|e('url'))) }}" class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-gray-50 transition-colors no-underline text-inherit group">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500"><i class="fa-solid fa-comments"></i></div>
+          <div class="min-w-0">
+            <span class="font-semibold text-[#105289] group-hover:text-blue-500 group-hover:underline block">{{ core_e(sub.name) }}</span>
+            {% if sub.description is not empty %}<p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ core_e(sub.description) }}</p>{% endif %}
+          </div>
+        </div>
+        <div class="flex items-center gap-3 text-xs sm:text-sm text-gray-600 flex-shrink-0">
+          <span>{{ (sub.topic_count ?? 0)|number_format(0) }} {{ core__('topic.topics')|default('konu') }} / {{ (sub.post_count ?? 0)|number_format(0) }} {{ core__('forum.posts') }}</span>
+          {% if sub.last_post_topic_title is not empty %}
+          <span class="text-gray-500">{{ core__('forum.last_post')|default('Son') }}: {{ core_e(sub.last_post_topic_title)|slice(0, 30) }}{% if sub.last_post_topic_title|length > 30 %}…{% endif %}</span>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if topics_include_parent_fallback is defined and topics_include_parent_fallback %}
+  <div class="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <i class="fa-solid fa-info-circle mr-2"></i> {{ core__('forum.subforum_topics_fallback_hint')|default('Bu alt forumda veritabanında doğrudan konu bulunamadı; import nedeniyle konular üst forumda kayıtlı olabilir. Üst forum ve bu alt forumun konuları birlikte listeleniyor.') }}
+  </div>
+  {% endif %}
+
+  {% if topics is not empty %}
+  {% set sticky_topics = topics|filter(t => t.is_sticky ?? false) %}
+  {% set hasSticky = sticky_topics is not empty %}
+  {% if hasSticky %}
+  <section class="bg-amber-50/70 ring-1 ring-amber-200 shadow-sm rounded-xl overflow-hidden">
+    <div class="px-5 py-2.5 border-b border-amber-200 bg-amber-100/80 text-amber-800 font-semibold text-sm flex items-center gap-2">
+      <i class="fa-solid fa-thumbtack"></i> {{ core__('topic.sticky_topics') }}
+    </div>
+    <div class="md:hidden w-full max-w-full overflow-hidden">
+      {% for t in sticky_topics %}
+      {% include 'partials/forum_topic_list_card.html.twig' with { t: t, topic_row_theme: 'sticky', user: user ?? null } only %}
+      {% endfor %}
+    </div>
+    <div class="hidden md:block overflow-x-auto">
+      <table class="w-full min-w-[780px] table-fixed border-collapse text-sm">
+        <colgroup>
+          <col class="w-9">
+          <col class="w-12">
+          <col>
+          <col style="width:0.5rem">
+          <col style="min-width:10rem;width:11.5rem">
+          <col style="width:4rem">
+          <col style="width:4.5rem">
+        </colgroup>
+        <thead>
+          <tr class="border-b border-amber-200 bg-amber-100/90 text-left text-[11px] font-semibold text-amber-900/90 uppercase tracking-wide">
+            <th scope="col" class="px-1 py-2.5 align-middle w-9 text-center" title="{{ core__('forum.topic_list_th_status')|e('html_attr') }}"><span class="sr-only">{{ core__('forum.topic_list_th_status_sr') }}</span><i class="fa-solid fa-eye text-amber-800/80 text-[10px]" aria-hidden="true"></i></th>
+            <th scope="col" class="px-2 py-2.5 align-middle w-12">{{ core__('forum.topic_list_th_user') }}</th>
+            <th scope="col" class="px-2 py-2.5 align-middle min-w-[12rem]">{{ core__('forum.topic_list_th_topic_title') }}</th>
+            <th scope="col" class="p-0 w-2 min-w-[0.5rem]" aria-hidden="true"></th>
+            <th scope="col" class="px-2 py-2.5 align-middle text-start whitespace-nowrap">{{ core__('forum.topic_list_th_last_reply') }}</th>
+            <th scope="col" class="px-2 py-2.5 align-middle text-end w-16 whitespace-nowrap">{{ core__('forum.topic_list_th_replies') }}</th>
+            <th scope="col" class="px-2 py-2.5 align-middle text-end w-20 whitespace-nowrap">{{ core__('forum.topic_list_th_views') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in sticky_topics %}
+          {% include 'partials/forum_topic_list_row.html.twig' with { t: t, topic_row_theme: 'sticky', user: user ?? null } only %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+    {% if hasSticky %}<div class="px-5 py-2.5 border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold text-sm">{{ core__('topic.topics') }}</div>{% endif %}
+    {% set normal_topics = topics|filter(t => not (t.is_sticky ?? false)) %}
+    {% if normal_topics is not empty %}
+    <div class="md:hidden w-full max-w-full overflow-hidden">
+      {% for t in normal_topics %}
+      {% include 'partials/forum_topic_list_card.html.twig' with { t: t, topic_row_theme: 'default', user: user ?? null } only %}
+      {% endfor %}
+    </div>
+    <div class="hidden md:block overflow-x-auto">
+      <table class="w-full min-w-[780px] table-fixed border-collapse text-sm">
+        <colgroup>
+          <col class="w-9">
+          <col class="w-12">
+          <col>
+          <col style="width:0.5rem">
+          <col style="min-width:10rem;width:11.5rem">
+          <col style="width:4rem">
+          <col style="width:4.5rem">
+        </colgroup>
+        <thead>
+          <tr class="border-b border-gray-200 bg-gray-50 text-left text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+            <th scope="col" class="px-1 py-2.5 align-middle w-9 text-center" title="{{ core__('forum.topic_list_th_status')|e('html_attr') }}"><span class="sr-only">{{ core__('forum.topic_list_th_status_sr') }}</span><i class="fa-solid fa-eye text-gray-500 text-[10px]" aria-hidden="true"></i></th>
+            <th scope="col" class="px-2 py-2.5 align-middle w-12">{{ core__('forum.topic_list_th_user') }}</th>
+            <th scope="col" class="px-2 py-2.5 align-middle min-w-[12rem]">{{ core__('forum.topic_list_th_topic_title') }}</th>
+            <th scope="col" class="p-0 w-2 min-w-[0.5rem]" aria-hidden="true"></th>
+            <th scope="col" class="px-2 py-2.5 align-middle text-start whitespace-nowrap">{{ core__('forum.topic_list_th_last_reply') }}</th>
+            <th scope="col" class="px-2 py-2.5 align-middle text-end w-16 whitespace-nowrap">{{ core__('forum.topic_list_th_replies') }}</th>
+            <th scope="col" class="px-2 py-2.5 align-middle text-end w-20 whitespace-nowrap">{{ core__('forum.topic_list_th_views') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in normal_topics %}
+          {% include 'partials/forum_topic_list_row.html.twig' with { t: t, topic_row_theme: 'default', user: user ?? null } only %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% elseif hasSticky %}
+    <div class="px-4 py-8 text-center text-sm text-gray-500">{{ core__('forum.topics_list_only_sticky_hint') }}</div>
+    {% endif %}
+  </section>
+  {% else %}
+  <section class="bg-white ring-1 ring-gray-200 shadow-sm rounded-xl overflow-hidden">
+    <div class="p-8 text-center text-gray-500">{{ core__('topic.no_topics_in_forum') }}</div>
+  </section>
+  {% endif %}
+
+  {% if pagination.total_pages > 1 %}
+  <nav class="flex flex-wrap items-center justify-center gap-2" aria-label="{{ core__('common.pagination') }}">
+    {% if pagination.page > 1 %}
+    <a href="{{ pagination_base }}page={{ pagination.page - 1 }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"><i class="fa-solid fa-chevron-left mr-1"></i>{{ core__('common.prev') }}</a>
+    {% endif %}
+    <span class="px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg">{{ pagination.page }} / {{ pagination.total_pages }}</span>
+    {% if pagination.page < pagination.total_pages %}
+    <a href="{{ pagination_base }}page={{ pagination.page + 1 }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">{{ core__('common.next') }}<i class="fa-solid fa-chevron-right ml-1"></i></a>
+    {% endif %}
+  </nav>
+  {% endif %}
+</div>
+</div>
+{% endif %}
+{% endblock %}

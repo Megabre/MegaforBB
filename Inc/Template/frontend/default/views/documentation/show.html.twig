@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ core_url('css/documentation.css') }}?v={{ core_config('app.version', '1.0.0') }}">
+{% endblock %}
+{% set docTitle = docTitle ?? 'Documentation' %}
+{% set sectionTree = sectionTree ?? [] %}
+{% set currentSection = currentSection ?? null %}
+{% set currentPage = currentPage ?? null %}
+{% set content = content ?? '' %}
+{% set breadcrumb = breadcrumb ?? [] %}
+{% block content %}
+<div class="doc-layout-wrapper">
+  <div class="doc-root">
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-inner">
+        <div class="doc-sidebar-header">
+          <a href="{{ core_url('documentation') }}" class="doc-sidebar-title">
+            <i class="fa-solid fa-book"></i>
+            {{ docTitle|e }}
+          </a>
+        </div>
+        {% include 'documentation/_doc_sidebar.html.twig' with { sectionTree: sectionTree, currentSection: currentSection, currentPage: currentPage } only %}
+      </div>
+    </aside>
+
+    <main class="doc-main">
+      <div class="doc-main-inner">
+        {% if breadcrumb is not empty %}
+        <nav class="doc-breadcrumb" aria-label="Breadcrumb">
+          <a href="{{ core_url('documentation') }}">{{ docTitle|e }}</a>
+          {% for item in breadcrumb %}
+          <span class="doc-breadcrumb-sep">/</span>
+          {% if item.path and not loop.last %}
+          <a href="{{ core_url('documentation/' ~ item.path) }}">{{ item.title|e }}</a>
+          {% else %}
+          <span class="doc-breadcrumb-current">{{ item.title|e }}</span>
+          {% endif %}
+          {% endfor %}
+        </nav>
+        {% endif %}
+
+        <article class="doc-article">
+          <h1>{{ currentPage ? currentPage.title|e : (currentSection ? currentSection.title|e : docTitle|e) }}</h1>
+          {% if content is not empty %}
+            {{ content|raw }}
+          {% elseif currentSection and not currentPage %}
+            <p>{{ core__('documentation.no_pages_in_section')|default('No pages in this section yet.') }}</p>
+          {% endif %}
+        </article>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

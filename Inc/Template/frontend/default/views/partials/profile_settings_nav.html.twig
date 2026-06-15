@@ -1,0 +1,27 @@
+{# Kullanım: active (edit|password|preferences|account), user #}
+{% set active = active ?? 'edit' %}
+{% set u = user ?? null %}
+{% if u %}
+<nav class="mfbb-profile-settings-nav" aria-label="{{ core__('profile.edit_page_title') }}">
+  <div class="mfbb-profile-settings-nav__user">
+    <span class="mfbb-profile-settings-nav__label">{{ core__('profile.edit_section_account') }}</span>
+    <strong>{{ core_e(u.username) }}</strong>
+  </div>
+  <a href="{{ core_url('profile/edit') }}" class="mfbb-profile-settings-nav__item{% if active == 'edit' %} is-active{% endif %}">
+    <i class="fa-solid fa-user-pen"></i> {{ core__('profile.edit_page_title') }}
+  </a>
+  <a href="{{ core_url('profile/password') }}" class="mfbb-profile-settings-nav__item{% if active == 'password' %} is-active{% endif %}">
+    <i class="fa-solid fa-key"></i> {{ core__('profile.password_change_link') }}
+  </a>
+  <a href="{{ core_url('profile/preferences') }}" class="mfbb-profile-settings-nav__item{% if active == 'preferences' %} is-active{% endif %}">
+    <i class="fa-solid fa-sliders"></i> {{ core__('profile.preferences_title') }}
+  </a>
+  <a href="{{ core_url('profile/account') }}" class="mfbb-profile-settings-nav__item{% if active == 'account' %} is-active{% endif %} mfbb-profile-settings-nav__item--danger">
+    <i class="fa-solid fa-shield-halved"></i> {{ lang('profile.account_link') }}
+  </a>
+  <div class="mfbb-profile-settings-nav__divider"></div>
+  <a href="{{ core_url('member/' ~ (u.username|e('url'))) }}" class="mfbb-profile-settings-nav__item">
+    <i class="fa-solid fa-arrow-left"></i> {{ core__('common.profile') }}
+  </a>
+</nav>
+{% endif %}

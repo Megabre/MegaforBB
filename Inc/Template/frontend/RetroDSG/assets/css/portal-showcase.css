@@ -1,0 +1,158 @@
+/**
+ * MegaforBB Portal – Öne Çıkan İçerikler (vitrin showcase)
+ * sonOlaylarSettings.enabled, portalTabVisibility, tabLabels
+ */
+
+.mfbb-showcase {
+  margin-bottom: 3rem;
+}
+
+.mfbb-showcase__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mfbb-showcase__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.mfbb-showcase__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-color, #206bc4);
+  text-decoration: none;
+}
+
+.mfbb-showcase__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mfbb-showcase__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .mfbb-showcase__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mfbb-showcase__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.mfbb-showcase__grid--users {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+@media (min-width: 640px) {
+  .mfbb-showcase__grid--users {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mfbb-showcase__grid--users {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Kart – vitrin stili (forum yazısı, fotoğraf yok) */
+.mfbb-showcase-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.25rem;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mfbb-showcase-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+}
+
+.mfbb-showcase-card--topic .mfbb-showcase-card__title {
+  margin-bottom: 0.35rem;
+}
+
+.mfbb-showcase-card__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #0f172a;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mfbb-showcase-card__author {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.mfbb-showcase-card__meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+/* Kullanıcı kartı */
+.mfbb-showcase-card--user {
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.mfbb-showcase-card__avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  border: 2px solid #e2e8f0;
+}
+
+.mfbb-showcase-card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mfbb-showcase-card--user .mfbb-showcase-card__name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 0.35rem;
+}
+
+.mfbb-showcase-card--user .mfbb-showcase-card__meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0;
+}

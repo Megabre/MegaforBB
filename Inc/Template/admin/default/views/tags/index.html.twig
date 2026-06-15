@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set tags = tags ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle ?? lang('admin.tags.title')) }}</h2>
+                <p class="text-muted mt-1">{{ lang('admin.tags.description') }}</p>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ core_url(adminPath ~ '/tags/create') }}" class="btn btn-primary">{{ lang('admin.tags.add_new') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flash('error') %}
+        <div class="alert alert-danger">{{ core_e(flash('error')) }}</div>
+        {% endif %}
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ lang('admin.tags.col_name') }}</th>
+                            <th>{{ lang('admin.tags.col_slug') }}</th>
+                            <th>{{ lang('admin.tags.col_description') }}</th>
+                            <th>{{ lang('admin.tags.col_usage') }}</th>
+                            <th class="w-1">{{ lang('admin.tags.col_actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if tags is empty %}
+                        <tr><td colspan="5" class="text-center text-muted">{{ lang('admin.tags.no_tags_yet') }}</td></tr>
+                        {% else %}
+                        {% for t in tags %}
+                        <tr>
+                            <td class="font-weight-bold">{{ core_e(t.name ?? '') }}</td>
+                            <td class="text-muted">{{ core_e(t.slug ?? '') }}</td>
+                            <td class="text-muted small">{{ core_e((t.description ?? '')|slice(0, 60)) }}{{ (t.description ?? '')|length > 60 ? '…' : '' }}</td>
+                            <td><span class="badge bg-blue-lt">{{ lang('admin.tags.topics_count', { count: t.use_count ?? 0 }) }}</span></td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a href="{{ core_url(adminPath ~ '/tags/edit/' ~ t.id) }}" class="btn btn-sm btn-white">{{ lang('admin.tags.btn_edit') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/tags/delete/' ~ t.id) }}" method="post" onsubmit="return confirm('{{ lang('admin.tags.delete_confirm')|e('html_attr') }}');" style="display:inline;">
+                                        {{ core_csrf_field()|raw }}
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ lang('admin.tags.btn_delete') }}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

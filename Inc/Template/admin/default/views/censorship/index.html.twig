@@ -1,0 +1,264 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.censorship.page_title') }}</h2>
+                <div class="text-muted">{{ lang('admin.censorship.description') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% for msg in app.session.getFlashBag().get('censorship_ok', []) %}
+            <div class="alert alert-success">{{ core_e(msg) }}</div>
+        {% endfor %}
+        {% for msg in app.session.getFlashBag().get('censorship_error', []) %}
+            <div class="alert alert-danger">{{ core_e(msg) }}</div>
+        {% endfor %}
+
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link {{ activeTab == 'words' ? 'active' : '' }}" href="{{ core_url(adminPath ~ '/censorship/words') }}">{{ lang('admin.censorship.tab_words') }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ activeTab == 'usernames' ? 'active' : '' }}" href="{{ core_url(adminPath ~ '/censorship/usernames') }}">{{ lang('admin.censorship.tab_usernames') }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ activeTab == 'domains' ? 'active' : '' }}" href="{{ core_url(adminPath ~ '/censorship/domains') }}">{{ lang('admin.censorship.tab_domains') }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ activeTab == 'settings' ? 'active' : '' }}" href="{{ core_url(adminPath ~ '/censorship/settings') }}">{{ lang('admin.censorship.tab_settings') }}</a>
+            </li>
+        </ul>
+
+        {# Tab: Words #}
+        {% if activeTab == 'words' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.censorship.blocked_words') }}</h3>
+            </div>
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/censorship/words/store') }}" method="post" class="row g-2 mb-4">
+                    {{ core_csrf_field('admin_censorship')|raw }}
+                    <div class="col-auto">
+                        <input type="text" name="word" class="form-control" placeholder="{{ lang('admin.censorship.word_placeholder') }}" required>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" name="replacement" class="form-control" placeholder="{{ lang('admin.censorship.replacement_placeholder') }}">
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_regex" value="1" class="form-check-input">
+                            <span class="form-check-label">{{ lang('admin.censorship.regex') }}</span>
+                        </label>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">{{ lang('admin.censorship.add_word') }}</button>
+                    </div>
+                </form>
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ lang('admin.censorship.word') }}</th>
+                                <th>{{ lang('admin.censorship.replacement') }}</th>
+                                <th>{{ lang('admin.censorship.regex') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in words %}
+                            <tr>
+                                <td><code>{{ core_e(w.word) }}</code></td>
+                                <td>{{ w.replacement ? core_e(w.replacement) : '—' }}</td>
+                                <td>{{ w.is_regex ? lang('admin.common.yes') : lang('admin.common.no') }}</td>
+                                <td>
+                                    <form action="{{ core_url(adminPath ~ '/censorship/words/delete/' ~ w.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.censorship.confirm_delete') }}');">
+                                        {{ core_csrf_field('admin_censorship')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-muted">{{ lang('admin.censorship.no_words') }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Tab: Usernames #}
+        {% if activeTab == 'usernames' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.censorship.blocked_usernames') }}</h3>
+            </div>
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/censorship/usernames/store') }}" method="post" class="row g-2 mb-4">
+                    {{ core_csrf_field('admin_censorship')|raw }}
+                    <div class="col-auto">
+                        <input type="text" name="pattern" class="form-control" placeholder="{{ lang('admin.censorship.username_pattern_placeholder') }}" required>
+                    </div>
+                    <div class="col-auto">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="is_regex" value="1" class="form-check-input">
+                            <span class="form-check-label">{{ lang('admin.censorship.regex') }}</span>
+                        </label>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">{{ lang('admin.censorship.add_username') }}</button>
+                    </div>
+                </form>
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ lang('admin.censorship.pattern') }}</th>
+                                <th>{{ lang('admin.censorship.regex') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in usernames %}
+                            <tr>
+                                <td><code>{{ core_e(u.pattern) }}</code></td>
+                                <td>{{ u.is_regex ? lang('admin.common.yes') : lang('admin.common.no') }}</td>
+                                <td>
+                                    <form action="{{ core_url(adminPath ~ '/censorship/usernames/delete/' ~ u.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.censorship.confirm_delete') }}');">
+                                        {{ core_csrf_field('admin_censorship')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-muted">{{ lang('admin.censorship.no_usernames') }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Tab: Domains (temp mail) #}
+        {% if activeTab == 'domains' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.censorship.blocked_email_domains') }}</h3>
+                <div class="card-subtitle text-muted">{{ lang('admin.censorship.temp_mail_hint') }}</div>
+            </div>
+            <div class="card-body">
+                <form action="{{ core_url(adminPath ~ '/censorship/domains/store') }}" method="post" class="row g-2 mb-4">
+                    {{ core_csrf_field('admin_censorship')|raw }}
+                    <div class="col-auto">
+                        <input type="text" name="domain" class="form-control" placeholder="tempmail.com" required>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">{{ lang('admin.censorship.add_domain') }}</button>
+                    </div>
+                </form>
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ lang('admin.censorship.domain') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in domains %}
+                            <tr>
+                                <td><code>{{ core_e(d.domain) }}</code></td>
+                                <td>
+                                    <form action="{{ core_url(adminPath ~ '/censorship/domains/delete/' ~ d.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.censorship.confirm_delete') }}');">
+                                        {{ core_csrf_field('admin_censorship')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="2" class="text-muted">{{ lang('admin.censorship.no_domains') }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Tab: Settings #}
+        {% if activeTab == 'settings' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ lang('admin.censorship.settings_title') }}</h3>
+            </div>
+            <form action="{{ core_url(adminPath ~ '/censorship/settings/update') }}" method="post">
+                {{ core_csrf_field('admin_censorship')|raw }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="hidden" name="censorship_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="censorship_enabled" value="1" class="form-check-input" {{ settings.censorship_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.censorship.censorship_enabled') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ lang('admin.censorship.word_action') }}</label>
+                        <select name="censorship_word_action" class="form-select" style="max-width: 200px;">
+                            <option value="block" {{ settings.censorship_word_action == 'block' ? 'selected' : '' }}>{{ lang('admin.censorship.action_block') }}</option>
+                            <option value="replace" {{ settings.censorship_word_action == 'replace' ? 'selected' : '' }}>{{ lang('admin.censorship.action_replace') }}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="censorship_apply_posts" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="censorship_apply_posts" value="1" class="form-check-input" {{ settings.censorship_apply_posts ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.censorship.apply_posts') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="censorship_apply_topic_titles" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="censorship_apply_topic_titles" value="1" class="form-check-input" {{ settings.censorship_apply_topic_titles ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.censorship.apply_topic_titles') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="censorship_apply_signatures" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="censorship_apply_signatures" value="1" class="form-check-input" {{ settings.censorship_apply_signatures ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.censorship.apply_signatures') }}</span>
+                        </label>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <input type="hidden" name="blocked_usernames_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="blocked_usernames_enabled" value="1" class="form-check-input" {{ settings.blocked_usernames_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.censorship.blocked_usernames_enabled') }}</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <input type="hidden" name="temp_mail_block_enabled" value="0">
+                        <label class="form-check form-switch">
+                            <input type="checkbox" name="temp_mail_block_enabled" value="1" class="form-check-input" {{ settings.temp_mail_block_enabled ? 'checked' : '' }}>
+                            <span class="form-check-label">{{ lang('admin.censorship.temp_mail_block_enabled') }}</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <button type="submit" class="btn btn-primary">{{ lang('admin.common.save') }}</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

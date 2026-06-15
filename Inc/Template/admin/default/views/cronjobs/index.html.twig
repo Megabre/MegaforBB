@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set tasks = tasks ?? [] %}
+{% set cronUrl = cronUrl ?? '' %}
+{% set csrfToken = csrfToken ?? '' %}
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title"><i class="ti ti-clock-play me-2"></i>{{ lang('admin.cronjobs.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.cronjobs.description') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{{ lang('admin.cronjobs.run_full') }}</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">{{ lang('admin.cronjobs.run_full_hint') }}</p>
+            <input type="hidden" id="cronjobs-csrf" value="{{ csrfToken|e('html_attr') }}">
+            <button type="button" class="btn btn-primary" id="btn-run-full-cron">
+                <i class="ti ti-player-play me-1"></i> {{ lang('admin.cronjobs.run_full_btn') }}
+            </button>
+            <div id="cron-output-wrap" class="mt-4" style="display:none">
+                <h4 class="mb-2">{{ lang('admin.cronjobs.output_title') }}</h4>
+                <pre id="cron-output" class="p-3 bg-dark text-light rounded font-monospace small" style="max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title mb-0">Zamanlanmış görevler (WoltLab karşılaştırması)</h3>
+            <p class="text-muted small mb-0 mt-1">{{ lang('admin.cronjobs.report_link') }}: <code>docs/CRON_JOBS_REPORT.md</code></p>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table table-striped">
+                <thead>
+                    <tr>
+                        <th>{{ lang('admin.cronjobs.col_task') }}</th>
+                        <th>{{ lang('admin.cronjobs.col_schedule') }}</th>
+                        <th>{{ lang('admin.cronjobs.col_status') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in tasks %}
+                    <tr>
+                        <td>{{ t.name|e }}</td>
+                        <td><code>{{ t.schedule|e }}</code></td>
+                        <td>
+                            {% if t.status == 'implemented' %}
+                                <span class="badge bg-success">{{ lang('admin.cronjobs.status_implemented') }}</span>
+                            {% elseif t.status == 'partial' %}
+                                <span class="badge bg-warning text-dark">{{ lang('admin.cronjobs.status_partial') }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ lang('admin.cronjobs.status_missing') }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var btn = document.getElementById('btn-run-full-cron');
+    var outWrap = document.getElementById('cron-output-wrap');
+    var outPre = document.getElementById('cron-output');
+    var csrfEl = document.getElementById('cronjobs-csrf');
+    var url = "{{ core_url(adminPath ~ '/cronjobs/run-full')|e('js') }}";
+    if (btn && outPre) {
+        btn.addEventListener('click', function() {
+            if (this.disabled) return;
+            this.disabled = true;
+            outPre.textContent = 'Running…';
+            outWrap.style.display = 'block';
+            var fd = new FormData();
+            fd.append('_token', csrfEl ? csrfEl.value : '');
+            fetch(url, { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    outPre.textContent = data.output || (data.message || 'No output');
+                    if (data.success) outPre.classList.add('text-success'); else outPre.classList.remove('text-success');
+                })
+                .catch(function(err) {
+                    outPre.textContent = 'Error: ' + (err && err.message ? err.message : 'Request failed');
+                })
+                .finally(function() {
+                    btn.disabled = false;
+                });
+        });
+    }
+})();
+</script>
+{% endblock %}

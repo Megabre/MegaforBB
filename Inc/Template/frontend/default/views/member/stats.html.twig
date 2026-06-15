@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% set profileUser = profileUser ?? null %}
+{% if not profileUser %}<div class="ips-profile-page"><div class="ips-profile-empty"><p>{{ core_e(lang('error.not_found')) }}</p></div></div>
+{% else %}
+{% set baseUrl = core_url('member/' ~ member_url_path(profileUser)) %}
+{% set userStats = userStats ?? {} %}
+{% set statsCharts = statsCharts ?? null %}
+{% set isOwnProfile = isOwnProfile ?? false %}
+{% set coverUrl = profileUser.cover_photo_path is not empty ? asset_url(profileUser.cover_photo_path) : null %}
+{% set avatarUrl = profileUser.avatar_path is not empty ? asset_url(profileUser.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(profileUser.username ?? null)|url_encode %}
+<div class="ips-profile-page">
+{% include 'partials/profile_breadcrumb.html.twig' with { crumbs: [{ label: profileUser.username, href: baseUrl }, { label: core__('member.tab_stats') }] } %}
+<div class="ips-profile-wrap">
+  {% include 'partials/profile_shell.html.twig' with {
+    profileUser: profileUser, isOwnProfile: isOwnProfile, coverUrl: coverUrl, avatarUrl: avatarUrl,
+    rewardLevel: rewardLevel ?? null, userStats: userStats, activeTab: 'stats',
+    reputationEnabled: reputationEnabled ?? true, compact: true
+  } %}
+  <div class="ips-profile-layout ips-profile-layout--single">
+    <div class="ips-profile-layout__main">
+      {% include 'partials/profile_stats_dashboard.html.twig' with {
+        userStats: userStats, statsCharts: statsCharts, reputationEnabled: reputationEnabled ?? true,
+        idelistEnabled: idelistEnabled ?? false, isOwnProfile: isOwnProfile
+      } %}
+      {% if reputationEnabled %}
+      <p class="ips-profile-stats-note"><a href="{{ baseUrl }}/reputation">{{ core__('member.view_rep_history') }}</a></p>
+      {% endif %}
+    </div>
+  </div>
+</div></div>
+{% endif %}
+{% endblock %}

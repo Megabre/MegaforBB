@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set tag = tag ?? null %}
+{% set isEdit = tag and tag.id %}
+{% set action = isEdit ? core_url(adminPath ~ '/tags/update/' ~ tag.id) : core_url(adminPath ~ '/tags/store') %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    <a href="{{ core_url(adminPath ~ '/tags') }}" class="btn btn-icon btn-outline-secondary me-2">←</a>
+                    {{ core_e(pageTitle) }}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="row row-cards">
+            <div class="col-12 col-lg-8">
+                <form action="{{ action }}" method="post" class="card">
+                    {{ core_csrf_field()|raw }}
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label required">{{ lang('admin.tags.col_name') }}</label>
+                            <input type="text" class="form-control" name="name" value="{{ core_e(tag.name ?? '') }}" placeholder="Örn: php, laravel, yardım" required maxlength="100">
+                            <small class="form-hint">{{ lang('admin.tags.name_hint') }}</small>
+                        </div>
+                        {% if isEdit %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ lang('admin.tags.col_slug') }}</label>
+                            <input type="text" class="form-control" value="{{ core_e(tag.slug ?? '') }}" readonly disabled>
+                            <small class="form-hint">{{ lang('admin.tags.slug_hint') }}</small>
+                        </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ lang('admin.tags.description_optional') }}</label>
+                            <textarea class="form-control" name="description" rows="2" placeholder="{{ lang('admin.tags.description_placeholder') }}" maxlength="500">{{ core_e(tag.description ?? '') }}</textarea>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="{{ core_url(adminPath ~ '/tags') }}" class="btn btn-outline-secondary">{{ lang('admin.common.cancel') }}</a>
+                        <button type="submit" class="btn btn-primary">{{ isEdit ? lang('admin.tags.btn_update') : lang('admin.tags.btn_add') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

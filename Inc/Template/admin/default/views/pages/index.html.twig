@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+{% set pages = pages ?? [] %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ lang('admin.pages.title') }}</h2>
+                <div class="text-muted mt-1">{{ lang('admin.pages.description') }} URL: <code>page/slug</code></div>
+            </div>
+            <div class="col-auto">
+                <a href="{{ core_url(adminPath ~ '/pages/create') }}" class="btn btn-primary">{{ lang('admin.pages.new_page') }}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-sm card-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ lang('admin.common.title') }}</th>
+                                <th>{{ lang('admin.pages.slug') }}</th>
+                                <th>{{ lang('admin.common.status') }}</th>
+                                <th>{{ lang('admin.pages.updated_at') }}</th>
+                                <th class="w-1"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in pages %}
+                            <tr>
+                                <td><strong>{{ core_e(p.title) }}</strong></td>
+                                <td>
+                                    <code>{{ core_e(p.slug) }}</code>
+                                    <a href="{{ core_url('page/' ~ p.slug) }}" target="_blank" class="ms-1 text-muted" title="{{ lang('admin.pages.preview') }}"><i class="ti ti-external-link small"></i></a>
+                                </td>
+                                <td>{% if p.is_active %}<span class="badge bg-success">{{ lang('admin.pages.published') }}</span>{% else %}<span class="badge bg-secondary">{{ lang('admin.pages.draft') }}</span>{% endif %}</td>
+                                <td class="text-muted small">{{ p.updated_at ? (p.updated_at|date('d.m.Y H:i')) : '—' }}</td>
+                                <td>
+                                    <a href="{{ core_url(adminPath ~ '/pages/edit/' ~ p.id) }}" class="btn btn-sm btn-ghost-secondary">{{ lang('admin.common.edit') }}</a>
+                                    <form action="{{ core_url(adminPath ~ '/pages/delete/' ~ p.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ lang('admin.pages.delete_confirm') }}');">
+                                        {{ core_csrf_field('admin_page_delete')|raw }}
+                                        <button type="submit" class="btn btn-sm btn-ghost-secondary text-danger">{{ lang('admin.common.delete') }}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if pages is empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">{{ lang('admin.pages.no_pages') }} <a href="{{ core_url(adminPath ~ '/pages/create') }}">{{ lang('admin.pages.add_new') }}</a>.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

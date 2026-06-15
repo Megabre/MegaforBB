@@ -1,0 +1,122 @@
+{# IPS Activity — gruplu katkılar #}
+{% set c = contributions ?? null %}
+{% set userStats = userStats ?? {} %}
+{% set u = profileUser ?? null %}
+{% set idelistEnabled = idelistEnabled ?? (idelist_enabled ?? false) %}
+{% set portalEnabled = portal_enabled ?? false %}
+{% if u and c %}
+{% set baseUrl = core_url('member/' ~ member_url_path(u)) %}
+
+<div class="ips-activity-stream">
+  {# Forum katkıları #}
+  <section class="ips-activity-group">
+    <header class="ips-activity-group__head">
+      <div class="ips-activity-group__title">
+        <span class="ips-activity-group__icon ips-activity-group__icon--forum"><i class="fa-solid fa-comments"></i></span>
+        <div>
+          <h3>{{ core__('member.contributions_forum') }}</h3>
+          <p>{{ (userStats.topic_count ?? 0)|number_format(0) }} {{ core__('profile.topics')|lower }} · {{ (userStats.forum_reply_count ?? userStats.post_count ?? 0)|number_format(0) }} {{ core__('profile.posts')|lower }}</p>
+        </div>
+      </div>
+      <a href="{{ baseUrl }}/forum" class="ips-activity-group__link">{{ core__('member.view_all') }} <i class="fa-solid fa-chevron-right text-xs"></i></a>
+    </header>
+    <div class="ips-activity-group__body">
+      {% if c.forum_topics is empty and c.forum_posts is empty %}
+        <p class="ips-activity-group__empty">{{ core__('member.contributions_forum_empty') }}</p>
+      {% else %}
+        {% for item in c.forum_topics %}
+        <a href="{{ item.url }}" class="ips-activity-item">
+          <span class="ips-activity-item__icon ips-activity-item__icon--topic"><i class="fa-solid fa-folder-open"></i></span>
+          <span class="ips-activity-item__main">
+            <span class="ips-activity-item__title">{{ core_e(item.title) }}</span>
+            <span class="ips-activity-item__meta">
+              <span class="ips-activity-item__type">{{ core__('profile.topics') }}</span>
+              {% if item.context %}<span>{{ core_e(item.context) }}</span>{% endif %}
+              <span>{{ core_e(item.created_at) }}</span>
+            </span>
+          </span>
+        </a>
+        {% endfor %}
+        {% for item in c.forum_posts %}
+        <a href="{{ item.url }}" class="ips-activity-item">
+          <span class="ips-activity-item__icon ips-activity-item__icon--post"><i class="fa-solid fa-reply"></i></span>
+          <span class="ips-activity-item__main">
+            <span class="ips-activity-item__title">{{ core_e(item.title) }}</span>
+            {% if item.excerpt %}<span class="ips-activity-item__excerpt">{{ core_e(item.excerpt) }}…</span>{% endif %}
+            <span class="ips-activity-item__meta">
+              <span class="ips-activity-item__type">{{ core__('profile.posts') }}</span>
+              {% if item.context %}<span>{{ core_e(item.context) }}</span>{% endif %}
+              <span>{{ core_e(item.created_at) }}</span>
+            </span>
+          </span>
+        </a>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </section>
+
+  {# Makaleler #}
+  {% if portalEnabled %}
+  <section class="ips-activity-group">
+    <header class="ips-activity-group__head">
+      <div class="ips-activity-group__title">
+        <span class="ips-activity-group__icon ips-activity-group__icon--article"><i class="fa-solid fa-newspaper"></i></span>
+        <div>
+          <h3>{{ core__('member.contributions_articles') }}</h3>
+          <p>{{ (userStats.article_count ?? 0)|number_format(0) }} {{ core__('article.articles')|lower }}</p>
+        </div>
+      </div>
+      <a href="{{ baseUrl }}/articles" class="ips-activity-group__link">{{ core__('member.view_all') }} <i class="fa-solid fa-chevron-right text-xs"></i></a>
+    </header>
+    <div class="ips-activity-group__body">
+      {% for item in c.articles %}
+      <a href="{{ item.url }}" class="ips-activity-item">
+        <span class="ips-activity-item__icon ips-activity-item__icon--article"><i class="fa-solid fa-newspaper"></i></span>
+        <span class="ips-activity-item__main">
+          <span class="ips-activity-item__title">{{ core_e(item.title) }}</span>
+          <span class="ips-activity-item__meta">
+            <span class="ips-activity-item__type">{{ core__('article.articles') }}</span>
+            <span>{{ core_e(item.created_at) }}</span>
+          </span>
+        </span>
+      </a>
+      {% else %}
+        <p class="ips-activity-group__empty">{{ core__('member.contributions_articles_empty') }}</p>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# Fikirler #}
+  {% if idelistEnabled %}
+  <section class="ips-activity-group">
+    <header class="ips-activity-group__head">
+      <div class="ips-activity-group__title">
+        <span class="ips-activity-group__icon ips-activity-group__icon--idea"><i class="fa-solid fa-lightbulb"></i></span>
+        <div>
+          <h3>{{ core__('member.contributions_ideas') }}</h3>
+          <p>{{ (userStats.idea_count ?? 0)|number_format(0) }} {{ core__('member.contributions_ideas')|lower }}</p>
+        </div>
+      </div>
+      <a href="{{ baseUrl }}/ideas" class="ips-activity-group__link">{{ core__('member.view_all') }} <i class="fa-solid fa-chevron-right text-xs"></i></a>
+    </header>
+    <div class="ips-activity-group__body">
+      {% for item in c.ideas %}
+      <a href="{{ item.url }}" class="ips-activity-item">
+        <span class="ips-activity-item__icon ips-activity-item__icon--idea"><i class="fa-solid fa-lightbulb"></i></span>
+        <span class="ips-activity-item__main">
+          <span class="ips-activity-item__title">{{ core_e(item.title) }}</span>
+          <span class="ips-activity-item__meta">
+            <span class="ips-activity-item__type">{{ core__('member.contributions_ideas') }}</span>
+            <span>{{ core_e(item.created_at) }}</span>
+          </span>
+        </span>
+      </a>
+      {% else %}
+        <p class="ips-activity-group__empty">{{ core__('member.contributions_ideas_empty') }}</p>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endif %}

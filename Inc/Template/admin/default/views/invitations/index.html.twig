@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+{% set adminPath = adminPath ?? env('ADMIN_PATH', 'admin') %}
+{% set invitations = invitations ?? [] %}
+{% set flashSuccess = flashSuccess ?? '' %}
+{% set flashError = flashError ?? '' %}
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">{{ core_e(pageTitle ?? lang('invitation.page_title')) }}</h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <form action="{{ core_url(adminPath ~ '/invitations/generate') }}" method="post" class="d-inline">
+                    {{ core_csrf_field('admin_invitation')|raw }}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-plus"></i>
+                        {{ core_e(lang('invitation.generate')) }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        {% if flashSuccess %}
+        <div class="alert alert-success">{{ core_e(flashSuccess) }}</div>
+        {% endif %}
+        {% if flashError %}
+        <div class="alert alert-danger">{{ core_e(flashError) }}</div>
+        {% endif %}
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>{{ core_e(lang('invitation.code')) }}</th>
+                            <th>{{ core_e(lang('invitation.inviter')) }}</th>
+                            <th>{{ core_e(lang('invitation.email')) }}</th>
+                            <th>{{ core_e(lang('invitation.used_by')) }}</th>
+                            <th>{{ core_e(lang('invitation.expires_at')) }}</th>
+                            <th>{{ core_e(lang('invitation.used_at')) }}</th>
+                            <th class="w-1">{{ core_e(admin__('common.actions')) }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if invitations is empty %}
+                        <tr><td colspan="8" class="text-center text-muted">{{ core_e(lang('invitation.list')) }}</td></tr>
+                        {% else %}
+                        {% for inv in invitations %}
+                        <tr>
+                            <td>{{ inv.id }}</td>
+                            <td><code>{{ core_e(inv.code) }}</code></td>
+                            <td>{% if inv.inviter %}<a href="{{ core_url(adminPath ~ '/users/edit/' ~ inv.inviter.id) }}">{{ core_e(inv.inviter.username) }}</a>{% else %}—{% endif %}</td>
+                            <td>{{ inv.email ? core_e(inv.email) : '—' }}</td>
+                            <td>{% if inv.newUser %}<a href="{{ core_url(adminPath ~ '/users/edit/' ~ inv.newUser.id) }}">{{ core_e(inv.newUser.username) }}</a>{% else %}—{% endif %}</td>
+                            <td>{{ inv.expires_at ? inv.expires_at|date('d.m.Y H:i') : '—' }}</td>
+                            <td>{{ inv.used_at ? inv.used_at|date('d.m.Y H:i') : '—' }}</td>
+                            <td>
+                                {% if not inv.used_at %}
+                                <form action="{{ core_url(adminPath ~ '/invitations/revoke/' ~ inv.id) }}" method="post" class="d-inline" onsubmit="return confirm('{{ core_e(admin__('common.confirm_delete')) }}');">
+                                    {{ core_csrf_field('admin_invitation')|raw }}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ core_e(admin__('common.delete')) }}</button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

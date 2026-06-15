@@ -1,0 +1,439 @@
+{% set isBirthday = p.is_birthday_today ?? false %}
+{% set displayName = (p.show_name and ((p.first_name ?? '')|trim != '' or (p.last_name ?? '')|trim != '')) ? ((p.first_name ?? '') ~ ' ' ~ (p.last_name ?? ''))|trim : '' %}
+{% set isAccepted = is_question and accepted_post_id and (p.id ?? 0) == accepted_post_id %}
+{% set canAcceptSolution = is_question and user and topic.user_id == user.id and p.user_id != user.id and not (p.is_first_post ?? false) and not isAccepted %}
+{% set canRemoveSolution = is_question and user and topic.user_id == user.id and isAccepted %}
+{% set netVotes = p.net_votes ?? 0 %}
+{% set voteByMe = p.vote_by_me ?? 0 %}
+{% set postBody = core_sanitize_html(core_display_post_html(p.body ?? '', p.body_html ?? '')) %}
+{% set cu = user ?? null %}
+{% set canEditPost = cu and (p.user_id == cu.id or (cu.role_id ?? 0) == 1 or (cu.role_id ?? 0) == 2) %}
+{% set avatarUrl = (p.is_banned|default(false)) ? banned_avatar_url() : (p.avatar_path is not empty ? asset_url(p.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(p.username)|url_encode ~ '&size=128') %}
+{% set postbitSimpleCfg = postbitSimple ?? {} %}
+{% set enabledFields = postbitSimpleCfg.enabledFields ?? ['custom_title', 'role_badge', 'post_count', 'like_count', 'reputation', 'reward_points', 'warning_points', 'joined_date', 'location', 'custom_fields'] %}
+{% set postbitAccent = postbitSimpleCfg.accentColor ?? '#1a252f' %}
+{% set showCustomTitle = 'custom_title' in enabledFields %}
+{% set showRoleBadge = 'role_badge' in enabledFields %}
+{% set showPostCount = 'post_count' in enabledFields %}
+{% set showLikeCount = 'like_count' in enabledFields %}
+{% set showReputation = 'reputation' in enabledFields %}
+{% set showRewardPoints = 'reward_points' in enabledFields %}
+{% set showWarningPoints = 'warning_points' in enabledFields %}
+{% set showJoinedDate = 'joined_date' in enabledFields %}
+{% set showLocation = 'location' in enabledFields %}
+{% set showCustomFields = 'custom_fields' in enabledFields %}
+{% set selectedCustomFieldKeys = postbitSimpleCfg.customFieldKeys ?? [] %}
+{% set postbitLayout = postbitSimpleCfg.layout ?? 'left' %}
+{% set topStatsPosition = postbitSimpleCfg.topStatsPosition ?? 'right' %}
+{% set topLeftItems = postbitSimpleCfg.topLeftItems ?? ['profile'] %}
+{% set topRightItems = postbitSimpleCfg.topRightItems ?? ['post_count', 'like_count', 'reputation', 'reward_points', 'warning_points', 'joined_date', 'location'] %}
+{% if postbitAdvanced is defined and postbitAdvanced.enabled and (postbitAdvanced.template ?? '')|trim != '' %}
+{{ render_twig_string(postbitAdvanced.template, _context|merge({ p: p })) }}
+{% else %}
+<article id="post-{{ p.id }}" class="{{ postbitLayout == 'top' ? 'flex flex-col' : 'flex flex-col md:flex-row' }} border-b border-gray-200 last:border-0 {{ isBirthday ? 'postbit-birthday' : '' }} {{ isAccepted ? 'border border-green-500 bg-green-50/30' : '' }}" {{ isBirthday ? 'data-birthday="1"' : '' }}>
+  <aside class="relative w-full {{ postbitLayout == 'top' ? 'md:w-full md:border-r-0' : 'md:w-[240px]' }} flex-shrink-0 flex flex-col {{ isBirthday ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-b md:border-b-0 md:border-r border-amber-200/60' : 'bg-slate-50 border-b md:border-b-0 md:border-r border-gray-200' }}" x-data="{ userModalOpen: false }">
+    {% if isBirthday %}<div class="absolute top-2 right-2 text-amber-600 text-xs font-semibold" title="{{ core__('profile.birthday') }}"><i class="fa-solid fa-birthday-cake"></i></div>{% endif %}
+
+    <!-- Mobile View (avatar boyutu img üzerinde – eski postbit ile aynı) -->
+    <div class="md:hidden flex items-center justify-between gap-2 py-2.5 px-3 cursor-pointer hover:bg-slate-100/50 transition-colors" @click="userModalOpen = true">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <div class="relative flex-shrink-0">
+          <img src="{{ core_e(avatarUrl) }}" alt="" class="w-10 h-10 object-cover rounded-full border-2 {{ isBirthday ? 'border-amber-300' : (p.is_online ? 'border-green-400' : 'border-white') }} ring-1 ring-gray-200">
+          {% if p.is_online %}<span class="online-dot" style="position:absolute;top:0;right:0;width:9px;height:9px;border-radius:50%;background:#22c55e;border:1.5px solid #fff;"></span>{% endif %}
+        </div>
+        <div class="flex flex-col min-w-0">
+          {% if p.is_banned|default(false) %}<span class="text-[10px] font-bold uppercase text-red-600">{{ core__('member.banned_badge') }}</span>{% endif %}
+          <a class="text-sm font-bold text-slate-800 truncate">{{ core_e(p.username ?? '') }} {% if p.is_verified %}<i class="fa-solid fa-certificate text-blue-500 text-xs"></i>{% endif %}</a>
+          {% if showCustomTitle and p.custom_title %}<span class="text-[11px] font-medium text-slate-500 truncate">{{ core_e(p.custom_title) }}</span>{% endif %}
+        </div>
+      </div>
+      <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+    </div>
+
+    <!-- Desktop View -->
+    {% if postbitLayout == 'top' %}
+    {% set customFieldMap = {} %}
+    {% if p.custom_fields is defined and p.custom_fields is not empty %}
+      {% for cf in p.custom_fields %}
+        {% set customFieldMap = customFieldMap|merge({ (cf.key): cf }) %}
+      {% endfor %}
+    {% endif %}
+    <div class="hidden pt-4 pb-4 px-4">
+      <div class="rounded-lg border bg-white p-3 overflow-hidden" style="border-color: {{ postbitAccent|e('html_attr') }};">
+        <div class="flex items-start justify-between gap-4 w-full">
+      {% for side in ['left', 'right'] %}
+      {% set sideItems = side == 'left' ? topLeftItems : topRightItems %}
+      <div class="w-1/2 {{ side == 'right' ? 'ml-auto flex flex-col items-end' : '' }}">
+        <div class="space-y-2 {{ side == 'right' ? 'text-right' : '' }}">
+        {% for itemKey in sideItems %}
+          {% if itemKey == 'profile' %}
+          <div class="flex items-start gap-3 min-w-0 pb-2 border-b border-gray-100 {{ side == 'right' ? 'ml-auto justify-end text-right' : '' }}">
+            <div class="relative cursor-pointer group" @click="userModalOpen = true">
+              <img src="{{ core_e(avatarUrl) }}" alt="" class="object-cover rounded-lg shadow-sm border-2 {{ isBirthday ? 'border-amber-300' : (p.is_online ? 'border-green-400' : 'border-white') }} ring-1 {{ isBirthday ? 'ring-amber-200' : (p.is_online ? 'ring-green-200' : 'ring-gray-200') }} group-hover:ring-slate-300 transition-all" style="width:69px;height:69px;">
+              {% if p.is_online %}<span class="online-dot" style="position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #fff;"></span>{% endif %}
+            </div>
+            <div class="{{ side == 'right' ? 'text-right' : 'text-left' }} min-w-0">
+              {% if p.is_banned|default(false) %}<p class="text-[11px] font-bold uppercase text-red-600 mb-0.5">{{ core__('member.banned_badge') }}</p>{% endif %}
+              <h3 class="text-base font-bold text-slate-800 mb-0.5 flex items-center gap-1.5 flex-wrap">
+                <a href="{{ core_url('member/' ~ (p.username ?? '')|e('url')) }}" class="text-[#1a252f] hover:underline">{{ core_e(p.username ?? '') }}</a>
+                {% if p.is_verified %}<i class="fa-solid fa-certificate text-blue-500 text-sm" title="Onaylı Üye"></i>{% endif %}
+              </h3>
+            </div>
+          </div>
+          {% elseif itemKey == 'custom_title' and showCustomTitle and p.custom_title %}
+          <div class="flex items-center justify-between py-1 text-[12px] w-full {{ side == 'right' ? 'ml-auto' : '' }}">
+            <span class="text-slate-500">Unvan</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100">{{ core_e(p.custom_title) }}</span>
+          </div>
+          {% elseif itemKey == 'role_badge' and showRoleBadge and p.role_name %}
+          <div class="flex items-center justify-between py-1 text-[12px] w-full {{ side == 'right' ? 'ml-auto' : '' }}">
+            <span class="text-slate-500">Rol</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-white text-[10px] font-bold uppercase" style="{{ p.role_color ? 'background-color:' ~ core_e(p.role_color) : ('background-color:' ~ postbitAccent|e('html_attr')) }}">{{ core_e(p.role_name) }}</span>
+          </div>
+          {% elseif itemKey == 'post_count' and showPostCount %}
+          <div class="postbit-meta-row flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('postbit.posts')|default('Mesaj') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.user_post_count ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'like_count' and showLikeCount %}
+          <div class="postbit-meta-row flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('postbit.likes')|default('Beğeni') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.user_like_count ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'reputation' and showReputation %}
+          <div class="postbit-meta-row postbit-meta-reputation flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">Rep</span><span class="postbit-meta-value font-semibold text-slate-700">+{{ (p.reputation_positive ?? 0)|number_format(0) }} / -{{ (p.reputation_negative ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'reward_points' and showRewardPoints %}
+          <div class="postbit-meta-row postbit-meta-reward flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('member.reward_points')|default('Ödül') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.reward_points ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'warning_points' and showWarningPoints %}
+          <div class="postbit-meta-row postbit-meta-warning flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('admin.users.warning_points')|default('Uyarı') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.warning_points ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'joined_date' and showJoinedDate %}
+          <div class="postbit-meta-row postbit-meta-joined flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('postbit.joined')|default('Katılım') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ p.user_joined is defined and p.user_joined ? p.user_joined|date('d M Y') : '—' }}</span></div>
+          {% elseif itemKey == 'location' and showLocation and p.location %}
+          <div class="postbit-meta-row postbit-meta-location flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('profile.location')|default('Konum') }}</span><span class="postbit-meta-value font-semibold text-slate-700 text-right">{{ core_e(p.location) }}</span></div>
+          {% elseif itemKey starts with 'custom:' and showCustomFields %}
+          {% set cfKey = itemKey|split(':')|last %}
+          {% if customFieldMap[cfKey] is defined and (selectedCustomFieldKeys is empty or cfKey in selectedCustomFieldKeys) %}
+          <div class="postbit-meta-row flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core_e(customFieldMap[cfKey].label) }}</span><span class="postbit-meta-value font-semibold text-slate-700 text-right">{{ core_sanitize_html(customFieldMap[cfKey].value) }}</span></div>
+          {% endif %}
+          {% endif %}
+        {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="hidden md:flex flex-col items-center pt-6 pb-6 px-4">
+      <div class="relative mb-3 cursor-pointer group" @click="userModalOpen = true">
+        <img src="{{ core_e(avatarUrl) }}" alt="" class="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg shadow-sm border-2 {{ isBirthday ? 'border-amber-300' : (p.is_online ? 'border-green-400' : 'border-white') }} ring-1 {{ isBirthday ? 'ring-amber-200' : (p.is_online ? 'ring-green-200' : 'ring-gray-200') }} group-hover:ring-slate-300 transition-all">
+        {% if p.is_online %}<span class="online-dot" style="position:absolute;top:4px;right:4px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid #fff;"></span>{% endif %}
+        <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-lg transition-all pointer-events-none">
+           <i class="fa-solid fa-magnifying-glass text-white text-xl drop-shadow-md"></i>
+        </div>
+      </div>
+      <div class="text-center px-2 w-full">
+        {% if p.is_banned|default(false) %}<p class="text-[11px] font-bold uppercase text-red-600 mb-0.5">{{ core__('member.banned_badge') }}</p>{% endif %}
+        <h3 class="text-base font-bold text-slate-800 mb-0.5 flex items-center justify-center gap-1.5 flex-wrap">
+          <a href="{{ core_url('member/' ~ (p.username ?? '')|e('url')) }}" class="text-[#1a252f] hover:underline">{{ core_e(p.username ?? '') }}</a>
+          {% if p.is_verified %}<i class="fa-solid fa-certificate text-blue-500 text-sm" title="Onaylı Üye"></i>{% endif %}
+        </h3>
+        
+        {% if showCustomTitle and p.custom_title %}
+        <div class="mb-2">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100">{{ core_e(p.custom_title) }}</span>
+        </div>
+        {% endif %}
+        {% if showRoleBadge and p.role_name %}
+        <div class="mb-2">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-white text-[10px] font-bold uppercase" style="{{ p.role_color ? 'background-color:' ~ core_e(p.role_color) : ('background-color:' ~ postbitAccent|e('html_attr')) }}">{{ core_e(p.role_name) }}</span>
+        </div>
+        {% endif %}
+        
+        <div class="flex items-center justify-center gap-3 mt-3 text-slate-600 text-xs cursor-pointer group" @click="userModalOpen = true" title="{{ core__('profile.details')|default('Detaylar') }}" style="color: {{ postbitAccent|e('html_attr') }}">
+          {% if showPostCount %}
+          <div class="flex flex-col items-center group-hover:text-indigo-600 transition-colors"><span class="font-bold text-slate-800 group-hover:text-indigo-700">{{ (p.user_post_count ?? 0)|number_format(0) }}</span><span class="text-[10px] uppercase text-slate-400 font-semibold">{{ core__('postbit.posts')|default('Mesaj') }}</span></div>
+          {% endif %}
+          {% if showPostCount and showLikeCount %}<div class="w-px h-5 bg-gray-300"></div>{% endif %}
+          {% if showLikeCount %}
+          <div class="flex flex-col items-center group-hover:text-indigo-600 transition-colors"><span class="font-bold text-slate-800 group-hover:text-indigo-700">{{ (p.user_like_count ?? 0)|number_format(0) }}</span><span class="text-[10px] uppercase text-slate-400 font-semibold">{{ core__('postbit.likes')|default('Beğeni') }}</span></div>
+          {% endif %}
+        </div>
+        <div class="postbit-meta-list mt-3 w-full text-left text-[11px] space-y-1.5 px-2">
+          {% if showReputation %}<div class="postbit-meta-row postbit-meta-reputation flex justify-between"><span class="postbit-meta-label text-slate-500">Rep</span><span class="postbit-meta-value font-semibold text-slate-700">+{{ (p.reputation_positive ?? 0)|number_format(0) }} / -{{ (p.reputation_negative ?? 0)|number_format(0) }}</span></div>{% endif %}
+          {% if showRewardPoints %}<div class="postbit-meta-row postbit-meta-reward flex justify-between"><span class="postbit-meta-label text-slate-500">{{ core__('member.reward_points')|default('Ödül') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.reward_points ?? 0)|number_format(0) }}</span></div>{% endif %}
+          {% if showWarningPoints %}<div class="postbit-meta-row postbit-meta-warning flex justify-between"><span class="postbit-meta-label text-slate-500">{{ core__('admin.users.warning_points')|default('Uyarı') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.warning_points ?? 0)|number_format(0) }}</span></div>{% endif %}
+          {% if showJoinedDate %}<div class="postbit-meta-row postbit-meta-joined flex justify-between"><span class="postbit-meta-label text-slate-500">{{ core__('postbit.joined')|default('Katılım') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ p.user_joined is defined and p.user_joined ? p.user_joined|date('d M Y') : '—' }}</span></div>{% endif %}
+          {% if showLocation and p.location %}<div class="postbit-meta-row postbit-meta-location flex justify-between"><span class="postbit-meta-label text-slate-500">{{ core__('profile.location')|default('Konum') }}</span><span class="postbit-meta-value font-semibold text-slate-700 text-right">{{ core_e(p.location) }}</span></div>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- User Details Modal -->
+    <div x-show="userModalOpen" style="display: none" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div x-show="userModalOpen" @click="userModalOpen = false" x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+      
+      <div x-show="userModalOpen" x-transition class="relative w-full max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden z-10 flex flex-col text-left">
+        <div class="p-6 pb-4 flex flex-col items-center text-center relative border-b border-gray-100">
+           <button type="button" @click="userModalOpen = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+           <div class="mb-3 relative">
+             <img src="{{ core_e(avatarUrl) }}" alt="" class="w-20 h-20 object-cover rounded-full shadow-sm border-2 border-white ring-1 ring-gray-100">
+           </div>
+           {% if p.is_banned|default(false) %}<p class="text-xs font-bold uppercase text-red-600 mb-0.5">{{ core__('member.banned_badge') }}</p>{% endif %}
+           <h3 class="text-lg font-bold text-slate-800 flex items-center justify-center gap-1.5">
+             {{ core_e(p.username ?? '') }}
+             {% if p.is_verified %}<i class="fa-solid fa-certificate text-blue-500 text-sm"></i>{% endif %}
+           </h3>
+           
+           {% if displayName != '' or (showCustomTitle and p.custom_title) %}
+           <div class="mt-1 flex flex-col items-center justify-center space-y-1">
+             {% if displayName != '' %}<p class="text-sm font-medium text-slate-600">{{ core_e(displayName) }}</p>{% endif %}
+             {% if showCustomTitle and p.custom_title %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100">{{ core_e(p.custom_title) }}</span>{% endif %}
+           </div>
+           {% endif %}
+           
+           <div class="mt-3 flex flex-wrap justify-center gap-2">
+             {% if p.reward_level is defined and p.reward_level %}
+              {% set rl = p.reward_level %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ core_e(rl.badge_css ?? 'text-gray-600 bg-gray-100') }}">{% if rl.badge_icon %}<i class="fa {{ core_e(rl.badge_icon) }} mr-1"></i>{% endif %}{{ core_e(rl.badge_label ?? rl.name ?? '') }}</span>
+             {% endif %}
+             {% if showRoleBadge and p.role_name %}<span class="inline-flex items-center px-2 py-0.5 rounded text-white text-[10px] font-bold uppercase" style="{{ p.role_color ? 'background-color:' ~ core_e(p.role_color) : '' }}">{{ core_e(p.role_name) }}</span>{% endif %}
+             {% if commerceTrustScores is defined and (p.user_id ?? null) is not null and commerceTrustScores[p.user_id] is defined %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800" title="{{ core__('commerce.trust_score')|default('Güven Skoru') }}"><i class="fa-solid fa-shield-halved text-emerald-600 mr-1"></i>{{ commerceTrustScores[p.user_id]|number_format(1, ',', '') }}</span>
+             {% endif %}
+           </div>
+        </div>
+
+        <div class="px-5 py-4 bg-slate-50/50 flex-1 space-y-2.5 text-[13px] max-h-[40vh] overflow-y-auto">
+           {% if showPostCount %}<div class="flex justify-between items-center py-1.5 border-b border-gray-200/60 border-dashed">
+             <span class="text-slate-500 font-medium"><i class="fa-regular fa-comment-dots w-4 text-center mr-1"></i>{{ core__('postbit.posts')|default('Mesaj') }}</span>
+             <span class="font-bold text-slate-800">{{ (p.user_post_count ?? 0)|number_format(0) }}</span>
+           </div>{% endif %}
+           {% if showLikeCount %}<div class="flex justify-between items-center py-1.5 border-b border-gray-200/60 border-dashed">
+             <span class="text-slate-500 font-medium"><i class="fa-regular fa-heart w-4 text-center mr-1"></i>{{ core__('postbit.likes')|default('Beğeni') }}</span>
+             <span class="font-bold text-slate-800">{{ (p.user_like_count ?? 0)|number_format(0) }}</span>
+           </div>{% endif %}
+           
+           {% if showReputation %}
+           <div class="flex justify-between items-center py-1.5 border-b border-gray-200/60 border-dashed">
+             <span class="text-slate-500 font-medium"><i class="fa-solid fa-star-half-stroke w-4 text-center mr-1"></i>{{ core__('profile.reputation')|default('İtibar (Rep)') }}</span>
+             <div class="flex items-center gap-1.5 font-bold">
+               <span class="text-green-600">+{{ (p.reputation_positive ?? 0)|number_format(0) }}</span>
+               <span class="text-slate-300">/</span>
+               <span class="text-red-500">-{{ (p.reputation_negative ?? 0)|number_format(0) }}</span>
+             </div>
+           </div>
+           {% endif %}
+
+           {% if showRewardPoints %}<div class="flex justify-between items-center py-1.5 border-b border-gray-200/60 border-dashed">
+             <span class="text-slate-500 font-medium"><i class="fa-solid fa-gift w-4 text-center mr-1"></i>{{ core__('member.reward_points')|default('Ödül Puanı') }}</span>
+             <span class="font-bold text-amber-600">{{ (p.reward_points ?? 0)|number_format(0) }}</span>
+           </div>{% endif %}
+           
+           {% if showWarningPoints %}<div class="flex justify-between items-center py-1.5 border-b border-gray-200/60 border-dashed">
+             <span class="text-slate-500 font-medium"><i class="fa-solid fa-triangle-exclamation w-4 text-center mr-1"></i>{{ core__('admin.users.warning_points')|default('Uyarı Puanı') }}</span>
+             <span class="font-bold text-red-600">{{ (p.warning_points ?? 0)|number_format(0) }}</span>
+           </div>{% endif %}
+
+           {% if showJoinedDate %}<div class="flex justify-between items-center py-1.5 border-b border-gray-200/60 border-dashed">
+             <span class="text-slate-500 font-medium"><i class="fa-regular fa-calendar w-4 text-center mr-1"></i>{{ core__('postbit.joined')|default('Katılım') }}</span>
+             <span class="font-bold text-slate-800">{{ p.user_joined is defined and p.user_joined ? p.user_joined|date('d M Y') : '—' }}</span>
+           </div>{% endif %}
+           {% if showLocation and p.location %}
+           <div class="flex justify-between items-center py-1.5 border-b border-gray-200/60 border-dashed">
+             <span class="text-slate-500 font-medium"><i class="fa-solid fa-location-dot w-4 text-center mr-1"></i>{{ core__('profile.location')|default('Konum') }}</span>
+             <span class="font-bold text-slate-800 text-right">{{ core_e(p.location) }}</span>
+           </div>
+           {% endif %}
+           {% if showCustomFields and p.custom_fields is defined and p.custom_fields is not empty %}
+           {% for cf in p.custom_fields %}
+           {% if selectedCustomFieldKeys is empty or cf.key in selectedCustomFieldKeys %}
+           <div class="flex justify-between items-center py-1.5 border-b border-gray-200/60 border-dashed">
+             <span class="text-slate-500 font-medium">{{ core_e(cf.label) }}</span>
+             <span class="font-bold text-slate-800 text-right">{{ core_sanitize_html(cf.value) }}</span>
+           </div>
+           {% endif %}
+           {% endfor %}
+           {% endif %}
+        </div>
+
+        <div class="p-4 border-t border-gray-100 bg-white flex gap-2 mt-auto">
+           <a href="{{ core_url('member/' ~ (p.username ?? '')|e('url')) }}" class="flex-1 flex items-center justify-center px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">{{ core__('profile.view_profile')|default('Profili Gör') }}</a>
+           {% if (user.id ?? 0) != p.user_id %}
+           <a href="{{ core_url('conversations/new/' ~ (p.username ?? '')|e('url')) }}" class="flex-1 flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-[#1a252f] rounded-lg hover:bg-[#172029] transition-colors"><i class="fa-regular fa-envelope mr-1.5"></i> {{ core__('member.send_message')|default('Mesaj') }}</a>
+           {% endif %}
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="hidden md:block {{ postbitLayout == 'top' ? 'h-1 w-full' : 'w-1 self-stretch' }}" style="background-color: {{ postbitAccent|e('html_attr') }};"></div>
+  <div class="flex-1 flex flex-col min-w-0 w-full bg-white" style="min-width: 0;">
+    <div class="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-1.5 bg-slate-50/50 text-sm" style="{{ postbitLayout == 'top' ? 'border-left:1px solid ' ~ postbitAccent|e('html_attr') ~ ';border-right:1px solid ' ~ postbitAccent|e('html_attr') ~ ';box-shadow: inset 1px 0 0 ' ~ postbitAccent|e('html_attr') ~ ', inset -1px 0 0 ' ~ postbitAccent|e('html_attr') ~ ';' : '' }}">
+      {% if isAccepted %}<div class="w-full sm:w-auto flex items-center gap-2 text-green-700 font-semibold flex-wrap">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-check-circle"></i><span>{{ core__('post.solution_label') }}</span><span class="text-xs font-normal text-green-600">{{ core__('post.solution_accepted_by_author') }}</span></span>
+        {% if canRemoveSolution %}<form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/remove-solution') }}" method="post" class="inline" onsubmit="return confirm('{{ core__('post.remove_solution_confirm')|e('js') }}');">{{ core_csrf_field('remove_solution')|raw }}<button type="submit" class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200"><i class="fa-solid fa-xmark"></i>{{ core__('post.remove_solution_btn') }}</button></form>{% endif %}
+      </div>{% endif %}
+      <span class="text-xs font-medium text-slate-500"><i class="fa-regular fa-clock mr-1"></i>{{ core_e(p.created_at ?? '') }}</span>
+      <div class="flex items-center gap-1.5 sm:gap-3 text-xs text-slate-400 font-medium flex-wrap">
+        <span>#{{ postLoopIndex ?? loop.index }}</span>
+        {% if cu and not topic.is_locked %}<button type="button" class="post-reply-btn hover:text-slate-700" title="{{ core__('post.reply_quote_title') }}" data-post-id="{{ p.id }}" data-username="{{ core_e(p.username ?? '') }}"><i class="fa-solid fa-reply mr-1"></i><span class="hidden sm:inline">{{ core__('forum.reply_btn') }}</span></button>{% endif %}
+        {% if cu and (p.user_id ?? 0) != cu.id %}<button type="button" class="post-report-btn hover:text-slate-700" title="{{ core__('forum.report') }}" data-post-id="{{ p.id }}"><i class="fa-solid fa-flag mr-1"></i><span class="hidden sm:inline">{{ core__('forum.report') }}</span></button>{% endif %}
+        {% if canEditPost %}
+        {% if p.is_first_post|default(false) %}<a href="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/edit') }}" class="hover:text-slate-700" title="{{ core__('topic.edit_title_label') }}"><i class="fa-solid fa-pen mr-1"></i><span class="hidden sm:inline">{{ core__('post.edit') }}</span></a>{% else %}<a href="{{ core_url('post/' ~ post_url_path(p) ~ '/edit') }}" class="hover:text-slate-700" title="{{ core__('post.edit') }}"><i class="fa-solid fa-pen mr-1"></i><span class="hidden sm:inline">{{ core__('post.edit') }}</span></a>{% endif %}
+        <a href="{{ core_url('post/' ~ post_url_path(p) ~ '/edit-history') }}" class="hover:text-slate-700" title="{{ core__('post.edit_history') }}"><i class="fa-solid fa-clock-rotate-left"></i><span class="hidden sm:inline ml-1">{{ core__('post.history') }}</span></a>{% endif %}
+      </div>
+    </div>
+    {% if postbitLayout == 'top' %}
+    {% set customFieldMap = {} %}
+    {% if p.custom_fields is defined and p.custom_fields is not empty %}
+      {% for cf in p.custom_fields %}
+        {% set customFieldMap = customFieldMap|merge({ (cf.key): cf }) %}
+      {% endfor %}
+    {% endif %}
+    <div class="hidden md:block w-full px-px">
+      <div class="bg-white overflow-hidden" style="border-left:1px solid {{ postbitAccent|e('html_attr') }};border-right:1px solid {{ postbitAccent|e('html_attr') }};border-bottom:1px solid {{ postbitAccent|e('html_attr') }};border-top:0;">
+        <div class="px-3 sm:px-4 md:px-6 py-3">
+        <div class="flex items-start justify-between gap-4 w-full">
+      {% for side in ['left', 'right'] %}
+      {% set sideItems = side == 'left' ? topLeftItems : topRightItems %}
+      <div class="w-1/2 {{ side == 'right' ? 'ml-auto flex flex-col items-end' : '' }}">
+        <div class="space-y-2 {{ side == 'right' ? 'text-right' : '' }}">
+        {% for itemKey in sideItems %}
+          {% if itemKey == 'profile' %}
+          <div class="flex items-start gap-3 min-w-0 pb-2 border-b border-gray-100 {{ side == 'right' ? 'ml-auto justify-end text-right' : '' }}">
+            <div class="relative cursor-pointer group" @click="userModalOpen = true">
+              <img src="{{ core_e(avatarUrl) }}" alt="" class="object-cover rounded-lg shadow-sm border-2 {{ isBirthday ? 'border-amber-300' : (p.is_online ? 'border-green-400' : 'border-white') }} ring-1 {{ isBirthday ? 'ring-amber-200' : (p.is_online ? 'ring-green-200' : 'ring-gray-200') }} group-hover:ring-slate-300 transition-all" style="width:69px;height:69px;">
+              {% if p.is_online %}<span class="online-dot" style="position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #fff;"></span>{% endif %}
+            </div>
+            <div class="{{ side == 'right' ? 'text-right' : 'text-left' }} min-w-0">
+              {% if p.is_banned|default(false) %}<p class="text-[11px] font-bold uppercase text-red-600 mb-0.5">{{ core__('member.banned_badge') }}</p>{% endif %}
+              <h3 class="text-base font-bold text-slate-800 mb-0.5 flex items-center gap-1.5 flex-wrap">
+                <a href="{{ core_url('member/' ~ (p.username ?? '')|e('url')) }}" class="text-[#1a252f] hover:underline">{{ core_e(p.username ?? '') }}</a>
+                {% if p.is_verified %}<i class="fa-solid fa-certificate text-blue-500 text-sm" title="Onaylı Üye"></i>{% endif %}
+              </h3>
+            </div>
+          </div>
+          {% elseif itemKey == 'custom_title' and showCustomTitle and p.custom_title %}
+          <div class="flex items-center justify-between py-1 text-[12px] w-full {{ side == 'right' ? 'ml-auto' : '' }}">
+            <span class="text-slate-500">Unvan</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100">{{ core_e(p.custom_title) }}</span>
+          </div>
+          {% elseif itemKey == 'role_badge' and showRoleBadge and p.role_name %}
+          <div class="flex items-center justify-between py-1 text-[12px] w-full {{ side == 'right' ? 'ml-auto' : '' }}">
+            <span class="text-slate-500">Rol</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-white text-[10px] font-bold uppercase" style="{{ p.role_color ? 'background-color:' ~ core_e(p.role_color) : ('background-color:' ~ postbitAccent|e('html_attr')) }}">{{ core_e(p.role_name) }}</span>
+          </div>
+          {% elseif itemKey == 'post_count' and showPostCount %}
+          <div class="postbit-meta-row flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('postbit.posts')|default('Mesaj') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.user_post_count ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'like_count' and showLikeCount %}
+          <div class="postbit-meta-row flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('postbit.likes')|default('Beğeni') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.user_like_count ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'reputation' and showReputation %}
+          <div class="postbit-meta-row postbit-meta-reputation flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">Rep</span><span class="postbit-meta-value font-semibold text-slate-700">+{{ (p.reputation_positive ?? 0)|number_format(0) }} / -{{ (p.reputation_negative ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'reward_points' and showRewardPoints %}
+          <div class="postbit-meta-row postbit-meta-reward flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('member.reward_points')|default('Ödül') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.reward_points ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'warning_points' and showWarningPoints %}
+          <div class="postbit-meta-row postbit-meta-warning flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('admin.users.warning_points')|default('Uyarı') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ (p.warning_points ?? 0)|number_format(0) }}</span></div>
+          {% elseif itemKey == 'joined_date' and showJoinedDate %}
+          <div class="postbit-meta-row postbit-meta-joined flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('postbit.joined')|default('Katılım') }}</span><span class="postbit-meta-value font-semibold text-slate-700">{{ p.user_joined is defined and p.user_joined ? p.user_joined|date('d M Y') : '—' }}</span></div>
+          {% elseif itemKey == 'location' and showLocation and p.location %}
+          <div class="postbit-meta-row postbit-meta-location flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core__('profile.location')|default('Konum') }}</span><span class="postbit-meta-value font-semibold text-slate-700 text-right">{{ core_e(p.location) }}</span></div>
+          {% elseif itemKey starts with 'custom:' and showCustomFields %}
+          {% set cfKey = itemKey|split(':')|last %}
+          {% if customFieldMap[cfKey] is defined and (selectedCustomFieldKeys is empty or cfKey in selectedCustomFieldKeys) %}
+          <div class="postbit-meta-row flex justify-between text-[12px] py-1 w-full {{ side == 'right' ? 'ml-auto' : '' }}"><span class="postbit-meta-label text-slate-500">{{ core_e(customFieldMap[cfKey].label) }}</span><span class="postbit-meta-value font-semibold text-slate-700 text-right">{{ core_sanitize_html(customFieldMap[cfKey].value) }}</span></div>
+          {% endif %}
+          {% endif %}
+        {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+        </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    <div id="post-body-{{ p.id }}" class="post-body p-4 md:p-6 text-slate-800 leading-relaxed text-[15px] prose prose-slate max-w-none break-words overflow-x-hidden" data-quote-source="1">{{ postBody|smileys|raw }}</div>
+
+    {% if (enable_inline_quotes ?? true) and p.inbound_replies is defined and p.inbound_replies is not empty %}
+    <div class="mt-4 border-t border-slate-100 pt-4 bg-slate-50/50 rounded-b-lg">
+        <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-4 px-6"><i class="fa-solid fa-code-branch mr-1.5 fa-rotate-90"></i>{{ core__('post.inbound_replies_title')|default('BU MESAJA VERİLEN YANITLAR') }}</div>
+        <div class="relative pl-6 md:pl-8 pr-4 md:pr-6 pb-4" x-data="{ expandedReplyList: false }">
+            <!-- Vertical Tree Trunk -->
+            <div class="absolute left-[30px] md:left-[38px] top-2 bottom-6 w-px bg-slate-300"></div>
+            
+            <div class="space-y-4">
+            {% for r in p.inbound_replies %}
+            <div class="relative flex items-start gap-3 pl-8" {% if loop.index > 3 %}x-show="expandedReplyList" style="display: none;"{% endif %}>
+                <!-- Branch Connectors -->
+                <div class="absolute left-0 top-4 w-8 h-px bg-slate-300"></div>
+                <div class="absolute left-0 top-0 w-px h-4 bg-slate-300 {% if not loop.last %}block{% else %}hidden{% endif %}" {% if loop.index == 3 and p.inbound_replies|length > 3 %} :class="expandedReplyList ? 'block' : 'hidden'" {% endif %}></div>
+                
+                <div class="flex-1 min-w-0 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="flex items-center justify-between bg-slate-50 border-b border-slate-100 px-3 py-2">
+                        <div class="flex items-center gap-2">
+                            {% set rAvatarUrl = (r.avatar_path ?? '') != '' ? asset_url(r.avatar_path) : 'https://ui-avatars.com/api/?name=' ~ avatar_display_name(r.username)|url_encode ~ '&size=64' %}
+                            <img src="{{ core_e(rAvatarUrl) }}" alt="" class="w-6 h-6 rounded-full object-cover border border-slate-200 ring-1 ring-white shadow-sm">
+                            <span class="text-[13px] font-bold text-slate-800">{{ core_e(r.username) }} <span class="text-[11px] font-medium text-slate-400 ml-1">{{ core__('post.replied')|default('yanıtladı') }}</span></span>
+                        </div>
+                        <a href="#post-{{ r.id }}" class="text-[11px] font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 transition-colors bg-blue-50/70 hover:bg-blue-100 px-2 py-1 rounded border border-blue-100"><i class="fa-solid fa-arrow-turn-down fa-rotate-270"></i>{{ core__('post.go_to_message')|default('Mesaja Git') }}</a>
+                    </div>
+                    <div class="p-3 text-[13px] text-slate-700 line-clamp-3 leading-relaxed">{{ core_sanitize_html(r.body_html)|striptags }}</div>
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+
+            {% if p.inbound_replies|length > 3 %}
+            <div class="relative flex items-center pl-8 mt-4" x-show="!expandedReplyList">
+                <div class="absolute left-0 top-1/2 w-8 h-px bg-slate-300"></div>
+                <button type="button" @click="expandedReplyList = true" class="relative z-10 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 hover:text-slate-800 transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-chevron-down text-[10px]"></i> {{ core__('post.see_more_replies')|default('Diğer :count cevabı gör')|replace({':count': p.inbound_replies|length - 3}) }}
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if p.user_signature and (cu or show_signatures_to_guests|default(true)) %}
+    <div class="mx-4 md:mx-6 mb-2 mt-2 pt-3 border-t border-dashed border-gray-200">
+      <div class="pl-3 border-l-2 border-gray-300 text-sm text-gray-600 italic leading-relaxed post-signature">{{ core_sanitize_html(p.user_signature)|smileys|raw }}</div>
+    </div>
+    {% endif %}
+    {% if p.attachments is defined and p.attachments is not empty %}
+    {% include 'partials/attachments.html.twig' with _context|merge({ attachments: p.attachments }) %}
+    {% endif %}
+    <template id="post-quote-body-{{ p.id }}">{{ (p.body_html ?? p.body ?? '')|striptags|e }}</template>
+    <div class="mt-auto px-4 md:px-6 py-3 border-t border-gray-100 bg-slate-50/30 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        {% if isStaff %}<label class="inline-flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer post-select-wrap"><input type="checkbox" class="post-select-cb rounded border-gray-300" name="post_ids[]" value="{{ p.id }}" form="posts-bulk-form"><span>{{ core__('post.select') }}</span></label>{% endif %}
+        <form action="{{ core_url('post/' ~ p.id ~ '/like') }}" method="post" class="inline post-like-form" data-post-id="{{ p.id }}" data-liked="{{ p.liked_by_me ? '1' : '0' }}" data-count="{{ p.like_count ?? 0 }}" data-label-like="{{ core__('forum.like')|e('html_attr') }}" data-label-unlike="{{ core__('forum.unlike')|e('html_attr') }}">{{ core_csrf_field('post_like')|raw }}<button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200 post-like-btn"><i class="fa-regular fa-thumbs-up post-like-icon"></i><span class="post-like-label">{{ p.liked_by_me ? core__('forum.unlike') : core__('forum.like') }}</span><span class="post-like-count">({{ p.like_count ?? 0 }})</span></button></form>
+        {% if canAcceptSolution %}<form action="{{ core_url('topic/' ~ topic_url_path(topic) ~ '/accept-solution') }}" method="post" class="inline" onsubmit="return confirm('{{ core__('post.accept_solution_confirm')|e('js') }}');">{{ core_csrf_field('accept_solution')|raw }}<input type="hidden" name="post_id" value="{{ p.id }}"><button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200"><i class="fa-solid fa-check-double"></i><span>{{ core__('post.accept_solution_btn') }}</span></button></form>{% endif %}
+        {% if reputationEnabled and cu and (p.user_id ?? 0) != cu.id %}<span class="inline-flex gap-1"><button type="button" class="post-rep-btn px-2 py-1 rounded text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100" data-username="{{ core_e(p.username ?? '') }}" data-value="1" data-post-id="{{ p.id }}">+ Rep</button><button type="button" class="post-rep-btn px-2 py-1 rounded text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100" data-username="{{ core_e(p.username ?? '') }}" data-value="-1" data-post-id="{{ p.id }}">− Rep</button></span>{% endif %}
+      </div>
+      {% if is_question %}
+      <div class="flex items-center gap-1 flex-shrink-0 mfbb-post-vote-wrap">
+        <form method="post" action="{{ core_url('post/' ~ p.id ~ '/vote') }}" class="inline mfbb-post-vote-form" data-post-id="{{ p.id }}" target="_self">
+          <input type="hidden" name="_token" value="{{ post_vote_csrf is defined and post_vote_csrf != '' ? post_vote_csrf : core_csrf_token('post_vote') }}">
+          <button type="submit" name="value" value="1" class="p-1.5 rounded hover:bg-gray-200 text-gray-500 hover:text-green-600 {{ voteByMe == 1 ? 'text-green-600 bg-green-50' : '' }}" title="Faydalı"><i class="fa-solid fa-caret-up"></i></button>
+        </form>
+        <span class="text-sm font-semibold text-slate-700 min-w-[1.5rem] text-center">{{ netVotes }}</span>
+        <form method="post" action="{{ core_url('post/' ~ p.id ~ '/vote') }}" class="inline mfbb-post-vote-form" data-post-id="{{ p.id }}" target="_self">
+          <input type="hidden" name="_token" value="{{ post_vote_csrf is defined and post_vote_csrf != '' ? post_vote_csrf : core_csrf_token('post_vote') }}">
+          <button type="submit" name="value" value="-1" class="p-1.5 rounded hover:bg-gray-200 text-gray-500 hover:text-red-600 {{ voteByMe == -1 ? 'text-red-600 bg-red-50' : '' }}" title="Faydalı değil"><i class="fa-solid fa-caret-down"></i></button>
+        </form>
+      </div>
+      {% endif %}
+      
+      <div class="flex items-center gap-1" x-data="{ copied: false }">
+        {% if cu and not topic.is_locked %}
+        <div class="flex items-center gap-1 mr-1">
+            <button type="button" class="post-multiquote-btn px-2 py-1.5 rounded text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors" title="{{ core__('post.multi_quote')|default('Çoklu Alıntı') }}" data-post-id="{{ p.id }}"><i class="fa-solid fa-plus mq-icon mr-1 sm:mr-1.5"></i><span class="hidden sm:inline">{{ core__('post.multi_quote_btn')|default('Alıntı') }}</span></button>
+            <button type="button" class="post-quote-btn px-2 py-1.5 rounded text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors" title="{{ core__('post.quote')|default('Alıntıla') }}" data-post-id="{{ p.id }}" data-username="{{ core_e(p.username ?? '') }}"><i class="fa-solid fa-quote-left mr-1 sm:mr-1.5"></i><span class="hidden sm:inline">{{ core__('post.quote_btn')|default('Alıntıla') }}</span></button>
+        </div>
+        {% endif %}
+        
+        <div class="flex items-center gap-1 post-share-wrap">
+            {% set postShareUrl = full_site_url('topic/' ~ topic_url_path(topic) ~ '#post-' ~ p.id) %}
+            <button type="button" class="post-share-copy px-2 py-1.5 rounded text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors" title="{{ core__('forum.copy_link')|default('Bağlantıyı kopyala') }}" data-share-url="{{ postShareUrl|e('html_attr') }}" @click="navigator.clipboard.writeText($el.dataset.shareUrl || '').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"><i class="fa-solid fa-share-nodes mr-1 sm:mr-1.5"></i><span class="hidden sm:inline" x-text="copied ? '{{ core__('forum.copied')|default('Kopyalandı') }}' : '{{ core__('forum.share')|default('Paylaş') }}'"></span><span class="sm:hidden" x-text="copied ? 'OK' : ''"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+{% endif %}
