@@ -2065,7 +2065,7 @@ return [
     'admin.cronjobs.status_partial'        => 'Kısmen',
     'admin.cronjobs.status_missing'        => 'Yok',
     'admin.cronjobs.output_title'          => 'Son çalıştırma çıktısı',
-    'admin.cronjobs.report_link'           => 'Karşılaştırma raporu',
+    'admin.cronjobs.tasks_title'           => 'Zamanlanmış görevler',
     'admin.cronjobs.task_scheduled_topics' => 'Planlanan konuları yayınla',
     'admin.cronjobs.task_forum_stats'     => 'Forum / günlük istatistikleri oluştur',
     'admin.cronjobs.task_notification_cleanup' => 'Eski bildirimleri temizle',
