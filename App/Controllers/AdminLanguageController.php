@@ -74,7 +74,9 @@ class AdminLanguageController extends AdminController
 
         foreach ($allCodes as $code) {
             if (isset($dbLanguages[$code])) {
-                $languages[] = $dbLanguages[$code];
+                $row = $dbLanguages[$code];
+                $row['is_default'] = ($code === $defaultLocale);
+                $languages[] = $row;
             } else {
                 // Dosyadan keşfedildi, DB'de yok
                 $known = $knownNames[$code] ?? null;
@@ -218,14 +220,9 @@ class AdminLanguageController extends AdminController
             ];
         }
 
-        // Varsayılan locale
-        $defaultLocale = core_config('app.locale', 'tr');
-        try {
-            $def = Language::getDefault();
-            if ($def) {
-                $defaultLocale = $def->code;
-            }
-        } catch (\Throwable $e) {
+        $defaultLocale = (string) $this->app->getSetting('default_locale', core_config('app.locale', 'tr'));
+        if ($defaultLocale === '' || !preg_match('/^[a-z]{2,5}$/', $defaultLocale)) {
+            $defaultLocale = core_config('app.locale', 'tr');
         }
 
         $translator = $this->app->translator();
@@ -332,7 +329,8 @@ class AdminLanguageController extends AdminController
                 return $this->redirect(core_url(env('ADMIN_PATH', 'admin') . '/languages'));
             }
 
-            if ($language->is_default) {
+            $defaultLocale = (string) $this->app->getSetting('default_locale', core_config('app.locale', 'tr'));
+            if ($code === $defaultLocale || $language->is_default) {
                 \Forecor\Core\SessionManager::get()->getFlashBag()->set('error', lang('admin.languages.cannot_delete_default'));
                 return $this->redirect(core_url(env('ADMIN_PATH', 'admin') . '/languages'));
             }
@@ -378,6 +376,13 @@ class AdminLanguageController extends AdminController
         try {
             \App\Models\Setting::setValue('default_locale', $code, 'system');
             \Forecor\Core\Application::clearSettingCache('default_locale');
+
+            try {
+                Language::query()->update(['is_default' => false]);
+                Language::where('code', $code)->update(['is_default' => true]);
+            } catch (\Throwable $e) {
+            }
+
             $flashBag->set('success', lang('admin.languages.default_changed'));
         } catch (\Throwable $e) {
             $detail = $e->getMessage();
