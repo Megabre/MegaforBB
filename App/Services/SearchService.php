@@ -153,12 +153,19 @@ class SearchService
         $words = preg_split('/\s+/u', $query, -1, PREG_SPLIT_NO_EMPTY);
         $safe = [];
         foreach ($words as $w) {
-            $w = preg_replace('/[+\-*"()]/u', '', $w);
+            // Strip every character that has special meaning in MySQL's
+            // FULLTEXT BOOLEAN MODE parser (+ - * " ( ) < > ~ @) so that
+            // queries like "<<<<<<<<" cannot trigger a parse error.
+            $w = preg_replace('/[+\-*"()<>~@]/u', '', $w);
             if ($w !== '') {
                 $safe[] = '+' . $w . '*';
             }
         }
-        return implode(' ', $safe) ?: $query;
+
+        // If nothing usable remains, return an empty string. Callers treat
+        // this as "no fulltext term" and fall back to safe LIKE matching
+        // instead of feeding the raw (potentially invalid) query to MySQL.
+        return implode(' ', $safe);
     }
 
     /** @return array{items: list<array<string, mixed>>, total: int} */
